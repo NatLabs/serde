@@ -29,7 +29,8 @@ let success = run([
                     let blob = to_candid (motoko);
                     let candid = Candid.encode(blob, ["name"]);
 
-                    candid == #Record([("name", #Text("Tomi"))]);
+                    // candid == #Record([("name", #Text("Tomi"))]);
+                    false;
                 },
             ),
 
