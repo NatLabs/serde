@@ -10,7 +10,7 @@ import T "Types";
 
 module {
 
-    public func decode<T>(candid : T.Candid) : Blob {
+    public func decode(candid : T.Candid) : Blob {
         let args = toArgs(candid);
         Encoder.encode(args);
     };
