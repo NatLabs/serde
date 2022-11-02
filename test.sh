@@ -1,3 +1,4 @@
+#!/bin/sh
 LIBS=$(vessel sources)
 WASM_FILES=""
 
@@ -12,8 +13,20 @@ for TEST in `ls tests/*Test.mo`
         printf '=%.0s' {1..30}
         echo
 
-        $(vessel bin)/moc $LIBS -wasi-system-api $TEST -o $WASM 
-        wasmtime $WASM 
+        $(vessel bin)/moc $LIBS -wasi-system-api $TEST -o $WASM
+        # RES=`wasmtime $WASM`
+
+        # CHECK_RES=`echo $RES | grep "Tests failed"`
+
+        wasmtime $WASM
         rm -f $WASM
-        
+        # if [$CHECK_RES = ""];
+        # then 
+        #     printf $RES
+        #     rm -f $WASM
+        #     exit 1
+        # else
+        #     printf $RES
+        #     rm -f $WASM
+        # fi
 	done

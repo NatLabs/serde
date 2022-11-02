@@ -5,18 +5,29 @@ import Prelude "mo:base/Prelude";
 
 import Encoder "mo:motoko_candid/Encoder";
 import Decoder "mo:motoko_candid/Decoder";
+import Arg "mo:motoko_candid/Arg";
+import Value "mo:motoko_candid/Value";
+import Type "mo:motoko_candid/Type";
 
 import T "Types";
 
 module {
+    type Arg = Arg.Arg;
+    type Type = Type.Type;
+    type Value = Value.Value;
+    type RecordFieldType = Type.RecordFieldType;
+    type RecordFieldValue = Value.RecordFieldValue;
 
-    public func decode(candid : T.Candid) : Blob {
+    type Candid = T.Candid;
+    type KeyValuePair = T.KeyValuePair;
+
+    public func decode(candid : Candid) : Blob {
         let args = toArgs(candid);
         Encoder.encode(args);
     };
 
-    func toArgs(candid : T.Candid) : [T.Arg] {
-        let arg : T.Arg = {
+    func toArgs(candid : Candid) : [Arg] {
+        let arg : Arg = {
             _type = toArgType(candid);
             value = toArgValue(candid);
         };
@@ -24,7 +35,7 @@ module {
         [arg];
     };
 
-    func toArgType(candid : T.Candid) : T.Type {
+    func toArgType(candid : Candid) : Type {
         switch (candid) {
             case (#Nat(_)) #Nat;
             case (#Nat8(_)) #Nat8;
@@ -59,7 +70,7 @@ module {
             case (#Record(records)) {
                 let newRecords = Array.map(
                     records,
-                    func((key, val) : T.KeyValuePair) : T.RecordFieldType {
+                    func((key, val) : KeyValuePair) : RecordFieldType {
                         {
                             tag = #name(key);
                             _type = toArgType(val);
@@ -73,7 +84,7 @@ module {
             // case (#Variant(variants)) {
             //     let newVariants = Array.map(
             //         variants,
-            //         func((key, val) : T.KeyValuePair) : T.RecordFieldType {
+            //         func((key, val) : KeyValuePair) : RecordFieldType {
             //             {
             //                 tag = #name(key);
             //                 _type = toArgType(val);
@@ -88,7 +99,7 @@ module {
         };
     };
 
-    func toArgValue(candid : T.Candid) : T.Value {
+    func toArgValue(candid : Candid) : Value {
         switch (candid) {
             case (#Nat(n)) #Nat(n);
             case (#Nat8(n)) #Nat8(n);
@@ -119,7 +130,7 @@ module {
             case (#Vector(arr)) {
                 let transformedArr = Array.map(
                     arr,
-                    func(elem : T.Candid) : T.Value {
+                    func(elem : Candid) : Value {
                         toArgValue(elem);
                     },
                 );
@@ -130,7 +141,7 @@ module {
             case (#Record(records)) {
                 let newRecords = Array.map(
                     records,
-                    func((key, val) : T.KeyValuePair) : T.RecordFieldValue {
+                    func((key, val) : KeyValuePair) : RecordFieldValue {
                         {
                             tag = #name(key);
                             value = toArgValue(val);

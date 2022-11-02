@@ -10,13 +10,26 @@ import Prelude "mo:base/Prelude";
 
 import Encoder "mo:motoko_candid/Encoder";
 import Decoder "mo:motoko_candid/Decoder";
+
+import Arg "mo:motoko_candid/Arg";
+import Value "mo:motoko_candid/Value";
+import Type "mo:motoko_candid/Type";
+
 import { hashName } "mo:motoko_candid/Tag";
 
 import T "Types";
 
 module {
+    type Arg = Arg.Arg;
+    type Type = Type.Type;
+    type Value = Value.Value;
+    type RecordFieldType = Type.RecordFieldType;
+    type RecordFieldValue = Value.RecordFieldValue;
 
-    public func encode(blob : Blob, recordKeys : [Text]) : T.Candid {
+    type Candid = T.Candid;
+    type KeyValuePair = T.KeyValuePair;
+
+    public func encode(blob : Blob, recordKeys : [Text]) : Candid {
         let res = Decoder.decode(blob);
 
         let keyEntries = Iter.map<Text, (Nat32, Text)>(
@@ -42,13 +55,13 @@ module {
         };
     };
 
-    func fromArgs(args : [T.Arg], recordKeyMap : TrieMap.TrieMap<Nat32, Text>) : T.Candid {
+    func fromArgs(args : [Arg], recordKeyMap : TrieMap.TrieMap<Nat32, Text>) : Candid {
         let arg = args[0];
 
         fromArgValue(arg.value, recordKeyMap);
     };
 
-    func fromArgValue(val : T.Value, recordKeyMap : TrieMap.TrieMap<Nat32, Text>) : T.Candid {
+    func fromArgValue(val : Value, recordKeyMap : TrieMap.TrieMap<Nat32, Text>) : Candid {
         switch (val) {
             case (#Nat(n)) #Nat(n);
             case (#Nat8(n)) #Nat8(n);
@@ -93,7 +106,7 @@ module {
             case (#Vector(arr)) {
                 let newArr = Array.map(
                     arr,
-                    func(elem : T.Value) : T.Candid {
+                    func(elem : Value) : Candid {
                         fromArgValue(elem, recordKeyMap);
                     },
                 );
@@ -104,7 +117,7 @@ module {
             case (#Record(records)) {
                 let newRecords = Array.map(
                     records,
-                    func({ tag; value } : T.RecordFieldValue) : T.KeyValuePair {
+                    func({ tag; value } : RecordFieldValue) : KeyValuePair {
                         switch (tag) {
                             case (#hash(hash)) {
                                 let key = switch (recordKeyMap.get(hash)) {

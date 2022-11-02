@@ -1,14 +1,4 @@
-import Arg "mo:motoko_candid/Arg";
-import Value "mo:motoko_candid/Value";
-import Type "mo:motoko_candid/Type";
-
 module {
-    public type Arg = Arg.Arg;
-    public type Type = Type.Type;
-    public type Value = Value.Value;
-    public type RecordFieldType = Type.RecordFieldType;
-    public type RecordFieldValue = Value.RecordFieldValue;
-
     public type KeyValuePair = (Text, Candid);
 
     public type Candid = {

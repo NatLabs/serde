@@ -30,10 +30,9 @@ let success = run([
             it(
                 "fromText()",
                 do {
-                    let text = "{ \"name\" : \"Tomi\" }";
+                    let text = "{\"name\": \"Tomi\"}";
                     switch (JSON.fromText(text)) {
                         case (?blob) {
-                            Debug.print(debug_show blob);
                             let user : ?User = from_candid (blob);
                             user == ?{ name = "Tomi" };
                         };
@@ -41,18 +40,16 @@ let success = run([
                     };
                 },
             ),
+            it(
+                "decode()",
+                do {
+                    let user = { name = "Tomi" };
+                    let blob = to_candid (user);
 
-            // it(
-            //     "decode()",
-            //     do {
-            //         let candid = #Record([("name", #Text("Tomi"))]);
-
-            //         let blob = Candid.decode(candid);
-            //         let user : ?User = from_candid (blob);
-
-            //         user == ?{ name = "Tomi" };
-            //     },
-            // ),
+                    let jsonText = JSON.toText(blob, ["name"]);
+                    jsonText == "{\"name\": \"Tomi\"}";
+                },
+            ),
         ],
     ),
 ]);
