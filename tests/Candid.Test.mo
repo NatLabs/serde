@@ -18,38 +18,116 @@ let {
     run;
 } = ActorSpec;
 
-let success = run([
-    describe(
-        "Candid",
-        [
-            it(
-                "encode()",
-                do {
-                    let motoko = { name = "Tomi" };
-                    let blob = to_candid (motoko);
-                    let candid = Candid.encode(blob, ["name"]);
+let success = run(
+    [
+        describe(
+            "Candid",
+            [
+                describe(
+                    "encode()",
+                    [
+                        it(
+                            "record type: {name: Text}",
+                            do {
+                                let motoko = { name = "Tomi" };
+                                let blob = to_candid (motoko);
+                                let candid = Candid.encode(blob, ["name"]);
 
-                    candid == #Record([("name", #Text("Tomi"))]);
-                },
-            ),
+                                candid == #Record([("name", #Text("Tomi"))]);
+                            },
+                        ),
+                        it(
+                            "array: [1, 2, 3, 4]",
+                            do {
+                                let arr = [1, 2, 3, 4];
+                                let blob = to_candid (arr);
+                                let candid = Candid.encode(blob, []);
 
-            it(
-                "decode()",
-                do {
-                    let candid = #Record([("name", #Text("Tomi"))]);
-                    type User = {
-                        name : Text;
-                    };
+                                candid == #Vector([#Nat(1), #Nat(2), #Nat(3), #Nat(4)]);
+                            },
+                        ),
+                        it(
+                            "complex type",
+                            do {
+                                type User = {
+                                    name : Text;
+                                    age : Nat8;
+                                    email : ?Text;
+                                    registered : Bool;
+                                };
+                                let record_keys = ["name", "age", "email", "registered"];
+                                let users : [User] = [
+                                    {
+                                        name = "Henry";
+                                        age = 32;
+                                        email = null;
+                                        registered = false;
+                                    },
+                                    {
+                                        name = "Ali";
+                                        age = 28;
+                                        email = ?"ali.abdull@gmail.com";
+                                        registered = false;
+                                    },
+                                    {
+                                        name = "James";
+                                        age = 40;
+                                        email = ?"james.bond@gmail.com";
+                                        registered = true;
+                                    },
+                                ];
 
-                    let blob = Candid.decode(candid);
-                    let user : ?User = from_candid (blob);
+                                let blob = to_candid (users);
+                                let candid = Candid.encode(blob, record_keys);
 
-                    user == ?{ name = "Tomi" };
-                },
-            ),
-        ],
-    ),
-]);
+                                candid == #Vector([
+                                    #Record([
+                                        ("age", #Nat8(32)),
+                                        ("email", #Option(#Null)),
+                                        ("name", #Text("Henry")),
+                                        ("registered", #Bool(false)),
+                                    ]),
+                                    #Record([
+                                        ("age", #Nat8(28)),
+                                        ("email", #Option(#Text("ali.abdull@gmail.com"))),
+                                        ("name", #Text("Ali")),
+                                        ("registered", #Bool(false)),
+                                    ]),
+                                    #Record([
+                                        ("age", #Nat8(40)),
+                                        ("email", #Option(#Text("james.bond@gmail.com"))),
+                                        ("name", #Text("James")),
+                                        ("registered", #Bool(true)),
+                                    ]),
+                                ]);
+                            },
+                        ),
+                    ],
+                ),
+
+                describe(
+                    "decode()",
+                    [
+                        it(
+                            "record type {name: Text}",
+                            do {
+                                let candid = #Record([("name", #Text("Tomi"))]);
+                                type User = {
+                                    name : Text;
+                                };
+
+                                let blob = Candid.decode(candid);
+                                let user : ?User = from_candid (blob);
+
+                                user == ?{ name = "Tomi" };
+                            },
+                        ),
+                    ],
+                ),
+            ],
+        ),
+    ],
+);
 
 if (success == false) {
     Debug.trap("\1b[46;41mTests failed\1b[0m");

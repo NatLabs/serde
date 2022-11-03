@@ -5,6 +5,7 @@ import TrieMap "mo:base/TrieMap";
 import Nat32 "mo:base/Nat32";
 import Text "mo:base/Text";
 import Iter "mo:base/Iter";
+import Order "mo:base/Order";
 import Hash "mo:base/Hash";
 import Prelude "mo:base/Prelude";
 
@@ -14,6 +15,7 @@ import Decoder "mo:motoko_candid/Decoder";
 import Arg "mo:motoko_candid/Arg";
 import Value "mo:motoko_candid/Value";
 import Type "mo:motoko_candid/Type";
+import Tag "mo:motoko_candid/Tag";
 
 import { hashName } "mo:motoko_candid/Tag";
 
@@ -118,37 +120,50 @@ module {
                 let newRecords = Array.map(
                     records,
                     func({ tag; value } : RecordFieldValue) : KeyValuePair {
-                        switch (tag) {
-                            case (#hash(hash)) {
-                                let key = switch (recordKeyMap.get(hash)) {
-                                    case (?key) key;
-                                    case (_) debug_show hash;
-                                };
+                        let key = getKey(tag, recordKeyMap);
+                        let val = fromArgValue(value, recordKeyMap);
 
-                                let val = fromArgValue(value, recordKeyMap);
-
-                                (key, val);
-                            };
-                            case (_) Prelude.unreachable();
-                        };
+                        (key, val);
                     },
                 );
 
-                #Record(newRecords);
+                #Record(Array.sort(newRecords, cmpRecords));
             };
 
-            // case (#Variant(variants)) {
-            //     let (key, val) = variants[0];
+            // case (#Variant(variant)) {
+            //     Debug.print(debug_show variant);
 
-            //     let res = {
-            //         tag = #name(key);
-            //         value = toArgValue(val);
-            //     };
+            //     let { tag; value } = variant;
 
-            //     #Variant(res);
+            //     let key = getKey(tag, recordKeyMap);
+            //     let candid_value = fromArgValue(value, recordKeyMap);
+
+            //     #Variant((key, candid_value));
             // };
 
             case (_) { Prelude.unreachable() };
         };
+    };
+
+    func getKey(tag : Tag.Tag, recordKeyMap : TrieMap.TrieMap<Nat32, Text>) : Text {
+        switch (tag) {
+            case (#hash(hash)) {
+                switch (recordKeyMap.get(hash)) {
+                    case (?key) {
+                        key;
+                    };
+                    case (_) {
+                        debug_show hash;
+                    };
+                };
+            };
+            case (#name(key)) {
+                key;
+            };
+        };
+    };
+
+    func cmpRecords(a : (Text, Any), b : (Text, Any)) : Order.Order {
+        Text.compare(a.0, b.0);
     };
 };
