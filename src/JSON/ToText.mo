@@ -47,6 +47,12 @@ module {
             case (#Float32(n)) #Number(Float.toInt(n));
             case (#Float64(n)) #Number(Float.toInt(n));
 
+            case (#Option(val)) {
+                switch (val) {
+                    case (#Null) #Null;
+                    case (v) candidToJSON(v);
+                };
+            };
             case (#Vector(arr)) {
                 let newArr = Array.map(
                     arr,

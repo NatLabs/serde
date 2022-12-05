@@ -1,6 +1,7 @@
 module {
     public type KeyValuePair = (Text, Candid);
 
+    // A standard representation of the Candid type
     public type Candid = {
         #Int : Int;
         #Int8 : Int8;
