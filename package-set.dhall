@@ -11,9 +11,21 @@ let Package = {
 -- This is where you can add your own packages to the package-set
 let additions = [
 	{ 
+		name = "base", 
+		version = "master", 
+		repo = "https://github.com/dfinity/motoko-base", 
+		dependencies = [] : List Text
+	},
+	{ 
 		name = "motoko_candid", 
 		version = "main", 
 		repo = "https://github.com/tomijaga/motoko_candid", 
+		dependencies = [] : List Text
+	},
+	{ 
+		name = "Itertools", 
+		version = "master", 
+		repo = "https://github.com/NatLabs/Itertools", 
 		dependencies = [] : List Text
 	},
 	{ 
@@ -26,6 +38,12 @@ let additions = [
 		name = "json", 
 		version = "v0.2.0", 
 		repo = "https://github.com/aviate-labs/json.mo", 
+		dependencies = [] : List Text
+	},
+	{ 
+		name = "moh", 
+		version = "main", 
+		repo = "https://github.com/NatLabs/moh", 
 		dependencies = [] : List Text
 	}
 ] : List Package

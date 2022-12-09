@@ -77,8 +77,7 @@ module {
             case (#Int32(n)) #Int32(n);
             case (#Int64(n)) #Int64(n);
 
-            case (#Float32(n)) #Float32(n);
-            case (#Float64(n)) #Float64(n);
+            case (#Float64(n)) #Float(n);
 
             case (#Bool(b)) #Bool(b);
 
@@ -113,7 +112,7 @@ module {
                     },
                 );
 
-                #Vector(newArr);
+                #Array(newArr);
             };
 
             case (#Record(records)) {

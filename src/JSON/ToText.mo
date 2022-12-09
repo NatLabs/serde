@@ -44,8 +44,7 @@ module {
             case (#Nat32(n)) #Number(NatX.from32ToNat(n));
             case (#Nat64(n)) #Number(NatX.from64ToNat(n));
 
-            case (#Float32(n)) #Number(Float.toInt(n));
-            case (#Float64(n)) #Number(Float.toInt(n));
+            case (#Float(n)) #Number(Float.toInt(n));
 
             case (#Option(val)) {
                 switch (val) {
@@ -53,7 +52,7 @@ module {
                     case (v) candidToJSON(v);
                 };
             };
-            case (#Vector(arr)) {
+            case (#Array(arr)) {
                 let newArr = Array.map(
                     arr,
                     func(n : Candid) : JSON {

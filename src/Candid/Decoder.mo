@@ -49,8 +49,7 @@ module {
             case (#Int32(_)) #Int32;
             case (#Int64(_)) #Int64;
 
-            case (#Float32(_)) #Float32;
-            case (#Float64(_)) #Float64;
+            case (#Float(_)) #Float64;
 
             case (#Bool(_)) #Bool;
 
@@ -63,7 +62,7 @@ module {
             case (#Option(optType)) {
                 #Option(toArgType(optType));
             };
-            case (#Vector(arr)) {
+            case (#Array(arr)) {
                 #Vector(toArgType(arr[0]));
             };
 
@@ -113,8 +112,7 @@ module {
             case (#Int32(n)) #Int32(n);
             case (#Int64(n)) #Int64(n);
 
-            case (#Float32(n)) #Float32(n);
-            case (#Float64(n)) #Float64(n);
+            case (#Float(n)) #Float64(n);
 
             case (#Bool(b)) #Bool(b);
 
@@ -127,7 +125,7 @@ module {
             case (#Option(optVal)) {
                 #Option(?toArgValue(optVal));
             };
-            case (#Vector(arr)) {
+            case (#Array(arr)) {
                 let transformedArr = Array.map(
                     arr,
                     func(elem : Candid) : Value {

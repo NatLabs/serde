@@ -48,7 +48,7 @@ module {
                     },
                 );
 
-                #Vector(newArr);
+                #Array(newArr);
             };
             case (#Object(objs)) {
                 let records = Array.map<(Text, JSON), (Text, Candid)>(

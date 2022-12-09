@@ -1,7 +1,8 @@
 module {
+
     public type KeyValuePair = (Text, Candid);
 
-    // A standard representation of the Candid type
+    /// A standard representation of the Candid type
     public type Candid = {
         #Int : Int;
         #Int8 : Int8;
@@ -16,10 +17,7 @@ module {
         #Nat64 : Nat64;
 
         #Bool : Bool;
-
-        #Float32 : Float;
-        #Float64 : Float;
-
+        #Float : Float;
         #Text : Text;
 
         #Null;
@@ -27,7 +25,7 @@ module {
         #Principal : Principal;
 
         #Option : Candid;
-        #Vector : [Candid];
+        #Array : [Candid];
         #Record : [KeyValuePair];
         #Variant : KeyValuePair;
 

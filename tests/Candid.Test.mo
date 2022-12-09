@@ -43,7 +43,7 @@ let success = run(
                                 let blob = to_candid (arr);
                                 let candid = Candid.encode(blob, []);
 
-                                candid == #Vector([#Nat(1), #Nat(2), #Nat(3), #Nat(4)]);
+                                candid == #Array([#Nat(1), #Nat(2), #Nat(3), #Nat(4)]);
                             },
                         ),
                         it(
@@ -80,7 +80,7 @@ let success = run(
                                 let blob = to_candid (users);
                                 let candid = Candid.encode(blob, record_keys);
 
-                                candid == #Vector([
+                                candid == #Array([
                                     #Record([
                                         ("age", #Nat8(32)),
                                         ("email", #Option(#Null)),
