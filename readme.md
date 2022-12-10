@@ -3,7 +3,7 @@
 A serialisation and deserialisation library for Motoko.
 
 ## Installation
-- Install [mops]()
+- Install [mops](https://j4mwm-bqaaa-aaaam-qajbq-cai.ic0.app/#/docs/install)
 - Run `mops install serde`, in your project directory
 
 ## Usage
@@ -28,8 +28,7 @@ A serialisation and deserialisation library for Motoko.
 ### URL-Encoded Pairs
 support for the `application/x-www-form-urlencoded` content type.
 
-This is a loose implementation, as it also supports arrays and nested objects in the form of `items[0]=value&items[1]=value` and `items[subKey]=value`.
-
+This implementation supports URL query strings and URL-encoded pairs, including arrays and nested objects, using the format `items[0]=value&items[1]=value` and `items[subKey]=value`."
 
 ```motoko
     import serde_urlencoded "mo:serde/URLEncoded";
