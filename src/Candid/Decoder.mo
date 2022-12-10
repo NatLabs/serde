@@ -37,33 +37,33 @@ module {
 
     func toArgType(candid : Candid) : Type {
         switch (candid) {
-            case (#Nat(_)) #Nat;
-            case (#Nat8(_)) #Nat8;
-            case (#Nat16(_)) #Nat16;
-            case (#Nat32(_)) #Nat32;
-            case (#Nat64(_)) #Nat64;
+            case (#Nat(_)) #nat;
+            case (#Nat8(_)) #nat8;
+            case (#Nat16(_)) #nat16;
+            case (#Nat32(_)) #nat32;
+            case (#Nat64(_)) #nat64;
 
-            case (#Int(_)) #Int;
-            case (#Int8(_)) #Int8;
-            case (#Int16(_)) #Int16;
-            case (#Int32(_)) #Int32;
-            case (#Int64(_)) #Int64;
+            case (#Int(_)) #int;
+            case (#Int8(_)) #int8;
+            case (#Int16(_)) #int16;
+            case (#Int32(_)) #int32;
+            case (#Int64(_)) #int64;
 
-            case (#Float(_)) #Float64;
+            case (#Float(_)) #float64;
 
-            case (#Bool(_)) #Bool;
+            case (#Bool(_)) #bool;
 
-            case (#Principal(_)) #Principal;
+            case (#Principal(_)) #principal;
 
-            case (#Text(_)) #Text;
+            case (#Text(_)) #text;
 
-            case (#Null) #Null;
+            case (#Null) #_null;
 
             case (#Option(optType)) {
-                #Option(toArgType(optType));
+                #opt(toArgType(optType));
             };
             case (#Array(arr)) {
-                #Vector(toArgType(arr[0]));
+                #vector(toArgType(arr[0]));
             };
 
             case (#Record(records)) {
@@ -77,7 +77,7 @@ module {
                     },
                 );
 
-                #Record(newRecords);
+                #record(newRecords);
             };
 
             // case (#Variant(variants)) {
@@ -100,30 +100,30 @@ module {
 
     func toArgValue(candid : Candid) : Value {
         switch (candid) {
-            case (#Nat(n)) #Nat(n);
-            case (#Nat8(n)) #Nat8(n);
-            case (#Nat16(n)) #Nat16(n);
-            case (#Nat32(n)) #Nat32(n);
-            case (#Nat64(n)) #Nat64(n);
+            case (#Nat(n)) #nat(n);
+            case (#Nat8(n)) #nat8(n);
+            case (#Nat16(n)) #nat16(n);
+            case (#Nat32(n)) #nat32(n);
+            case (#Nat64(n)) #nat64(n);
 
-            case (#Int(n)) #Int(n);
-            case (#Int8(n)) #Int8(n);
-            case (#Int16(n)) #Int16(n);
-            case (#Int32(n)) #Int32(n);
-            case (#Int64(n)) #Int64(n);
+            case (#Int(n)) #int(n);
+            case (#Int8(n)) #int8(n);
+            case (#Int16(n)) #int16(n);
+            case (#Int32(n)) #int32(n);
+            case (#Int64(n)) #int64(n);
 
-            case (#Float(n)) #Float64(n);
+            case (#Float(n)) #float64(n);
 
-            case (#Bool(b)) #Bool(b);
+            case (#Bool(b)) #bool(b);
 
-            case (#Principal(n)) #Principal(#transparent(n));
+            case (#Principal(n)) #principal(#transparent(n));
 
-            case (#Text(n)) #Text(n);
+            case (#Text(n)) #text(n);
 
-            case (#Null) #Null;
+            case (#Null) #_null;
 
             case (#Option(optVal)) {
-                #Option(?toArgValue(optVal));
+                #opt(?toArgValue(optVal));
             };
             case (#Array(arr)) {
                 let transformedArr = Array.map(
@@ -133,7 +133,7 @@ module {
                     },
                 );
 
-                #Vector(transformedArr);
+                #vector(transformedArr);
             };
 
             case (#Record(records)) {
@@ -148,7 +148,7 @@ module {
                     },
                 );
 
-                #Record(newRecords);
+                #record(newRecords);
             };
 
             // case (#Variant(variants)) {

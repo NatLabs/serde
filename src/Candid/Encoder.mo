@@ -65,23 +65,23 @@ module {
 
     func fromArgValue(val : Value, recordKeyMap : TrieMap.TrieMap<Nat32, Text>) : Candid {
         switch (val) {
-            case (#Nat(n)) #Nat(n);
-            case (#Nat8(n)) #Nat8(n);
-            case (#Nat16(n)) #Nat16(n);
-            case (#Nat32(n)) #Nat32(n);
-            case (#Nat64(n)) #Nat64(n);
+            case (#nat(n)) #Nat(n);
+            case (#nat8(n)) #Nat8(n);
+            case (#nat16(n)) #Nat16(n);
+            case (#nat32(n)) #Nat32(n);
+            case (#nat64(n)) #Nat64(n);
 
-            case (#Int(n)) #Int(n);
-            case (#Int8(n)) #Int8(n);
-            case (#Int16(n)) #Int16(n);
-            case (#Int32(n)) #Int32(n);
-            case (#Int64(n)) #Int64(n);
+            case (#int(n)) #Int(n);
+            case (#int8(n)) #Int8(n);
+            case (#int16(n)) #Int16(n);
+            case (#int32(n)) #Int32(n);
+            case (#int64(n)) #Int64(n);
 
-            case (#Float64(n)) #Float(n);
+            case (#float64(n)) #Float(n);
 
-            case (#Bool(b)) #Bool(b);
+            case (#bool(b)) #Bool(b);
 
-            case (#Principal(service)) {
+            case (#principal(service)) {
                 switch (service) {
                     case (#transparent(p)) {
                         #Principal(p);
@@ -90,11 +90,11 @@ module {
                 };
             };
 
-            case (#Text(n)) #Text(n);
+            case (#text(n)) #Text(n);
 
-            case (#Null) #Null;
+            case (#_null) #Null;
 
-            case (#Option(optVal)) {
+            case (#opt(optVal)) {
                 let val = switch (optVal) {
                     case (?val) {
                         fromArgValue(val, recordKeyMap);
@@ -104,7 +104,7 @@ module {
 
                 #Option(val);
             };
-            case (#Vector(arr)) {
+            case (#vector(arr)) {
                 let newArr = Array.map(
                     arr,
                     func(elem : Value) : Candid {
@@ -115,7 +115,7 @@ module {
                 #Array(newArr);
             };
 
-            case (#Record(records)) {
+            case (#record(records)) {
                 let newRecords = Array.map(
                     records,
                     func({ tag; value } : RecordFieldValue) : KeyValuePair {

@@ -19,7 +19,7 @@ let additions = [
 	{ 
 		name = "motoko_candid", 
 		version = "main", 
-		repo = "https://github.com/tomijaga/motoko_candid", 
+		repo = "https://github.com/gekctek/motoko_candid", 
 		dependencies = [] : List Text
 	},
 	{ 
