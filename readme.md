@@ -26,7 +26,7 @@ A serialisation and deserialisation library for Motoko.
 ```
 
 ### URL-Encoded Pairs
-support for the `application/x-www-form-urlencoded` content type.
+Serialization and deserialization for `application/x-www-form-urlencoded`.
 
 This implementation supports URL query strings and URL-encoded pairs, including arrays and nested objects, using the format `items[0]=value&items[1]=value` and `items[subKey]=value`."
 
