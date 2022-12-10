@@ -49,7 +49,9 @@ let success = run([
                     it(
                         "record with array",
                         do {
-                            let blob = UrlEncoded.fromText("users[0][name]=John&users[0][msg]=Hello World&users[1][name]=Jane&users[1][msg]=testing");
+                            let blob = UrlEncoded.fromText(
+                                "users[0][name]=John&users[0][msg]=Hello World&users[1][name]=Jane&users[1][msg]=testing",
+                            );
 
                             let res : ?{ users : [User] } = from_candid (blob);
                             Debug.print(debug_show res);
@@ -107,7 +109,6 @@ let success = run([
 
                             let text = UrlEncoded.toText(blob, ["users", "name", "msg"]);
 
-                            Debug.print(debug_show text);
                             assertTrue(
                                 text == "users[0][msg]=Hello World&users[0][name]=John&users[1][msg]=testing&users[1][name]=Jane",
                             );

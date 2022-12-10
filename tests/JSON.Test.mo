@@ -31,13 +31,10 @@ let success = run([
                 "fromText()",
                 do {
                     let text = "{\"name\": \"Tomi\"}";
-                    switch (JSON.fromText(text)) {
-                        case (?blob) {
-                            let user : ?User = from_candid (blob);
-                            user == ?{ name = "Tomi" };
-                        };
-                        case (_) false;
-                    };
+                    let blob = JSON.fromText(text);
+                    let user : ?User = from_candid (blob);
+
+                    user == ?{ name = "Tomi" };
                 },
             ),
             it(

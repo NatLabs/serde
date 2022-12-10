@@ -19,19 +19,15 @@ module {
     type JSON = JSON.JSON;
     type Candid = Candid.Candid;
 
-    public func fromText(rawText : Text) : ?Blob {
+    public func fromText(rawText : Text) : Blob {
         let json = JSON.parse(rawText);
 
         let candid = switch (json) {
-            case (?json) {
-                jsonToCandid(json);
-            };
-            case (_) {
-                return null;
-            };
+            case (?json) jsonToCandid(json);
+            case (_) Debug.trap("Failed to parse JSON");
         };
 
-        ?Candid.decode(candid);
+        Candid.decode(candid);
     };
 
     func jsonToCandid(json : JSON) : Candid {
