@@ -2,7 +2,7 @@
 name = "serde"
 version = "0.1.0"
 description = "A serialisation and deserialisation library for Motoko."
-repository = ""
+repository = "https://github.com/NatLabs/serde"
 
 [dependencies]
 base = "https://github.com/dfinity/motoko-base#master"

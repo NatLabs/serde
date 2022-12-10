@@ -20,7 +20,7 @@ jobs:
                   chmod +x /home/runner/bin/vessel
 
             - name: Run Tests
-              run: make test1
+              run: make test
 
             - name: Generate Docs
               run: make docs
