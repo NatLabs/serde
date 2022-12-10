@@ -1,10 +1,10 @@
-import Itertools "mo:Itertools/Iter";
+import itertools "mo:itertools/Iter";
 
 module {
     public func subText(text : Text, start : Nat, end : Nat) : Text {
-        Itertools.toText(
-            Itertools.skip(
-                Itertools.take(text.chars(), end),
+        itertools.toText(
+            itertools.skip(
+                itertools.take(text.chars(), end),
                 start,
             ),
         );

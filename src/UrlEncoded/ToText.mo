@@ -15,7 +15,7 @@ import Option "mo:base/Option";
 import Principal "mo:base/Principal";
 import Prelude "mo:base/Prelude";
 
-import Itertools "mo:Itertools/Iter";
+import itertools "mo:itertools/Iter";
 
 import Candid "../Candid";
 
@@ -64,15 +64,10 @@ module {
                 };
             };
             case (#Array(arr)) {
-                for ((i, value) in Itertools.enumerate(arr.vals())) {
+                for ((i, value) in itertools.enumerate(arr.vals())) {
                     toKeyValuePairs(pairs, storedKey # "[" # Nat.toText(i) # "]", value);
                 };
             };
-
-            // case(#Variant(variant)) {
-            //     let (key, value) = variant;
-            //     toKeyValuePairs(pairs, storedKey , variant.1);
-            // };
 
             case (#Option(p)) toKeyValuePairs(pairs, storedKey, p);
             case (#Text(t)) pairs.put(storedKey, t);

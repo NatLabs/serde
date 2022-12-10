@@ -23,7 +23,7 @@ let additions = [
 		dependencies = [] : List Text
 	},
 	{ 
-		name = "Itertools", 
+		name = "itertools", 
 		version = "master", 
 		repo = "https://github.com/NatLabs/Itertools", 
 		dependencies = [] : List Text
@@ -38,12 +38,6 @@ let additions = [
 		name = "json", 
 		version = "v0.2.0", 
 		repo = "https://github.com/aviate-labs/json.mo", 
-		dependencies = [] : List Text
-	},
-	{ 
-		name = "moh", 
-		version = "main", 
-		repo = "https://github.com/NatLabs/moh", 
 		dependencies = [] : List Text
 	}
 ] : List Package

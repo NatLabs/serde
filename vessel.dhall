@@ -1,4 +1,4 @@
 {
-  dependencies = [ "base", "motoko_candid", "xtendedNumbers", "json", "moh" ,"parser-combinators", "Itertools"],
+  dependencies = [ "base", "motoko_candid", "xtendedNumbers", "json" ,"parser-combinators", "itertools"],
   compiler = Some "0.7.0"
 }

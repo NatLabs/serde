@@ -4,7 +4,6 @@ import Iter "mo:base/Iter";
 import ActorSpec "./utils/ActorSpec";
 
 import UrlEncoded "../src/UrlEncoded";
-// import [FnName] "../../src/[section]/[FnName]";
 
 let {
     assertTrue;
@@ -45,7 +44,6 @@ let success = run([
                             );
                         },
                     ),
-
                     it(
                         "record with array",
                         do {
@@ -73,13 +71,13 @@ let success = run([
                     ),
                 ],
             ),
-
             describe(
                 "motoko toText",
                 [
                     it(
                         "single record",
                         do {
+
                             let info : User = {
                                 msg = "Hello World";
                                 name = "John";

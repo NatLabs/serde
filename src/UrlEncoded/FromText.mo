@@ -13,7 +13,7 @@ import Float "mo:base/Float";
 import Option "mo:base/Option";
 import Prelude "mo:base/Prelude";
 
-import Itertools "mo:Itertools/Iter";
+import itertools "mo:itertools/Iter";
 
 import Candid "../Candid";
 import { subText } "../Utils";
@@ -92,7 +92,7 @@ module {
             };
 
             switch (
-                Itertools.findIndex(
+                itertools.findIndex(
                     key.chars(),
                     func(c : Char) : Bool = c == '[',
                 ),
@@ -117,7 +117,7 @@ module {
                     insert(triemap, first_field, other_fields, value);
                 };
                 case (_) {
-                    insert(triemap, key, Itertools.empty(), value);
+                    insert(triemap, key, itertools.empty(), value);
                 };
             };
         };
@@ -166,8 +166,8 @@ module {
 
     func trieMapToCandid(triemap : NestedTrieMap) : Candid {
         var i = 0;
-        let isArray = Itertools.all(
-            Itertools.sort(triemap.keys(), Text.compare),
+        let isArray = itertools.all(
+            itertools.sort(triemap.keys(), Text.compare),
             func(key : Text) : Bool {
                 let res = key == Nat.toText(i);
                 i += 1;
