@@ -9,17 +9,18 @@ import Order "mo:base/Order";
 import Hash "mo:base/Hash";
 import Prelude "mo:base/Prelude";
 
-import Encoder "mo:motoko_candid/Encoder";
-import Decoder "mo:motoko_candid/Decoder";
+import Encoder "mo:candid/Encoder";
+import Decoder "mo:candid/Decoder";
 
-import Arg "mo:motoko_candid/Arg";
-import Value "mo:motoko_candid/Value";
-import Type "mo:motoko_candid/Type";
-import Tag "mo:motoko_candid/Tag";
+import Arg "mo:candid/Arg";
+import Value "mo:candid/Value";
+import Type "mo:candid/Type";
+import Tag "mo:candid/Tag";
 
-import { hashName } "mo:motoko_candid/Tag";
+import { hashName } "mo:candid/Tag";
 
 import T "Types";
+import U "../Utils";
 
 module {
     type Arg = Arg.Arg;
@@ -126,19 +127,8 @@ module {
                     },
                 );
 
-                #Record(Array.sort(newRecords, cmpRecords));
+                #Record(Array.sort(newRecords, U.cmpRecords));
             };
-
-            // case (#Variant(variant)) {
-            //     Debug.print(debug_show variant);
-
-            //     let { tag; value } = variant;
-
-            //     let key = getKey(tag, recordKeyMap);
-            //     let candid_value = fromArgValue(value, recordKeyMap);
-
-            //     #Variant((key, candid_value));
-            // };
 
             case (_) { Prelude.unreachable() };
         };
@@ -162,7 +152,4 @@ module {
         };
     };
 
-    func cmpRecords(a : (Text, Any), b : (Text, Any)) : Order.Order {
-        Text.compare(a.0, b.0);
-    };
 };

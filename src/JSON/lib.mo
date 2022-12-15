@@ -1,3 +1,5 @@
+/// A module for converting between JSON and Motoko values.
+
 import Array "mo:base/Array";
 import Debug "mo:base/Debug";
 import Result "mo:base/Result";
@@ -10,8 +12,6 @@ import Float "mo:base/Float";
 import Prelude "mo:base/Prelude";
 
 import JSON "mo:json/JSON";
-import NatX "mo:xtendedNumbers/NatX";
-import IntX "mo:xtendedNumbers/IntX";
 
 import Candid "../Candid";
 import FromText "FromText";
@@ -20,6 +20,9 @@ import ToText "ToText";
 module {
     public type JSON = JSON.JSON;
 
+    /// Converts a JSON `Text` to a motoko value encoded as a `Blob`
     public let { fromText } = FromText;
+
+    /// Converts a motoko value encoded as a `Blob` to a JSON `Text`
     public let { toText } = ToText;
 };

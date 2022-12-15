@@ -10,8 +10,8 @@ import Float "mo:base/Float";
 import Prelude "mo:base/Prelude";
 
 import JSON "mo:json/JSON";
-import NatX "mo:xtendedNumbers/NatX";
-import IntX "mo:xtendedNumbers/IntX";
+import NatX "mo:xtended-numbers/NatX";
+import IntX "mo:xtended-numbers/IntX";
 
 import Candid "../Candid";
 

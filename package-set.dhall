@@ -12,12 +12,12 @@ let Package = {
 let additions = [
 	{ 
 		name = "base", 
-		version = "master", 
+		version = "moc-0.7.4", 
 		repo = "https://github.com/dfinity/motoko-base", 
 		dependencies = [] : List Text
 	},
 	{ 
-		name = "motoko_candid", 
+		name = "candid", 
 		version = "main", 
 		repo = "https://github.com/gekctek/motoko_candid", 
 		dependencies = [] : List Text
@@ -30,6 +30,12 @@ let additions = [
 	},
 	{ 
 		name = "xtendedNumbers", 
+		version = "v1.0.0", 
+		repo = "https://github.com/gekctek/motoko_numbers", 
+		dependencies = [] : List Text
+	},
+	{ 
+		name = "xtended-numbers", 
 		version = "v1.0.0", 
 		repo = "https://github.com/gekctek/motoko_numbers", 
 		dependencies = [] : List Text

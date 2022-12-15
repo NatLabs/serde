@@ -1,8 +1,15 @@
 #!/bin/sh
-LIBS=$(vessel sources)
+LIBS=$(mops sources)
 WASM_FILES=""
 
-for TEST in `ls tests/*Test.mo`
+LS_DIR=`ls tests/*.Test.mo`
+if [ -n $1 ]
+then
+    echo $1
+    LS_DIR=`ls tests/*.Test.mo | grep $1`
+fi
+
+for TEST in $LS_DIR
 	do
 		FILE=`echo ${TEST:6} | awk -F'.' '{print $1}'`
         WASM=tests/$FILE.Test.wasm

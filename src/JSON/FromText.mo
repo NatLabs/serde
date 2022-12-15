@@ -5,15 +5,15 @@ import TrieMap "mo:base/TrieMap";
 import Nat32 "mo:base/Nat32";
 import Text "mo:base/Text";
 import Iter "mo:base/Iter";
+import Int "mo:base/Int";
 import Hash "mo:base/Hash";
 import Float "mo:base/Float";
 import Prelude "mo:base/Prelude";
 
 import JSON "mo:json/JSON";
-import NatX "mo:xtendedNumbers/NatX";
-import IntX "mo:xtendedNumbers/IntX";
 
 import Candid "../Candid";
+import U "../Utils";
 
 module {
     type JSON = JSON.JSON;
@@ -34,7 +34,13 @@ module {
         switch (json) {
             case (#Null) #Null;
             case (#Boolean(n)) #Bool(n);
-            case (#Number(n)) #Int(n);
+            case (#Number(n)) {
+                if (n < 0) {
+                    return #Int(n);
+                };
+
+                #Nat(Int.abs(n));
+            };
             case (#String(n)) #Text(n);
             case (#Array(arr)) {
                 let newArr = Array.map(
@@ -54,7 +60,7 @@ module {
                     },
                 );
 
-                #Record(records);
+                #Record(Array.sort(records, U.cmpRecords));
             };
         };
     };

@@ -27,7 +27,8 @@ module {
         #Option : Candid;
         #Array : [Candid];
         #Record : [KeyValuePair];
-        #Variant : KeyValuePair;
+
+        // #Variant : KeyValuePair;
 
         // #Reserved;
         // #Func : FuncType;

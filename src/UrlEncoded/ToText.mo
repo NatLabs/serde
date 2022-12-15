@@ -4,6 +4,7 @@ import Buffer "mo:base/Buffer";
 import Debug "mo:base/Debug";
 import Result "mo:base/Result";
 import Nat "mo:base/Nat";
+import Int "mo:base/Int";
 import Nat32 "mo:base/Nat32";
 import Text "mo:base/Text";
 import TrieMap "mo:base/TrieMap";
@@ -18,6 +19,7 @@ import Prelude "mo:base/Prelude";
 import itertools "mo:itertools/Iter";
 
 import Candid "../Candid";
+import U "../Utils";
 
 module {
     type Candid = Candid.Candid;
@@ -52,7 +54,7 @@ module {
         Text.compare(a, b);
     };
 
-    public func toKeyValuePairs(
+    func toKeyValuePairs(
         pairs : TrieMap<Text, Text>,
         storedKey : Text,
         candid : Candid,
@@ -79,14 +81,14 @@ module {
             case (#Nat32(n)) pairs.put(storedKey, Nat32.toText(n));
             case (#Nat64(n)) pairs.put(storedKey, debug_show (n));
 
-            case (#Int(n)) pairs.put(storedKey, debug_show (n));
-            case (#Int8(n)) pairs.put(storedKey, debug_show (n));
-            case (#Int16(n)) pairs.put(storedKey, debug_show (n));
-            case (#Int32(n)) pairs.put(storedKey, debug_show (n));
-            case (#Int64(n)) pairs.put(storedKey, debug_show (n));
+            case (#Int(n)) pairs.put(storedKey, U.stripStart(debug_show (n), #char '+'));
+            case (#Int8(n)) pairs.put(storedKey, U.stripStart(debug_show (n), #char '+'));
+            case (#Int16(n)) pairs.put(storedKey, U.stripStart(debug_show (n), #char '+'));
+            case (#Int32(n)) pairs.put(storedKey, U.stripStart(debug_show (n), #char '+'));
+            case (#Int64(n)) pairs.put(storedKey, U.stripStart(debug_show (n), #char '+'));
 
             case (#Float(n)) pairs.put(storedKey, Float.toText(n));
-            case (#Null) pairs.put(storedKey, "");
+            case (#Null) pairs.put(storedKey, "null");
             case (#Empty) pairs.put(storedKey, "");
 
             case (#Bool(b)) pairs.put(storedKey, debug_show (b));

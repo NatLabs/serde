@@ -1,6 +1,7 @@
 import Array "mo:base/Array";
 import Blob "mo:base/Blob";
 import Buffer "mo:base/Buffer";
+import Char "mo:base/Char";
 import Debug "mo:base/Debug";
 import Result "mo:base/Result";
 import TrieMap "mo:base/TrieMap";
@@ -125,44 +126,44 @@ module {
         triemap;
     };
 
-    /// Convert from a nested TrieMap
-    /// --------------------------------------------------
-    /// TrieMap {
-    ///     'users' => TrieMap {
-    ///         '0' => TrieMap {
-    ///             'name' => 'peter',
-    ///             'age' => '20',
-    ///         },
-    ///         '1' => TrieMap {
-    ///             'name' => 'john',
-    ///             'age' => '30',
-    ///         },
-    ///     },
-    ///     'settings' => TrieMap {
-    ///         'theme' => 'dark',
-    ///         'language' => 'en',
-    ///     },
-    /// }
-    /// --------------------------------------------------
-    /// Into a Candid Record
-    /// --------------------------------------------------
-    /// {
-    ///     users : [
-    ///         {
-    ///             name : "peter",
-    ///             age : 20,
-    ///         },
-    ///         {
-    ///             name : "john",
-    ///             age : 30,
-    ///         },
-    ///     ],
-    ///     settings : {
-    ///         theme : "dark",
-    ///         language : "en",
-    ///     },
-    /// }
-    /// --------------------------------------------------
+    // Convert from a nested TrieMap
+    // --------------------------------------------------
+    // TrieMap {
+    //     'users' => TrieMap {
+    //         '0' => TrieMap {
+    //             'name' => 'peter',
+    //             'age' => '20',
+    //         },
+    //         '1' => TrieMap {
+    //             'name' => 'john',
+    //             'age' => '30',
+    //         },
+    //     },
+    //     'settings' => TrieMap {
+    //         'theme' => 'dark',
+    //         'language' => 'en',
+    //     },
+    // }
+    // --------------------------------------------------
+    // Into a Candid Record
+    // --------------------------------------------------
+    // {
+    //     users : [
+    //         {
+    //             name : "peter",
+    //             age : 20,
+    //         },
+    //         {
+    //             name : "john",
+    //             age : 30,
+    //         },
+    //     ],
+    //     settings : {
+    //         theme : "dark",
+    //         language : "en",
+    //     },
+    // }
+    // --------------------------------------------------
 
     func trieMapToCandid(triemap : NestedTrieMap) : Candid {
         var i = 0;
@@ -203,7 +204,7 @@ module {
             func((key, value) : (Text, TextOrTrieMap)) : (Text, Candid) {
                 switch (value) {
                     case (#text(text)) {
-                        (key, #Text(text));
+                        (key, parseValue(text));
                     };
                     case (#triemap(map)) {
                         (key, trieMapToCandid(map));
@@ -217,7 +218,32 @@ module {
         #Record(records);
     };
 
-    /// Inserts a key value pair from UrlSearchParams into a nested TrieMap
+    // Parse value to Candid
+    // --------------------------------------------------
+    // "true" => #Bool(true)
+    // "false" => #Bool(false)
+    // "null" || "" => #Null
+    // "42" => #Nat(42)
+    // "-42" => #Int(-42)
+    // "3.14" => #Float(3.14)
+    // "hello" => #Text("hello")
+    // "0042" => #Text("0042")
+    // --------------------------------------------------
+
+    func parseValue(value : Text) : Candid {
+        switch (value) {
+            case ("true") #Bool(true);
+            case ("false") #Bool(false);
+            case ("null") #Null;
+            case ("") #Null;
+            case (_) {
+                // todo: parse Nat, Float, Int, Principal
+                #Text(value);
+            };
+        };
+    };
+
+    // Inserts a key value pair from UrlSearchParams into a nested TrieMap
     func insert(map : NestedTrieMap, field : Text, fields_iter : Iter<Text>, value : Text) {
         let next_field = switch (fields_iter.next()) {
             case (?_field) _field;

@@ -3,13 +3,14 @@ import Debug "mo:base/Debug";
 import Result "mo:base/Result";
 import Prelude "mo:base/Prelude";
 
-import Encoder "mo:motoko_candid/Encoder";
-import Decoder "mo:motoko_candid/Decoder";
-import Arg "mo:motoko_candid/Arg";
-import Value "mo:motoko_candid/Value";
-import Type "mo:motoko_candid/Type";
+import Encoder "mo:candid/Encoder";
+import Decoder "mo:candid/Decoder";
+import Arg "mo:candid/Arg";
+import Value "mo:candid/Value";
+import Type "mo:candid/Type";
 
 import T "Types";
+import U "../Utils";
 
 module {
     type Arg = Arg.Arg;
@@ -23,6 +24,7 @@ module {
 
     public func decode(candid : Candid) : Blob {
         let args = toArgs(candid);
+
         Encoder.encode(args);
     };
 
@@ -68,7 +70,7 @@ module {
 
             case (#Record(records)) {
                 let newRecords = Array.map(
-                    records,
+                    Array.sort(records, U.cmpRecords),
                     func((key, val) : KeyValuePair) : RecordFieldType {
                         {
                             tag = #name(key);
@@ -80,21 +82,7 @@ module {
                 #record(newRecords);
             };
 
-            // case (#Variant(variants)) {
-            //     let newVariants = Array.map(
-            //         variants,
-            //         func((key, val) : KeyValuePair) : RecordFieldType {
-            //             {
-            //                 tag = #name(key);
-            //                 _type = toArgType(val);
-            //             };
-            //         },
-            //     );
-
-            //     #Variant(newVariants);
-            // };
-
-            case (_) { Prelude.unreachable() };
+            case (c) Prelude.unreachable();
         };
     };
 
@@ -138,31 +126,19 @@ module {
 
             case (#Record(records)) {
                 let newRecords = Array.map(
-                    records,
+                    Array.sort(records, U.cmpRecords),
                     func((key, val) : KeyValuePair) : RecordFieldValue {
                         {
                             tag = #name(key);
                             value = toArgValue(val);
                         };
-
                     },
                 );
 
                 #record(newRecords);
             };
 
-            // case (#Variant(variants)) {
-            //     let (key, val) = variants[0];
-
-            //     let res = {
-            //         tag = #name(key);
-            //         value = toArgValue(val);
-            //     };
-
-            //     #Variant(res);
-            // };
-
-            case (_) { Prelude.unreachable() };
+            case (c) Prelude.unreachable();
         };
     };
 };

@@ -21,6 +21,7 @@ let {
 
 type User = {
     name : Text;
+    id : ?Int;
 };
 
 let success = run([
@@ -30,21 +31,21 @@ let success = run([
             it(
                 "fromText()",
                 do {
-                    let text = "{\"name\": \"Tomi\"}";
+                    let text = "{\"name\": \"Tomi\", \"id\": 32}";
                     let blob = JSON.fromText(text);
                     let user : ?User = from_candid (blob);
 
-                    user == ?{ name = "Tomi" };
+                    user == ?{ name = "Tomi"; id = ?32 };
                 },
             ),
             it(
                 "decode()",
                 do {
-                    let user = { name = "Tomi" };
+                    let user = { name = "Tomi"; id = null };
                     let blob = to_candid (user);
+                    let jsonText = JSON.toText(blob, ["name", "id"]);
 
-                    let jsonText = JSON.toText(blob, ["name"]);
-                    jsonText == "{\"name\": \"Tomi\"}";
+                    jsonText == "{\"id\": null, \"name\": \"Tomi\"}";
                 },
             ),
         ],

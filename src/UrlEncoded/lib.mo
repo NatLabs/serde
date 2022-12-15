@@ -1,3 +1,5 @@
+/// A module for converting between Motoko values and Url-Encoded `Text`.
+
 import Array "mo:base/Array";
 import Blob "mo:base/Blob";
 import Buffer "mo:base/Buffer";
@@ -19,6 +21,9 @@ import FromText "./FromText";
 import ToText "./ToText";
 
 module {
+    /// Converts a Url-Encoded `Text` to a motoko value encoded as a `Blob`.
     public let { fromText } = FromText;
+
+    /// Converts a motoko value encoded as a `Blob` to a Url-Encoded `Text`.
     public let { toText } = ToText;
 };
