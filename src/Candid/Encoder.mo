@@ -138,17 +138,11 @@ module {
         switch (tag) {
             case (#hash(hash)) {
                 switch (recordKeyMap.get(hash)) {
-                    case (?key) {
-                        key;
-                    };
-                    case (_) {
-                        debug_show hash;
-                    };
+                    case (?key) key;
+                    case (_) debug_show hash;
                 };
             };
-            case (#name(key)) {
-                key;
-            };
+            case (#name(key)) key;
         };
     };
 

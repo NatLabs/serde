@@ -13,7 +13,6 @@ import Prelude "mo:base/Prelude";
 import JSON "mo:json/JSON";
 
 import Candid "../Candid";
-import U "../Utils";
 
 module {
     type JSON = JSON.JSON;
@@ -26,7 +25,7 @@ module {
             case (?json) jsonToCandid(json);
             case (_) Debug.trap("Failed to parse JSON");
         };
-
+        debug { Debug.print("Candid: " # debug_show (candid)) };
         Candid.decode(candid);
     };
 
@@ -60,7 +59,7 @@ module {
                     },
                 );
 
-                #Record(Array.sort(records, U.cmpRecords));
+                #Record(records);
             };
         };
     };
