@@ -39,7 +39,7 @@ module {
         let nestedTriemap = entriesToTrieMap(text);
         let candid = trieMapToCandid(nestedTriemap);
 
-        Candid.decode(candid);
+        Candid.encode(candid);
     };
 
     // Converting entries from UrlSearchParams

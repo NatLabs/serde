@@ -13,6 +13,7 @@ import Prelude "mo:base/Prelude";
 import JSON "mo:json/JSON";
 
 import Candid "../Candid";
+import U "../Utils";
 
 module {
     type JSON = JSON.JSON;
@@ -26,7 +27,7 @@ module {
             case (_) Debug.trap("Failed to parse JSON");
         };
         debug { Debug.print("Candid: " # debug_show (candid)) };
-        Candid.decode(candid);
+        Candid.encode(candid);
     };
 
     func jsonToCandid(json : JSON) : Candid {
@@ -52,6 +53,16 @@ module {
                 #Array(newArr);
             };
             case (#Object(objs)) {
+
+                if (objs.size() == 1) {
+                    let (key, val) = objs[0];
+
+                    if (Text.startsWith(key, #text "#")) {
+                        let tag = U.stripStart(key, #text "#");
+                        return #Variant(tag, jsonToCandid(val));
+                    };
+                };
+
                 let records = Array.map<(Text, JSON), (Text, Candid)>(
                     objs,
                     func((key, val) : (Text, JSON)) : (Text, Candid) {

@@ -26,7 +26,7 @@ module {
     type TrieMap<K, V> = TrieMap.TrieMap<K, V>;
 
     public func toText(blob : Blob, keys : [Text]) : Text {
-        let candid = Candid.encode(blob, keys);
+        let candid = Candid.decode(blob, keys);
         let pairs : TrieMap<Text, Text> = TrieMap.TrieMap(Text.equal, Text.hash);
 
         switch (candid) {
@@ -60,15 +60,23 @@ module {
         candid : Candid,
     ) {
         switch (candid) {
-            case (#Record(records)) {
-                for ((key, value) in records.vals()) {
-                    toKeyValuePairs(pairs, storedKey # "[" # key # "]", value);
-                };
-            };
             case (#Array(arr)) {
                 for ((i, value) in itertools.enumerate(arr.vals())) {
-                    toKeyValuePairs(pairs, storedKey # "[" # Nat.toText(i) # "]", value);
+                    let array_key = storedKey # "[" # Nat.toText(i) # "]";
+                    toKeyValuePairs(pairs, array_key, value);
                 };
+            };
+
+            case (#Record(records)) {
+                for ((key, value) in records.vals()) {
+                    let record_key = storedKey # "[" # key # "]";
+                    toKeyValuePairs(pairs, record_key, value);
+                };
+            };
+
+            case (#Variant(key, val)) {
+                let variant_key = storedKey # "#" # key;
+                toKeyValuePairs(pairs, variant_key, val);
             };
 
             case (#Option(p)) toKeyValuePairs(pairs, storedKey, p);
@@ -93,7 +101,6 @@ module {
 
             case (#Bool(b)) pairs.put(storedKey, debug_show (b));
 
-            case (#Variant(_)) Debug.trap("invalid type: variant is not supported");
         };
     };
 };

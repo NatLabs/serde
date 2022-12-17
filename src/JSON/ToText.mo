@@ -20,7 +20,7 @@ module {
     type Candid = Candid.Candid;
 
     public func toText(blob : Blob, keys : [Text]) : Text {
-        let candid = Candid.encode(blob, keys);
+        let candid = Candid.decode(blob, keys);
         let json = candidToJSON(candid);
 
         JSON.show(json);
@@ -72,6 +72,11 @@ module {
                 );
 
                 #Object(objs);
+            };
+
+            case (#Variant(variant)) {
+                let (key, val) = variant;
+                #Object([("#" # key, candidToJSON(val))]);
             };
 
             case (_) Prelude.unreachable();

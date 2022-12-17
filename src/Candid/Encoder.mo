@@ -1,23 +1,13 @@
 import Array "mo:base/Array";
 import Debug "mo:base/Debug";
 import Result "mo:base/Result";
-import TrieMap "mo:base/TrieMap";
-import Nat32 "mo:base/Nat32";
-import Text "mo:base/Text";
-import Iter "mo:base/Iter";
-import Order "mo:base/Order";
-import Hash "mo:base/Hash";
 import Prelude "mo:base/Prelude";
 
 import Encoder "mo:candid/Encoder";
 import Decoder "mo:candid/Decoder";
-
 import Arg "mo:candid/Arg";
 import Value "mo:candid/Value";
 import Type "mo:candid/Type";
-import Tag "mo:candid/Tag";
-
-import { hashName } "mo:candid/Tag";
 
 import T "Types";
 import U "../Utils";
@@ -32,118 +22,139 @@ module {
     type Candid = T.Candid;
     type KeyValuePair = T.KeyValuePair;
 
-    public func encode(blob : Blob, recordKeys : [Text]) : Candid {
-        let res = Decoder.decode(blob);
+    public func encode(candid : Candid) : Blob {
+        let args = toArgs(candid);
+        Debug.print("args: " # debug_show args);
+        Encoder.encode(args);
+    };
 
-        let keyEntries = Iter.map<Text, (Nat32, Text)>(
-            recordKeys.vals(),
-            func(key : Text) : (Nat32, Text) {
-                (hashName(key), key);
-            },
-        );
-
-        let recordKeyMap = TrieMap.fromEntries<Nat32, Text>(
-            keyEntries,
-            Nat32.equal,
-            func(n : Nat32) : Hash.Hash {
-                Hash.hash(Nat32.toNat(n));
-            },
-        );
-
-        switch (res) {
-            case (?args) {
-                fromArgs(args, recordKeyMap);
-            };
-            case (_) { Prelude.unreachable() };
+    func toArgs(candid : Candid) : [Arg] {
+        let arg : Arg = {
+            _type = toArgType(candid);
+            value = toArgValue(candid);
         };
+
+        [arg];
     };
 
-    func fromArgs(args : [Arg], recordKeyMap : TrieMap.TrieMap<Nat32, Text>) : Candid {
-        let arg = args[0];
+    func toArgType(candid : Candid) : Type {
+        switch (candid) {
+            case (#Nat(_)) #nat;
+            case (#Nat8(_)) #nat8;
+            case (#Nat16(_)) #nat16;
+            case (#Nat32(_)) #nat32;
+            case (#Nat64(_)) #nat64;
 
-        fromArgValue(arg.value, recordKeyMap);
-    };
+            case (#Int(_)) #int;
+            case (#Int8(_)) #int8;
+            case (#Int16(_)) #int16;
+            case (#Int32(_)) #int32;
+            case (#Int64(_)) #int64;
 
-    func fromArgValue(val : Value, recordKeyMap : TrieMap.TrieMap<Nat32, Text>) : Candid {
-        switch (val) {
-            case (#nat(n)) #Nat(n);
-            case (#nat8(n)) #Nat8(n);
-            case (#nat16(n)) #Nat16(n);
-            case (#nat32(n)) #Nat32(n);
-            case (#nat64(n)) #Nat64(n);
+            case (#Float(_)) #float64;
 
-            case (#int(n)) #Int(n);
-            case (#int8(n)) #Int8(n);
-            case (#int16(n)) #Int16(n);
-            case (#int32(n)) #Int32(n);
-            case (#int64(n)) #Int64(n);
+            case (#Bool(_)) #bool;
 
-            case (#float64(n)) #Float(n);
+            case (#Principal(_)) #principal;
 
-            case (#bool(b)) #Bool(b);
+            case (#Text(_)) #text;
 
-            case (#principal(service)) {
-                switch (service) {
-                    case (#transparent(p)) {
-                        #Principal(p);
-                    };
-                    case (_) Prelude.unreachable();
-                };
+            case (#Null) #_null;
+
+            case (#Option(optType)) {
+                #opt(toArgType(optType));
+            };
+            case (#Array(arr)) {
+                #vector(toArgType(arr[0]));
             };
 
-            case (#text(n)) #Text(n);
-
-            case (#_null) #Null;
-
-            case (#opt(optVal)) {
-                let val = switch (optVal) {
-                    case (?val) {
-                        fromArgValue(val, recordKeyMap);
-                    };
-                    case (_) #Null;
-                };
-
-                #Option(val);
-            };
-            case (#vector(arr)) {
-                let newArr = Array.map(
-                    arr,
-                    func(elem : Value) : Candid {
-                        fromArgValue(elem, recordKeyMap);
-                    },
-                );
-
-                #Array(newArr);
-            };
-
-            case (#record(records)) {
+            case (#Record(records)) {
                 let newRecords = Array.map(
-                    records,
-                    func({ tag; value } : RecordFieldValue) : KeyValuePair {
-                        let key = getKey(tag, recordKeyMap);
-                        let val = fromArgValue(value, recordKeyMap);
-
-                        (key, val);
+                    Array.sort(records, U.cmpRecords),
+                    func((key, val) : KeyValuePair) : RecordFieldType {
+                        {
+                            tag = #name(key);
+                            _type = toArgType(val);
+                        };
                     },
                 );
 
-                #Record(Array.sort(newRecords, U.cmpRecords));
+                #record(newRecords);
             };
 
-            case (_) { Prelude.unreachable() };
+            case (#Variant((key, val))) {
+
+                #variant([{
+                    tag = #name(key);
+                    _type = toArgType(val);
+                }]);
+            };
+
+            case (c) Prelude.unreachable();
         };
     };
 
-    func getKey(tag : Tag.Tag, recordKeyMap : TrieMap.TrieMap<Nat32, Text>) : Text {
-        switch (tag) {
-            case (#hash(hash)) {
-                switch (recordKeyMap.get(hash)) {
-                    case (?key) key;
-                    case (_) debug_show hash;
-                };
+    func toArgValue(candid : Candid) : Value {
+        switch (candid) {
+            case (#Nat(n)) #nat(n);
+            case (#Nat8(n)) #nat8(n);
+            case (#Nat16(n)) #nat16(n);
+            case (#Nat32(n)) #nat32(n);
+            case (#Nat64(n)) #nat64(n);
+
+            case (#Int(n)) #int(n);
+            case (#Int8(n)) #int8(n);
+            case (#Int16(n)) #int16(n);
+            case (#Int32(n)) #int32(n);
+            case (#Int64(n)) #int64(n);
+
+            case (#Float(n)) #float64(n);
+
+            case (#Bool(b)) #bool(b);
+
+            case (#Principal(n)) #principal(#transparent(n));
+
+            case (#Text(n)) #text(n);
+
+            case (#Null) #_null;
+
+            case (#Option(optVal)) {
+                #opt(?toArgValue(optVal));
             };
-            case (#name(key)) key;
+            case (#Array(arr)) {
+                let transformedArr = Array.map(
+                    arr,
+                    func(elem : Candid) : Value {
+                        toArgValue(elem);
+                    },
+                );
+
+                #vector(transformedArr);
+            };
+
+            case (#Record(records)) {
+                let newRecords = Array.map(
+                    Array.sort(records, U.cmpRecords),
+                    func((key, val) : KeyValuePair) : RecordFieldValue {
+                        {
+                            tag = #name(key);
+                            value = toArgValue(val);
+                        };
+                    },
+                );
+
+                #record(newRecords);
+            };
+
+            case (#Variant((key, val))) {
+
+                #variant({
+                    tag = #name(key);
+                    value = toArgValue(val);
+                });
+            };
+
+            case (c) Prelude.unreachable();
         };
     };
-
 };

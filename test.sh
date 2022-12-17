@@ -3,11 +3,14 @@ LIBS=$(mops sources)
 WASM_FILES=""
 
 LS_DIR=`ls tests/*.Test.mo`
-if [ -n $1 ]
+if [ -z $1 ]
 then
+    echo "No argument supplied"
+else
     echo $1
     LS_DIR=`ls tests/*.Test.mo | grep $1`
 fi
+
 
 for TEST in $LS_DIR
 	do
