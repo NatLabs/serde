@@ -52,7 +52,6 @@ let success = run([
                             );
 
                             let res : ?{ users : [User] } = from_candid (blob);
-                            Debug.print(debug_show res);
                             assertTrue(
                                 res == ?{
                                     users = [
@@ -67,6 +66,68 @@ let success = run([
                                     ];
                                 },
                             );
+                        },
+                    ),
+                    it(
+                        "variant type",
+                        do {
+                            type Variant = {
+                                #text : Text;
+                                #nat : Nat;
+                                #bool : Bool;
+                                #record : { site : Text };
+                                #user : User;
+                                #array : [Nat];
+                            };
+
+                            let text = "variant[#text]=hello";
+                            let nat = "variant[#nat]=123";
+                            let bool = "variant[#bool]=true";
+                            let record = "variant[#record][site]=github";
+                            let user = "variant[#user][name]=John&variant[#user][msg]=Hello World";
+                            let array = "variant[#array][0]=1&variant[#array][1]=2&variant[#array][2]=3";
+
+                            let text_blob = UrlEncoded.fromText(text);
+                            let nat_blob = UrlEncoded.fromText(nat);
+                            let bool_blob = UrlEncoded.fromText(bool);
+                            let record_blob = UrlEncoded.fromText(record);
+                            let user_blob = UrlEncoded.fromText(user);
+                            let array_blob = UrlEncoded.fromText(array);
+
+                            let text_val : ?{ variant : Variant } = from_candid (text_blob);
+                            let nat_val : ?{ variant : Variant } = from_candid (nat_blob);
+                            let bool_val : ?{ variant : Variant } = from_candid (bool_blob);
+                            let record_val : ?{ variant : Variant } = from_candid (record_blob);
+                            let user_val : ?{ variant : Variant } = from_candid (user_blob);
+                            let array_val : ?{ variant : Variant } = from_candid (array_blob);
+
+                            Debug.print(
+                                debug_show ([
+                                    text_val,
+                                    nat_val,
+                                    bool_val,
+                                    record_val,
+                                    user_val,
+                                    array_val,
+                                ]),
+                            );
+
+                            assertAllTrue([
+                                text_val == ?{ variant = #text("hello") },
+                                nat_val == ?{ variant = #nat(123) },
+                                bool_val == ?{ variant = #bool(true) },
+                                record_val == ?{
+                                    variant = #record({ site = "github" });
+                                },
+                                user_val == ?{
+                                    variant = #user({
+                                        name = "John";
+                                        msg = "Hello World";
+                                    });
+                                },
+                                array_val == ?{ variant = #array([1, 2, 3]) },
+
+                            ]);
                         },
                     ),
                 ],

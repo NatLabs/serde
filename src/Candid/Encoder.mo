@@ -24,7 +24,6 @@ module {
 
     public func encode(candid : Candid) : Blob {
         let args = toArgs(candid);
-        Debug.print("args: " # debug_show args);
         Encoder.encode(args);
     };
 

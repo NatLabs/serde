@@ -26,7 +26,6 @@ module {
             case (?json) jsonToCandid(json);
             case (_) Debug.trap("Failed to parse JSON");
         };
-        debug { Debug.print("Candid: " # debug_show (candid)) };
         Candid.encode(candid);
     };
 

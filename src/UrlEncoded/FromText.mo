@@ -17,9 +17,12 @@ import Prelude "mo:base/Prelude";
 import itertools "mo:itertools/Iter";
 
 import Candid "../Candid";
-import { subText } "../Utils";
+import { parseValue } "./Parser";
+import U "../Utils";
 
 module {
+    let { subText } = U;
+
     type Candid = Candid.Candid;
 
     type Buffer<A> = Buffer.Buffer<A>;
@@ -38,7 +41,7 @@ module {
     public func fromText(text : Text) : Blob {
         let nestedTriemap = entriesToTrieMap(text);
         let candid = trieMapToCandid(nestedTriemap);
-
+        Debug.print("UrlEncoded fromText: " # debug_show (candid));
         Candid.encode(candid);
     };
 
@@ -186,17 +189,33 @@ module {
                     };
 
                     switch (val) {
-                        case (#text(text)) {
-                            #Text(text);
-                        };
-                        case (#triemap(map)) {
-                            trieMapToCandid(map);
-                        };
+                        case (#text(text)) parseValue(text);
+                        case (#triemap(map)) trieMapToCandid(map);
                     };
                 },
             );
 
             return #Array(array);
+        };
+
+        if (triemap.size() == 1) {
+            let (variant_key, value) = switch (triemap.entries().next()) {
+                case (?(k, v))(k, v);
+                case (_) Prelude.unreachable();
+            };
+
+            let isVariant = Text.startsWith(variant_key, #text "#");
+
+            if (isVariant) {
+                let key = U.stripStart(variant_key, #text "#");
+
+                let val = switch (value) {
+                    case (#text(text)) parseValue(text);
+                    case (#triemap(map)) trieMapToCandid(map);
+                };
+
+                return #Variant((key, val));
+            };
         };
 
         let records_iter = Iter.map<(Text, TextOrTrieMap), (Text, Candid)>(
@@ -229,19 +248,6 @@ module {
     // "hello" => #Text("hello")
     // "0042" => #Text("0042")
     // --------------------------------------------------
-
-    func parseValue(value : Text) : Candid {
-        switch (value) {
-            case ("true") #Bool(true);
-            case ("false") #Bool(false);
-            case ("null") #Null;
-            case ("") #Null;
-            case (_) {
-                // todo: parse Nat, Float, Int, Principal
-                #Text(value);
-            };
-        };
-    };
 
     // Inserts a key value pair from UrlSearchParams into a nested TrieMap
     func insert(map : NestedTrieMap, field : Text, fields_iter : Iter<Text>, value : Text) {

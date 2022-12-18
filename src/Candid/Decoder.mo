@@ -50,7 +50,6 @@ module {
 
         switch (res) {
             case (?args) {
-                Debug.print("Candid decode args: " # debug_show (args));
                 fromArgs(args, recordKeyMap);
             };
             case (_) { Prelude.unreachable() };
