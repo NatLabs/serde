@@ -1,4 +1,5 @@
 import Order "mo:base/Order";
+import Float "mo:base/Float";
 import Text "mo:base/Text";
 
 import itertools "mo:itertools/Iter";
@@ -22,5 +23,9 @@ module {
             case (?t) t;
             case (_) text;
         };
+    };
+
+    public func log2(n : Float) : Float {
+        Float.log(n) / Float.log(2);
     };
 };

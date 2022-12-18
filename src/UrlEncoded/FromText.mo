@@ -237,18 +237,6 @@ module {
         #Record(records);
     };
 
-    // Parse value to Candid
-    // --------------------------------------------------
-    // "true" => #Bool(true)
-    // "false" => #Bool(false)
-    // "null" || "" => #Null
-    // "42" => #Nat(42)
-    // "-42" => #Int(-42)
-    // "3.14" => #Float(3.14)
-    // "hello" => #Text("hello")
-    // "0042" => #Text("0042")
-    // --------------------------------------------------
-
     // Inserts a key value pair from UrlSearchParams into a nested TrieMap
     func insert(map : NestedTrieMap, field : Text, fields_iter : Iter<Text>, value : Text) {
         let next_field = switch (fields_iter.next()) {

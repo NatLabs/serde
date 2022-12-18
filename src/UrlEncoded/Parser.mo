@@ -1,6 +1,7 @@
 import Char "mo:base/Char";
 import Debug "mo:base/Debug";
 import Iter "mo:base/Iter";
+import Float "mo:base/Float";
 import List "mo:base/List";
 import Nat32 "mo:base/Nat32";
 
@@ -9,11 +10,25 @@ import P "mo:parser-combinators/Parser";
 import Itertools "mo:itertools/Iter";
 
 import Candid "../Candid";
+import U "../Utils";
 
 module {
     type Candid = Candid.Candid;
     type List<A> = List.List<A>;
+
     type Parser<T, A> = P.Parser<T, A>;
+
+    // Parse value to Candid
+    // --------------------------------------------------
+    // "true" => #Bool(true)
+    // "false" => #Bool(false)
+    // "null" || "" => #Null
+    // "42" => #Nat(42)
+    // "-42" => #Int(-42)
+    // "3.14" => #Float(3.14)
+    // "hello" => #Text("hello")
+    // "0042" => #Text("0042")
+    // --------------------------------------------------
 
     public func parseValue(text : Text) : Candid {
         let t = switch (text) {
@@ -26,7 +41,7 @@ module {
 
         let list = Iter.toList(t.chars());
 
-        // todo: parse Float, Principal
+        // todo: parse Principal
         switch (parseCharList(list)) {
             case (?candid) candid;
             case (null) #Text(text);
@@ -39,7 +54,10 @@ module {
             case (?(x, xs)) {
                 switch (xs) {
                     case (null) { ?x };
-                    case (_) { null };
+                    case (_) {
+                        Debug.print("didn't finish: " # debug_show xs);
+                        null;
+                    };
                 };
             };
         };
@@ -47,49 +65,97 @@ module {
 
     func valueParser() : Parser<Char, Candid> {
         C.oneOf([
+            floatParser(),
             natParser(),
             intParser(),
         ]);
     };
 
-    func intParser() : Parser<Char, Candid> {
-        func(xs : List<Char>) : ?(Candid, List<Char>) {
-            let (op, ys) = switch (C.Character.char('-')(xs)) {
-                case (null) { (func(n : Nat) : Candid { #Nat(n) }, xs) };
-                case (?(_, xs)) { (func(n : Nat) : Candid { #Int(-n) }, xs) };
+    func floatParser() : Parser<Char, Candid> {
+
+        func toFloat(tuple : (Int, List<Char>)) : Candid {
+            let (n, d_chars) = tuple;
+
+            let n_of_decimals = Float.fromInt(List.size(d_chars));
+
+            let num = Float.fromInt(n);
+            let decimals = Float.fromInt(listToNat(d_chars)) / (10 ** n_of_decimals);
+
+            let isNegative = num < 0;
+
+            let float = if (isNegative) {
+                num - decimals;
+            } else {
+                num + decimals;
             };
 
-            let mapToNat = C.map(
-                C.many1(C.Character.digit()),
-                listToNat,
-            );
+            #Float(float);
+        };
 
-            let mapToCandid = C.map<Char, Nat, Candid>(
-                mapToNat,
+        C.map(
+            parseFloat(),
+            toFloat,
+        );
+    };
+
+    func parseFloat() : Parser<Char, (Int, List<Char>)> {
+        C.seq<Char, Int, List<Char>>(
+            parseInt(),
+            C.right(
+                C.Character.char('.'),
+                C.many1(C.Character.digit()),
+            ),
+        );
+    };
+
+    func parseInt() : Parser<Char, Int> {
+        func(xs : List<Char>) : ?(Int, List<Char>) {
+            let (op, ys) = switch (C.Character.char('-')(xs)) {
+                case (null) { (func(n : Nat) : Int { n }, xs) };
+                case (?(_, xs)) { (func(n : Nat) : Int { -n }, xs) };
+            };
+
+            let mapToInt = C.map<Char, Nat, Int>(
+                parseNat(),
                 op,
             );
 
-            mapToCandid(ys);
+            mapToInt(ys);
         };
     };
 
-    func natParser() : Parser<Char, Candid> {
+    func intParser() : Parser<Char, Candid> {
+        C.map(
+            parseInt(),
+            func(n : Int) : Candid {
+                #Int(n);
+            },
+        );
+    };
 
-        let toNat = C.map(
-            consIf<Char, Char>(
-                C.Character.digit(),
-                C.many(C.Character.digit()),
+    func parseNat() : Parser<Char, Nat> {
+        let noLeadingZeroes = consIf<Char, Char>(
+            C.Character.digit(),
+            C.many(C.Character.digit()),
 
-                // fail if number has leading zeros
-                func(digit : Char, digits : List<Char>) : Bool {
-                    digits != ?('0', null);
-                },
-            ),
-            listToNat,
+            func(first_digit : Char, digits : List<Char>) : Bool {
+                let size_eq_1 = switch (List.pop(digits)) {
+                    case ((_, xs)) xs == null;
+                };
+
+                first_digit != '0' or size_eq_1;
+            },
         );
 
         C.map(
-            toNat,
+            noLeadingZeroes,
+            listToNat,
+        );
+    };
+
+    func natParser() : Parser<Char, Candid> {
+        C.map(
+            parseNat(),
             func(n : Nat) : Candid {
                 #Nat(n);
             },

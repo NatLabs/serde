@@ -74,6 +74,8 @@ let success = run([
                             type Variant = {
                                 #text : Text;
                                 #nat : Nat;
+                                #int : Int;
+                                #float : Float;
                                 #bool : Bool;
                                 #record : { site : Text };
                                 #user : User;
@@ -82,6 +84,8 @@ let success = run([
 
                             let text = "variant[#text]=hello";
                             let nat = "variant[#nat]=123";
+                            let int = "variant[#int]=-123";
+                            let float = "variant[#float]=-1.23";
                             let bool = "variant[#bool]=true";
                             let record = "variant[#record][site]=github";
                             let user = "variant[#user][name]=John&variant[#user][msg]=Hello World";
@@ -89,6 +93,8 @@ let success = run([
 
                             let text_blob = UrlEncoded.fromText(text);
                             let nat_blob = UrlEncoded.fromText(nat);
+                            let int_blob = UrlEncoded.fromText(int);
+                            let float_blob = UrlEncoded.fromText(float);
                             let bool_blob = UrlEncoded.fromText(bool);
                             let record_blob = UrlEncoded.fromText(record);
                             let user_blob = UrlEncoded.fromText(user);
@@ -96,6 +102,8 @@ let success = run([
 
                             let text_val : ?{ variant : Variant } = from_candid (text_blob);
                             let nat_val : ?{ variant : Variant } = from_candid (nat_blob);
+                            let int_val : ?{ variant : Variant } = from_candid (int_blob);
+                            let float_val : ?{ variant : Variant } = from_candid (float_blob);
                             let bool_val : ?{ variant : Variant } = from_candid (bool_blob);
                             let record_val : ?{ variant : Variant } = from_candid (record_blob);
                             let user_val : ?{ variant : Variant } = from_candid (user_blob);
@@ -105,6 +113,8 @@ let success = run([
                                 debug_show ([
                                     text_val,
                                     nat_val,
+                                    int_val,
+                                    float_val,
                                     bool_val,
                                     record_val,
                                     user_val,
@@ -115,6 +125,9 @@ let success = run([
                             assertAllTrue([
                                 text_val == ?{ variant = #text("hello") },
                                 nat_val == ?{ variant = #nat(123) },
+                                int_val == ?{ variant = #int(-123) },
+
+                                float_val == ?{ variant = #float(-1.23) },
                                 bool_val == ?{ variant = #bool(true) },
                                 record_val == ?{
                                     variant = #record({ site = "github" });
