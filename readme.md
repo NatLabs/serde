@@ -37,7 +37,7 @@ This implementation supports URL query strings and URL-encoded pairs, including 
     
     type User = {
         name: Text;
-        id: Text; // only supports Text for now
+        id: Nat; 
     };
     
     let payload = "users[0][id]=123&users[0][name]=John&users[1][id]=456&users[1][name]=Jane";
@@ -48,11 +48,11 @@ This implementation supports URL query strings and URL-encoded pairs, including 
     assert res == ?{ users = [
         {
             name = "John";
-            id = "123";
+            id = 123;
         },
         {
             name = "Jane";
-            id = "456";
+            id = 456;
         },
     ] };
 

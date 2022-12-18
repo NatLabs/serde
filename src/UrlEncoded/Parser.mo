@@ -55,7 +55,6 @@ module {
                 switch (xs) {
                     case (null) { ?x };
                     case (_) {
-                        Debug.print("didn't finish: " # debug_show xs);
                         null;
                     };
                 };
