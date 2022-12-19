@@ -171,7 +171,7 @@ module {
     func trieMapToCandid(triemap : NestedTrieMap) : Candid {
         var i = 0;
         let isArray = itertools.all(
-            itertools.sort(triemap.keys(), Text.compare),
+            Iter.sort(triemap.keys(), Text.compare),
             func(key : Text) : Bool {
                 let res = key == Nat.toText(i);
                 i += 1;

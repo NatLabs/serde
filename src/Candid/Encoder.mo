@@ -27,7 +27,7 @@ module {
         Encoder.encode(args);
     };
 
-    func toArgs(candid : Candid) : [Arg] {
+    public func toArgs(candid : Candid) : [Arg] {
         let arg : Arg = {
             _type = toArgType(candid);
             value = toArgValue(candid);
@@ -64,7 +64,11 @@ module {
                 #opt(toArgType(optType));
             };
             case (#Array(arr)) {
-                #vector(toArgType(arr[0]));
+                if (arr.size() > 0) {
+                    #vector(toArgType(arr[0]));
+                } else {
+                    #vector(#empty);
+                };
             };
 
             case (#Record(records)) {
