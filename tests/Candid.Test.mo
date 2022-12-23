@@ -24,187 +24,187 @@ let success = run(
         describe(
             "Candid",
             [
-                // describe(
-                //     "decode()",
-                //     [
-                //         it(
-                //             "record type: {name: Text}",
-                //             do {
-                //                 let motoko = { name = "candid" };
-                //                 let blob = to_candid (motoko);
-                //                 let candid = Candid.decode(blob, ["name"]);
+                describe(
+                    "decode()",
+                    [
+                        it(
+                            "record type: {name: Text}",
+                            do {
+                                let motoko = { name = "candid" };
+                                let blob = to_candid (motoko);
+                                let candid = Candid.decode(blob, ["name"]);
 
-                //                 candid == #Record([("name", #Text("candid"))]);
-                //             },
-                //         ),
-                //         it(
-                //             "array: [1, 2, 3, 4]",
-                //             do {
-                //                 let arr = [1, 2, 3, 4];
-                //                 let blob = to_candid (arr);
-                //                 let candid = Candid.decode(blob, []);
+                                candid == #Record([("name", #Text("candid"))]);
+                            },
+                        ),
+                        it(
+                            "array: [1, 2, 3, 4]",
+                            do {
+                                let arr = [1, 2, 3, 4];
+                                let blob = to_candid (arr);
+                                let candid = Candid.decode(blob, []);
 
-                //                 candid == #Array([#Nat(1), #Nat(2), #Nat(3), #Nat(4)]);
-                //             },
-                //         ),
-                //         it(
-                //             "variant",
-                //             do {
-                //                 type Variant = {
-                //                     #text : Text;
-                //                     #nat : Nat;
-                //                     #bool : Bool;
-                //                     #record : { site : Text };
-                //                     #array : [Nat];
-                //                 };
+                                candid == #Array([#Nat(1), #Nat(2), #Nat(3), #Nat(4)]);
+                            },
+                        ),
+                        it(
+                            "variant",
+                            do {
+                                type Variant = {
+                                    #text : Text;
+                                    #nat : Nat;
+                                    #bool : Bool;
+                                    #record : { site : Text };
+                                    #array : [Nat];
+                                };
 
-                //                 let text = #text("hello");
-                //                 let nat = #nat(123);
-                //                 let bool = #bool(true);
-                //                 let record = #record({ site = "github" });
-                //                 let array = #array([1, 2, 3]);
+                                let text = #text("hello");
+                                let nat = #nat(123);
+                                let bool = #bool(true);
+                                let record = #record({ site = "github" });
+                                let array = #array([1, 2, 3]);
 
-                //                 let text_blob = to_candid (text);
-                //                 let nat_blob = to_candid (nat);
-                //                 let bool_blob = to_candid (bool);
-                //                 let record_blob = to_candid (record);
-                //                 let array_blob = to_candid (array);
+                                let text_blob = to_candid (text);
+                                let nat_blob = to_candid (nat);
+                                let bool_blob = to_candid (bool);
+                                let record_blob = to_candid (record);
+                                let array_blob = to_candid (array);
 
-                //                 let text_candid = Candid.decode(text_blob, ["text"]);
-                //                 let nat_candid = Candid.decode(nat_blob, ["nat"]);
-                //                 let bool_candid = Candid.decode(bool_blob, ["bool"]);
-                //                 let record_candid = Candid.decode(record_blob, ["record", "site"]);
-                //                 let array_candid = Candid.decode(array_blob, ["array"]);
+                                let text_candid = Candid.decode(text_blob, ["text"]);
+                                let nat_candid = Candid.decode(nat_blob, ["nat"]);
+                                let bool_candid = Candid.decode(bool_blob, ["bool"]);
+                                let record_candid = Candid.decode(record_blob, ["record", "site"]);
+                                let array_candid = Candid.decode(array_blob, ["array"]);
 
-                //                 assertAllTrue([
-                //                     text_candid == #Variant("text", #Text("hello")),
-                //                     nat_candid == #Variant("nat", #Nat(123)),
-                //                     bool_candid == #Variant("bool", #Bool(true)),
-                //                     record_candid == #Variant("record", #Record([("site", #Text("github"))])),
-                //                     array_candid == #Variant("array", #Array([#Nat(1), #Nat(2), #Nat(3)])),
-                //                 ]);
+                                assertAllTrue([
+                                    text_candid == #Variant("text", #Text("hello")),
+                                    nat_candid == #Variant("nat", #Nat(123)),
+                                    bool_candid == #Variant("bool", #Bool(true)),
+                                    record_candid == #Variant("record", #Record([("site", #Text("github"))])),
+                                    array_candid == #Variant("array", #Array([#Nat(1), #Nat(2), #Nat(3)])),
+                                ]);
 
-                //             },
-                //         ),
-                //         it(
-                //             "complex type",
-                //             do {
-                //                 type User = {
-                //                     name : Text;
-                //                     age : Nat8;
-                //                     email : ?Text;
-                //                     registered : Bool;
-                //                 };
-                //                 let record_keys = ["name", "age", "email", "registered"];
-                //                 let users : [User] = [
-                //                     {
-                //                         name = "Henry";
-                //                         age = 32;
-                //                         email = null;
-                //                         registered = false;
-                //                     },
-                //                     {
-                //                         name = "Ali";
-                //                         age = 28;
-                //                         email = ?"ali.abdull@gmail.com";
-                //                         registered = false;
-                //                     },
-                //                     {
-                //                         name = "James";
-                //                         age = 40;
-                //                         email = ?"james.bond@gmail.com";
-                //                         registered = true;
-                //                     },
-                //                 ];
+                            },
+                        ),
+                        it(
+                            "complex type",
+                            do {
+                                type User = {
+                                    name : Text;
+                                    age : Nat8;
+                                    email : ?Text;
+                                    registered : Bool;
+                                };
+                                let record_keys = ["name", "age", "email", "registered"];
+                                let users : [User] = [
+                                    {
+                                        name = "Henry";
+                                        age = 32;
+                                        email = null;
+                                        registered = false;
+                                    },
+                                    {
+                                        name = "Ali";
+                                        age = 28;
+                                        email = ?"ali.abdull@gmail.com";
+                                        registered = false;
+                                    },
+                                    {
+                                        name = "James";
+                                        age = 40;
+                                        email = ?"james.bond@gmail.com";
+                                        registered = true;
+                                    },
+                                ];
 
-                //                 let blob = to_candid (users);
-                //                 let candid = Candid.decode(blob, record_keys);
+                                let blob = to_candid (users);
+                                let candid = Candid.decode(blob, record_keys);
 
-                //                 candid == #Array([
-                //                     #Record([
-                //                         ("age", #Nat8(32)),
-                //                         ("email", #Option(#Null)),
-                //                         ("name", #Text("Henry")),
-                //                         ("registered", #Bool(false)),
-                //                     ]),
-                //                     #Record([
-                //                         ("age", #Nat8(28)),
-                //                         ("email", #Option(#Text("ali.abdull@gmail.com"))),
-                //                         ("name", #Text("Ali")),
-                //                         ("registered", #Bool(false)),
-                //                     ]),
-                //                     #Record([
-                //                         ("age", #Nat8(40)),
-                //                         ("email", #Option(#Text("james.bond@gmail.com"))),
-                //                         ("name", #Text("James")),
-                //                         ("registered", #Bool(true)),
-                //                     ]),
-                //                 ]);
-                //             },
-                //         ),
-                //     ],
-                // ),
+                                candid == #Array([
+                                    #Record([
+                                        ("age", #Nat8(32)),
+                                        ("email", #Option(#Null)),
+                                        ("name", #Text("Henry")),
+                                        ("registered", #Bool(false)),
+                                    ]),
+                                    #Record([
+                                        ("age", #Nat8(28)),
+                                        ("email", #Option(#Text("ali.abdull@gmail.com"))),
+                                        ("name", #Text("Ali")),
+                                        ("registered", #Bool(false)),
+                                    ]),
+                                    #Record([
+                                        ("age", #Nat8(40)),
+                                        ("email", #Option(#Text("james.bond@gmail.com"))),
+                                        ("name", #Text("James")),
+                                        ("registered", #Bool(true)),
+                                    ]),
+                                ]);
+                            },
+                        ),
+                    ],
+                ),
 
-                // describe(
-                //     "encode()",
-                //     [
-                //         it(
-                //             "record type {name: Text}",
-                //             do {
-                //                 let candid = #Record([("name", #Text("candid"))]);
-                //                 type User = {
-                //                     name : Text;
-                //                 };
+                describe(
+                    "encode()",
+                    [
+                        it(
+                            "record type {name: Text}",
+                            do {
+                                let candid = #Record([("name", #Text("candid"))]);
+                                type User = {
+                                    name : Text;
+                                };
 
-                //                 let blob = Candid.encode(candid);
-                //                 let user : ?User = from_candid (blob);
+                                let blob = Candid.encode(candid);
+                                let user : ?User = from_candid (blob);
 
-                //                 user == ?{ name = "candid" };
-                //             },
-                //         ),
-                //         it(
-                //             "variant",
-                //             do {
+                                user == ?{ name = "candid" };
+                            },
+                        ),
+                        it(
+                            "variant",
+                            do {
 
-                //                 type Variant = {
-                //                     #text : Text;
-                //                     #nat : Nat;
-                //                     #bool : Bool;
-                //                     #record : { site : Text };
-                //                     #array : [Nat];
-                //                 };
+                                type Variant = {
+                                    #text : Text;
+                                    #nat : Nat;
+                                    #bool : Bool;
+                                    #record : { site : Text };
+                                    #array : [Nat];
+                                };
 
-                //                 let text = #Variant("text", #Text("hello"));
-                //                 let nat = #Variant("nat", #Nat(123));
-                //                 let bool = #Variant("bool", #Bool(true));
-                //                 let record = #Variant("record", #Record([("site", #Text("github"))]));
-                //                 let array = #Variant("array", #Array([#Nat(1), #Nat(2), #Nat(3)]));
+                                let text = #Variant("text", #Text("hello"));
+                                let nat = #Variant("nat", #Nat(123));
+                                let bool = #Variant("bool", #Bool(true));
+                                let record = #Variant("record", #Record([("site", #Text("github"))]));
+                                let array = #Variant("array", #Array([#Nat(1), #Nat(2), #Nat(3)]));
 
-                //                 let text_blob = Candid.encode(text);
-                //                 let nat_blob = Candid.encode(nat);
-                //                 let bool_blob = Candid.encode(bool);
-                //                 let record_blob = Candid.encode(record);
-                //                 let array_blob = Candid.encode(array);
+                                let text_blob = Candid.encode(text);
+                                let nat_blob = Candid.encode(nat);
+                                let bool_blob = Candid.encode(bool);
+                                let record_blob = Candid.encode(record);
+                                let array_blob = Candid.encode(array);
 
-                //                 let text_val : ?Variant = from_candid (text_blob);
-                //                 let nat_val : ?Variant = from_candid (nat_blob);
-                //                 let bool_val : ?Variant = from_candid (bool_blob);
-                //                 let record_val : ?Variant = from_candid (record_blob);
-                //                 let array_val : ?Variant = from_candid (array_blob);
+                                let text_val : ?Variant = from_candid (text_blob);
+                                let nat_val : ?Variant = from_candid (nat_blob);
+                                let bool_val : ?Variant = from_candid (bool_blob);
+                                let record_val : ?Variant = from_candid (record_blob);
+                                let array_val : ?Variant = from_candid (array_blob);
 
-                //                 assertAllTrue([
-                //                     text_val == ?#text("hello"),
-                //                     nat_val == ?#nat(123),
-                //                     bool_val == ?#bool(true),
-                //                     record_val == ?#record({
-                //                         site = "github";
-                //                     }),
-                //                     array_val == ?#array([1, 2, 3]),
-                //                 ]);
-                //             },
-                //         ),
-                //     ],
-                // ),
+                                assertAllTrue([
+                                    text_val == ?#text("hello"),
+                                    nat_val == ?#nat(123),
+                                    bool_val == ?#bool(true),
+                                    record_val == ?#record({
+                                        site = "github";
+                                    }),
+                                    array_val == ?#array([1, 2, 3]),
+                                ]);
+                            },
+                        ),
+                    ],
+                ),
 
                 it(
                     "print out args",
@@ -212,14 +212,16 @@ let success = run(
                         type User = {
                             name : Text;
                             details : {
-                            age : Nat;
-                            email : ?Text;
-                            registered : Bool;
+                                age : Nat;
+                                email : ?Text;
+                                registered : Bool;
                             };
                         };
 
                         let candid = #Record([
-                            ( "name", #Text("candid") ), ( "details", #Record([( "age", #Nat(32) ), ( "email", #Option(#Text("example@gmail.com")) ), ( "registered", #Bool(true) )]) )]);
+                            ("name", #Text("candid")),
+                            ("details", #Record([("age", #Nat(32)), ("email", #Option(#Text("example@gmail.com"))), ("registered", #Bool(true))])),
+                        ]);
 
                         let blob = Candid.encode(candid);
 

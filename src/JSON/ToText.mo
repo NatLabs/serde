@@ -9,7 +9,7 @@ import Hash "mo:base/Hash";
 import Float "mo:base/Float";
 import Prelude "mo:base/Prelude";
 
-import JSON "mo:json/JSON";
+import JSON "mo:json.mo";
 import NatX "mo:xtended-numbers/NatX";
 import IntX "mo:xtended-numbers/IntX";
 
