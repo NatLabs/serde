@@ -1,13 +1,17 @@
+import Blob "mo:base/Blob";
 import Char "mo:base/Char";
 import Debug "mo:base/Debug";
 import Iter "mo:base/Iter";
 import Float "mo:base/Float";
+import Principal "mo:base/Principal";
+import Text "mo:base/Text";
 import List "mo:base/List";
 import Nat32 "mo:base/Nat32";
 
 import C "mo:parser-combinators/Combinators";
 import P "mo:parser-combinators/Parser";
 import Itertools "mo:itertools/Iter";
+import NatX "mo:xtended-numbers/NatX";
 
 import Candid "../Candid";
 import U "../Utils";
@@ -96,7 +100,83 @@ module {
     };
 
     func candidParser() : Parser<Char, Candid> {
-        C.oneOf([]);
+        C.oneOf([
+            principalParser(),
+        ]);
+    };
+
+    func textParser() : Parser<Char, Candid> {
+        C.map(
+            C.many1(C.Character.alphanum()),
+            func(chars : List<Char>) : Candid {
+                let text = Itertools.toText(Iter.fromList(chars));
+                #Text(text);
+            },
+        );
+    };
+
+    func blobParser() : Parser<Char, Candid> {
+        C.map(
+            C.right(
+                C.String.string("blob"),
+                ignoreSpace(
+                    C.bracket(
+                        C.String.string("\""),
+                        C.sepBy(
+                            C.map(
+                                C.seq(
+                                    C.Character.hex(),
+                                    C.Character.hex(),
+                                ),
+                                func((c1, c2) : (Char, Char)) : Nat8 {
+                                    (fromHex(c1) << 4) + fromHex(c2);
+                                },
+                            ),
+                            C.Character.char('\\'), // escapes char: '\'
+                        ),
+                        C.String.string("\""),
+                    ),
+                ),
+            ),
+            func(chars : List<Nat8>) : Candid {
+                let blob = Blob.fromArray(Iter.toArray(Iter.fromList(chars)));
+                #Blob(blob);
+            },
+        );
+
+    };
+
+    // func stringLengthParser() : Parser<Char, Int> {
+
+    // };
+
+    func principalParser() : Parser<Char, Candid> {
+        C.map(
+            C.right(
+                C.String.string("principal"),
+                ignoreSpace(
+                    C.bracket(
+                        C.String.string("\""),
+                        C.many1(
+                            C.oneOf([
+                                C.Character.alphanum(),
+                                C.Character.char('-'),
+                            ]),
+                        ),
+                        C.String.string("\""),
+                    ),
+                ),
+            ),
+            func(chars : List<Char>) : Candid {
+                let text = toText(chars);
+                #Principal(Principal.fromText(text));
+            },
+        );
+    };
+
+    func toText(chars : List<Char>) : Text {
+        let iter = Iter.fromList(chars);
+        Itertools.toText(iter);
     };
 
     func floatParser() : Parser<Char, Candid> {
@@ -224,6 +304,28 @@ module {
                 );
             },
         );
+    };
+
+    func fromHex(char : Char) : Nat8 {
+        let charCode = Char.toNat32(char);
+
+        if (Char.isDigit(char)) {
+            let digit = charCode - Char.toNat32('0');
+
+            return NatX.from32To8(digit);
+        };
+
+        if (Char.isUppercase(char)) {
+            let digit = charCode - Char.toNat32('A') + 10;
+
+            return NatX.from32To8(digit);
+        };
+
+        // lowercase
+        let digit = charCode - Char.toNat32('a') + 10;
+
+        return NatX.from32To8(digit);
+
     };
 
 };
