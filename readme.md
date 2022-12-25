@@ -2,7 +2,7 @@
 
 A serialisation and deserialisation library for Motoko.
 
-[Motoko Playground Demo](https://m7sm4-2iaaa-aaaab-qabra-cai.raw.ic0.app/?tag=2854254896)
+[Motoko Playground Demo](https://m7sm4-2iaaa-aaaab-qabra-cai.raw.ic0.app/?tag=3196250840)
 
 ## Installation
 - Install [mops](https://j4mwm-bqaaa-aaaam-qajbq-cai.ic0.app/#/docs/install)

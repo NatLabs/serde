@@ -84,12 +84,6 @@ let success = run(
                                 ]);
                             },
                         ),
-                        it(
-                            "nested variant types",
-                            do {
-                                true;
-                            },
-                        ),
                     ],
                 ),
                 describe(
