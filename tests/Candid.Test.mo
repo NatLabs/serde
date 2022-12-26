@@ -48,6 +48,26 @@ let success = run(
                             },
                         ),
                         it(
+                            "blob and [Nat8] types",
+                            do {
+                                let motoko_blob = Blob.fromArray([1, 2, 3, 4]);
+                                let motoko_array: [Nat8] = [1, 2, 3, 4];
+
+                                let bytes_array = to_candid (motoko_blob);
+                                let bytes_blob = to_candid (motoko_blob);
+
+                                let candid_array = Candid.decode(bytes_array, []);
+                                let candid_blob = Candid.decode(bytes_blob, []);
+
+                                assertAllTrue([
+                                    // All [Nat8] types are decoded as #Blob
+                                    candid_array != #Array([#Nat8(1), #Nat8(2), #Nat8(3), #Nat8(4)]),
+                                    candid_array == #Blob(motoko_blob),
+                                    candid_blob == #Blob(motoko_blob),
+                                ]);
+                            },
+                        ),
+                        it(
                             "variant",
                             do {
                                 type Variant = {
@@ -160,6 +180,31 @@ let success = run(
                                 let user : ?User = from_candid (blob);
 
                                 user == ?{ name = "candid" };
+                            },
+                        ),
+                        it(
+                            "blob and [Nat8] type",
+                            do {
+                                let motoko_blob = Blob.fromArray([1, 2, 3, 4]);
+
+                                let candid_1 = #Array([#Nat8(1:Nat8), #Nat8(2:Nat8), #Nat8(3:Nat8), #Nat8(4:Nat8)]);
+                                let candid_2 = #Blob(motoko_blob);
+
+                                let serialized_1 = Candid.encode(candid_1);
+                                let serialized_2 = Candid.encode(candid_2);
+
+                                let blob_1: ?Blob = from_candid(serialized_1);
+                                let blob_2: ?Blob = from_candid(serialized_2);
+
+                                let bytes_1: ?[Nat8] = from_candid(serialized_1);
+                                let bytes_2: ?[Nat8] = from_candid(serialized_1);
+
+                                assertAllTrue([
+                                    blob_1 == ?motoko_blob,
+                                    blob_2 == ?motoko_blob,
+                                    bytes_1 == ?[1, 2, 3, 4],
+                                    bytes_2 == ?[1, 2, 3, 4],
+                                ]);
                             },
                         ),
                         it(

@@ -19,6 +19,7 @@ module {
         #Bool : Bool;
         #Float : Float;
         #Text : Text;
+        #Blob : Blob;
 
         #Null;
         #Empty;

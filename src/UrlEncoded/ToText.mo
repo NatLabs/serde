@@ -78,6 +78,9 @@ module {
                 let variant_key = storedKey # "#" # key;
                 toKeyValuePairs(pairs, variant_key, val);
             };
+            
+            // TODO: convert blob to hex
+            case(#Blob(blob)) pairs.put(storedKey, "todo: Blob.toText(blob)");
 
             case (#Option(p)) toKeyValuePairs(pairs, storedKey, p);
             case (#Text(t)) pairs.put(storedKey, t);
