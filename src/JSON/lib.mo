@@ -11,7 +11,7 @@ import Hash "mo:base/Hash";
 import Float "mo:base/Float";
 import Prelude "mo:base/Prelude";
 
-import JSON "mo:json.mo";
+import JSON "mo:json/JSON";
 
 import Candid "../Candid";
 import FromText "FromText";
@@ -20,9 +20,7 @@ import ToText "ToText";
 module {
     public type JSON = JSON.JSON;
 
-    /// Converts a JSON `Text` to a motoko value encoded as a `Blob`
-    public let { fromText } = FromText;
+    public let { fromText; toCandid } = FromText;
 
-    /// Converts a motoko value encoded as a `Blob` to a JSON `Text`
-    public let { toText } = ToText;
+    public let { toText; fromCandid } = ToText;
 };

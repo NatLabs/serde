@@ -10,7 +10,7 @@ import Hash "mo:base/Hash";
 import Float "mo:base/Float";
 import Prelude "mo:base/Prelude";
 
-import JSON "mo:json.mo";
+import JSON "mo:json/JSON";
 
 import Candid "../Candid";
 import U "../Utils";
@@ -19,14 +19,22 @@ module {
     type JSON = JSON.JSON;
     type Candid = Candid.Candid;
 
+    /// Converts JSON text to a serialized Candid blob that can be decoded to motoko values using `from_candid()`
     public func fromText(rawText : Text) : Blob {
+        let candid = toCandid(rawText);
+        Candid.encode(candid);
+    };
+
+    /// Convert JSON text to a Candid value
+    public func toCandid(rawText: Text): Candid {
         let json = JSON.parse(rawText);
 
         let candid = switch (json) {
             case (?json) jsonToCandid(json);
             case (_) Debug.trap("Failed to parse JSON");
         };
-        Candid.encode(candid);
+
+        candid
     };
 
     func jsonToCandid(json : JSON) : Candid {

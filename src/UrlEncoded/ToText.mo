@@ -25,19 +25,28 @@ module {
     type Candid = Candid.Candid;
     type TrieMap<K, V> = TrieMap.TrieMap<K, V>;
 
+    /// Converts a serialized Candid blob to a URL-Encoded string.
     public func toText(blob : Blob, keys : [Text]) : Text {
         let candid = Candid.decode(blob, keys);
-        let pairs : TrieMap<Text, Text> = TrieMap.TrieMap(Text.equal, Text.hash);
+        fromCandid(candid);
+    };
 
-        switch (candid) {
-            case (#Record(records)) {
-                for ((key, value) in records.vals()) {
-                    toKeyValuePairs(pairs, key, value);
-                };
-            };
+    /// Convert a Candid Record to a URL-Encoded string.
+    public func fromCandid(candid : Candid) : Text {
+
+        let records = switch (candid) {
+            case (#Record(records)) records;
             case (_) Debug.trap("invalid type: the value must be a record");
         };
 
+        let pairs = TrieMap.TrieMap<Text, Text>(Text.equal, Text.hash);
+
+        for ((key, value) in records.vals()) {
+            toKeyValuePairs(pairs, key, value);
+        };
+
+        toKeyValuePairs(pairs, "", candid);
+        
         Text.join(
             "&",
             Iter.map(
@@ -47,11 +56,6 @@ module {
                 },
             ),
         );
-
-    };
-
-    func cmpKeys((a, _) : (Text, Text), (b, _) : (Text, Text)) : Order.Order {
-        Text.compare(a, b);
     };
 
     func toKeyValuePairs(

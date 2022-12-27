@@ -21,9 +21,7 @@ import FromText "./FromText";
 import ToText "./ToText";
 
 module {
-    /// Converts a Url-Encoded `Text` to a motoko value encoded as a `Blob`.
-    public let { fromText } = FromText;
+    public let { fromText; toCandid } = FromText;
 
-    /// Converts a motoko value encoded as a `Blob` to a Url-Encoded `Text`.
-    public let { toText } = ToText;
+    public let { toText; fromCandid } = ToText;
 };
