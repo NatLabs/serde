@@ -1,4 +1,5 @@
 import Array "mo:base/Array";
+import Blob "mo:base/Blob";
 import Debug "mo:base/Debug";
 import Result "mo:base/Result";
 import Prelude "mo:base/Prelude";
@@ -57,6 +58,7 @@ module {
             case (#Principal(_)) #principal;
 
             case (#Text(_)) #text;
+            case (#Blob(_)) #vector(#nat8);
 
             case (#Null) #_null;
 
@@ -135,9 +137,22 @@ module {
                 #vector(transformedArr);
             };
 
+            case (#Blob(blob)){
+                let array = Blob.toArray(blob);
+
+                let bytes = Array.map(
+                    array,
+                    func(elem : Nat8) : Value {
+                        #nat8(elem);
+                    },
+                );
+
+                #vector(bytes);
+            };
+
             case (#Record(records)) {
                 let newRecords = Array.map(
-                    Array.sort(records, U.cmpRecords),
+                    records,
                     func((key, val) : KeyValuePair) : RecordFieldValue {
                         {
                             tag = #name(key);

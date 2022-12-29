@@ -9,7 +9,7 @@ import Hash "mo:base/Hash";
 import Float "mo:base/Float";
 import Prelude "mo:base/Prelude";
 
-import JSON "mo:json.mo";
+import JSON "mo:json/JSON";
 import NatX "mo:xtended-numbers/NatX";
 import IntX "mo:xtended-numbers/IntX";
 
@@ -19,8 +19,14 @@ module {
     type JSON = JSON.JSON;
     type Candid = Candid.Candid;
 
+    /// Converts serialized Candid blob to JSON text
     public func toText(blob : Blob, keys : [Text]) : Text {
         let candid = Candid.decode(blob, keys);
+        fromCandid(candid);
+    };
+
+    /// Convert a Candid value to JSON text
+    public func fromCandid(candid : Candid) : Text {
         let json = candidToJSON(candid);
 
         JSON.show(json);

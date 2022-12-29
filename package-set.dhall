@@ -29,12 +29,6 @@ let additions = [
 		dependencies = [] : List Text
 	},
 	{ 
-		name = "xtendedNumbers", 
-		version = "v1.0.0", 
-		repo = "https://github.com/gekctek/motoko_numbers", 
-		dependencies = [] : List Text
-	},
-	{ 
 		name = "xtended-numbers", 
 		version = "v1.0.0", 
 		repo = "https://github.com/gekctek/motoko_numbers", 

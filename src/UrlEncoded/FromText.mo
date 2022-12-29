@@ -38,11 +38,18 @@ module {
 
     func newMap() : NestedTrieMap = TrieMap.TrieMap(Text.equal, Text.hash);
 
+    /// Converts a Url-Encoded Text to a serialized Candid Record
     public func fromText(text : Text) : Blob {
-        let nestedTriemap = entriesToTrieMap(text);
-        let candid = trieMapToCandid(nestedTriemap);
-        Debug.print("UrlEncoded fromText: " # debug_show (candid));
+        let candid = toCandid(text);
+
+        debug { Debug.print("UrlEncoded fromText: " # debug_show (candid)) };
         Candid.encode(candid);
+    };
+
+    /// Converts a Url-Encoded Text to a Candid Record
+    public func toCandid(text : Text) : Candid {
+        let nestedTriemap = entriesToTrieMap(text);
+        trieMapToCandid(nestedTriemap);
     };
 
     // Converting entries from UrlSearchParams

@@ -1,4 +1,5 @@
 import Array "mo:base/Array";
+import Blob "mo:base/Blob";
 import Debug "mo:base/Debug";
 import Result "mo:base/Result";
 import TrieMap "mo:base/TrieMap";
@@ -59,28 +60,28 @@ module {
     public func fromArgs(args : [Arg], recordKeyMap : TrieMap.TrieMap<Nat32, Text>) : Candid {
         let arg = args[0];
 
-        fromArgValue(arg.value, recordKeyMap);
+        fromArgValue(arg._type, arg.value, recordKeyMap);
     };
 
-    func fromArgValue(val : Value, recordKeyMap : TrieMap.TrieMap<Nat32, Text>) : Candid {
-        switch (val) {
-            case (#nat(n)) #Nat(n);
-            case (#nat8(n)) #Nat8(n);
-            case (#nat16(n)) #Nat16(n);
-            case (#nat32(n)) #Nat32(n);
-            case (#nat64(n)) #Nat64(n);
+    func fromArgValue(_type : Type, val : Value, recordKeyMap : TrieMap.TrieMap<Nat32, Text>) : Candid {
+        switch (_type, val) {
+            case (_, #nat(n)) #Nat(n);
+            case (_, #nat8(n)) #Nat8(n);
+            case (_, #nat16(n)) #Nat16(n);
+            case (_, #nat32(n)) #Nat32(n);
+            case (_, #nat64(n)) #Nat64(n);
 
-            case (#int(n)) #Int(n);
-            case (#int8(n)) #Int8(n);
-            case (#int16(n)) #Int16(n);
-            case (#int32(n)) #Int32(n);
-            case (#int64(n)) #Int64(n);
+            case (_, #int(n)) #Int(n);
+            case (_, #int8(n)) #Int8(n);
+            case (_, #int16(n)) #Int16(n);
+            case (_, #int32(n)) #Int32(n);
+            case (_, #int64(n)) #Int64(n);
 
-            case (#float64(n)) #Float(n);
+            case (_, #float64(n)) #Float(n);
 
-            case (#bool(b)) #Bool(b);
+            case (_, #bool(b)) #Bool(b);
 
-            case (#principal(service)) {
+            case (_, #principal(service)) {
                 switch (service) {
                     case (#transparent(p)) {
                         #Principal(p);
@@ -89,50 +90,82 @@ module {
                 };
             };
 
-            case (#text(n)) #Text(n);
+            case (_, #text(n)) #Text(n);
 
-            case (#_null) #Null;
+            case (_, #_null) #Null;
 
-            case (#opt(optVal)) {
-                let val = switch (optVal) {
-                    case (?val) {
-                        fromArgValue(val, recordKeyMap);
+            case (optionType, #opt(optVal)) {
+                let val = switch (optionType, optVal) {
+                    case (#opt(#_null), _) #Null;
+                    case (#opt(_), null) #Null;
+                    case (#opt(innerType), ?val) {
+                        fromArgValue(innerType, val, recordKeyMap);
                     };
-                    case (_) #Null;
+                    case (_) Debug.trap("Expected value in #opt");
                 };
 
                 #Option(val);
             };
-            case (#vector(arr)) {
-                let newArr = Array.map(
-                    arr,
-                    func(elem : Value) : Candid {
-                        fromArgValue(elem, recordKeyMap);
-                    },
-                );
+            case (vectorType, #vector(arr)) {
 
-                #Array(newArr);
+                switch (vectorType) {
+                    case (#vector(#nat8)) {
+                        let bytes = Array.map(
+                            arr,
+                            func(elem : Value) : Nat8 {
+                                switch (elem) {
+                                    case (#nat8(n)) n;
+                                    case (_) Debug.trap("Expected nat8 in #vector");
+                                };
+                            },
+                        );
+
+                        let blob = Blob.fromArray(bytes);
+                        return #Blob(blob);
+                    };
+                    case (#vector(innerType)) {
+                        let newArr = Array.map(
+                            arr,
+                            func(elem : Value) : Candid {
+                                fromArgValue(innerType, elem, recordKeyMap);
+                            },
+                        );
+
+                        return #Array(newArr);
+                    };
+                    case (_) Debug.trap("Mismatched type '" # debug_show (vectorType)# "'' to value of '#vector'");
+                };
             };
 
-            case (#record(records)) {
-                let newRecords = Array.map(
-                    records,
-                    func({ tag; value } : RecordFieldValue) : KeyValuePair {
+            case (#record(recordTypes), #record(records)) {
+                let newRecords = Array.tabulate(
+                    records.size(),
+                    func (i: Nat): KeyValuePair {
+                        let {_type = innerType} = recordTypes[i];
+                        let {tag; value} = records[i];
+
                         let key = getKey(tag, recordKeyMap);
-                        let val = fromArgValue(value, recordKeyMap);
+                        let val = fromArgValue(innerType, value, recordKeyMap);
 
-                        (key, val);
+                        (key, val)
                     },
-                );
-
+                ); 
+                
                 #Record(Array.sort(newRecords, U.cmpRecords));
             };
 
-            case (#variant({ tag; value })) {
-                let key = getKey(tag, recordKeyMap);
-                let val = fromArgValue(value, recordKeyMap);
+            case (#variant(variantTypes), #variant(v)) {
+                
+                for ({tag; _type = innerType} in variantTypes.vals()) {
+                    if (tag == v.tag) {
+                        let key = getKey(tag, recordKeyMap);
+                        let val = fromArgValue(innerType, v.value, recordKeyMap);
 
-                #Variant((key, val));
+                        return #Variant((key, val));
+                    };
+                };
+
+                Debug.trap("Could not find variant type for '" # debug_show v.tag # "'");
             };
 
             case (_) { Prelude.unreachable() };
