@@ -2,6 +2,7 @@ import Blob "mo:base/Blob";
 import Char "mo:base/Char";
 import Debug "mo:base/Debug";
 import Iter "mo:base/Iter";
+import Int "mo:base/Int";
 import Float "mo:base/Float";
 import Principal "mo:base/Principal";
 import Text "mo:base/Text";
@@ -13,30 +14,21 @@ import P "mo:parser-combinators/Parser";
 import Itertools "mo:itertools/Iter";
 import NatX "mo:xtended-numbers/NatX";
 
-import Candid "../Candid";
+import Candid "../Candid/Types";
 import U "../Utils";
 
-module {
+module CandidParser {
     type Candid = Candid.Candid;
     type List<A> = List.List<A>;
 
     type Parser<T, A> = P.Parser<T, A>;
 
     public func parse(text : Text) : Candid {
-        let t = switch (text) {
-            case ("true") return #Bool(true);
-            case ("false") return #Bool(false);
-            case ("null") return #Null;
-            case ("") return #Empty;
-            case (t) t;
-        };
+        let chars = Iter.toList(text.chars());
 
-        let chars = Iter.toList(t.chars());
-
-        // todo: parse Principal
         switch (parseCandid(chars)) {
             case (?candid) candid;
-            case (null) #Text(text);
+            case (null) Debug.trap("Failed to parse Candid text");
         };
     };
 
@@ -44,6 +36,25 @@ module {
         C.right(
             C.many(C.Character.space()),
             parserA,
+        );
+    };
+
+    func ignoreUnderscore(parser : P.Parser<Char, Char>) : P.Parser<Char, List<Char>> {
+        let x : Parser<Char, List<Char>> = C.sepBy<Char, Char, Char>(
+            C.Character.digit(),
+            C.Character.char('_'),
+        );
+
+        let y = func(nested_lists : List<List<Char>>) : List<Char> {
+            List.flatten(nested_lists);
+        };
+
+        C.map(
+            x,
+            func(xs : List<Char>) : List<Char> {
+                Debug.print("ignoreUnderscore: " # debug_show (xs));
+                xs;
+            },
         );
     };
 
@@ -91,7 +102,8 @@ module {
             case (?(x, xs)) {
                 switch (xs) {
                     case (null) { ?x };
-                    case (_) {
+                    case (_xs) {
+                        Debug.print("Failed parseCandid: " # debug_show (x, _xs));
                         null;
                     };
                 };
@@ -100,14 +112,42 @@ module {
     };
 
     func candidParser() : Parser<Char, Candid> {
-        C.oneOf([
+        let supportedParsers = [
             principalParser(),
+            blobParser(),
+            natParser(),
+            intParser(),
+            floatParser(),
+            textParser(),
+            // boolParser(),
+            // nullParser(),
+            // emptyParser(),
+            // recordParser(),
+        ];
+
+        C.oneOf([
+            C.bracket(
+                C.String.string("("),
+                ignoreSpace(
+                    C.oneOf(supportedParsers),
+                ),
+                C.String.string(")"),
+            ),
+            C.bracket(
+                C.many(C.Character.space()),
+                C.oneOf(supportedParsers),
+                C.many(C.Character.space()),
+            ),
         ]);
     };
 
     func textParser() : Parser<Char, Candid> {
         C.map(
-            C.many1(C.Character.alphanum()),
+            C.bracket(
+                C.String.string("\""),
+                C.many1(any<Char>()),
+                C.String.string("\""),
+            ),
             func(chars : List<Char>) : Candid {
                 let text = Itertools.toText(Iter.fromList(chars));
                 #Text(text);
@@ -122,17 +162,20 @@ module {
                 ignoreSpace(
                     C.bracket(
                         C.String.string("\""),
-                        C.sepBy(
-                            C.map(
-                                C.seq(
-                                    C.Character.hex(),
-                                    C.Character.hex(),
+                        C.right(
+                            C.Character.char('\\'), // skips the first '\'
+                            C.sepBy(
+                                C.map(
+                                    C.seq(
+                                        C.Character.hex(),
+                                        C.Character.hex(),
+                                    ),
+                                    func((c1, c2) : (Char, Char)) : Nat8 {
+                                        (fromHex(c1) << 4) + fromHex(c2);
+                                    },
                                 ),
-                                func((c1, c2) : (Char, Char)) : Nat8 {
-                                    (fromHex(c1) << 4) + fromHex(c2);
-                                },
+                                C.Character.char('\\'), // escapes char: '\'
                             ),
-                            C.Character.char('\\'), // escapes char: '\'
                         ),
                         C.String.string("\""),
                     ),
@@ -143,7 +186,6 @@ module {
                 #Blob(blob);
             },
         );
-
     };
 
     // func stringLengthParser() : Parser<Char, Int> {
@@ -217,53 +259,94 @@ module {
     };
 
     func parseInt() : Parser<Char, Int> {
+        wrapNatToIntParser(C.Nat.nat());
+    };
+
+    func wrapNatToIntParser(natParser : Parser<Char, Nat>) : Parser<Char, Int> {
         func(xs : List<Char>) : ?(Int, List<Char>) {
-            let (op, ys) = switch (C.Character.char('-')(xs)) {
+
+            let parseSign = C.oneOf([
+                C.Character.char('+'),
+                C.Character.char('-'),
+            ]);
+
+            let (toInt, ys) = switch (parseSign(xs)) {
                 case (null) { (func(n : Nat) : Int { n }, xs) };
+                case (?('+', xs)) { (func(n : Nat) : Int { n }, xs) };
                 case (?(_, xs)) { (func(n : Nat) : Int { -n }, xs) };
             };
 
             let mapToInt = C.map<Char, Nat, Int>(
-                parseNat(),
-                op,
+                natParser,
+                toInt,
             );
 
             mapToInt(ys);
         };
     };
 
+    func parseIntWithUnderscore() : Parser<Char, Int> {
+        wrapNatToIntParser(parseNatWithUnderscore());
+    };
+
     func intParser() : Parser<Char, Candid> {
         C.map(
-            parseInt(),
+            C.oneOf([
+                parseIntWithUnderscore(),
+                parseInt(),
+            ]),
             func(n : Int) : Candid {
-                #Int(n);
+                if (n < 0) {
+                    #Int(n);
+                } else {
+                    #Nat(Int.abs(n));
+                };
             },
         );
     };
 
-    func parseNat() : Parser<Char, Nat> {
-        let noLeadingZeroes = consIf<Char, Char>(
-            C.Character.digit(),
-            C.many(C.Character.digit()),
+    func parseNatWithUnderscore() : Parser<Char, Nat> {
+        C.map(
+            ignoreSpace(
+                C.sepBy1<Char, List<Char>, Char>(
+                    C.many1(C.Character.digit()),
+                    C.Character.char('_'),
+                ),
+            ),
+            func(nested_lists : List<List<Char>>) : Nat {
+                let flattened = List.flatten(nested_lists);
 
-            func(first_digit : Char, digits : List<Char>) : Bool {
-                let size_eq_1 = switch (List.pop(digits)) {
-                    case ((_, xs)) xs == null;
+                debug {
+                    Debug.print("nested_lists: " # debug_show (nested_lists));
+                    Debug.print("flattened: " # debug_show (flattened));
                 };
 
-                first_digit != '0' or size_eq_1;
+                listToNat(flattened);
             },
         );
-
-        C.map(
-            noLeadingZeroes,
-            listToNat,
-        );
     };
+
+    // func parseNatFromHex(): Parser<Char, Nat>{
+    //     C.right(
+    //         C.Character.char('0'),
+    //         C.right(
+    //             C.Character.char('x'),
+
+    //         )
+    //     )
+    // };
 
     func natParser() : Parser<Char, Candid> {
         C.map(
-            parseNat(),
+            C.oneOf<Char, Nat>([
+                parseNatWithUnderscore(),
+                C.Nat.nat(),
+                // C.map(
+                //     ignoreUnderscore(C.Character.digit()),
+                //     listToNat
+                // ),
+            ]),
+
             func(n : Nat) : Candid {
                 #Nat(n);
             },
@@ -326,6 +409,12 @@ module {
 
         return NatX.from32To8(digit);
 
+    };
+
+    func any<T>() : Parser<T, T> {
+        C.sat<T>(
+            func(c : T) : Bool { true },
+        );
     };
 
 };
