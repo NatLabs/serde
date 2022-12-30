@@ -8,6 +8,7 @@ import Principal "mo:base/Principal";
 import Text "mo:base/Text";
 import List "mo:base/List";
 import Nat32 "mo:base/Nat32";
+import Nat64 "mo:base/Nat64";
 
 import C "mo:parser-combinators/Combinators";
 import P "mo:parser-combinators/Parser";
@@ -32,28 +33,23 @@ module CandidParser {
         };
     };
 
-    func ignoreSpace<A>(parserA : P.Parser<Char, A>) : P.Parser<Char, A> {
+    func ignoreSpace<A>(parser : P.Parser<Char, A>) : P.Parser<Char, A> {
         C.right(
             C.many(C.Character.space()),
-            parserA,
+            parser,
         );
     };
 
-    func ignoreUnderscore(parser : P.Parser<Char, Char>) : P.Parser<Char, List<Char>> {
-        let x : Parser<Char, List<Char>> = C.sepBy<Char, Char, Char>(
-            C.Character.digit(),
-            C.Character.char('_'),
-        );
-
-        let y = func(nested_lists : List<List<Char>>) : List<Char> {
-            List.flatten(nested_lists);
-        };
-
+    func removeUnderscore<A>(parser : P.Parser<Char, A>) : P.Parser<Char, List<A>> {
         C.map(
-            x,
-            func(xs : List<Char>) : List<Char> {
-                Debug.print("ignoreUnderscore: " # debug_show (xs));
-                xs;
+            ignoreSpace(
+                C.sepBy1<Char, List<A>, Char>(
+                    C.many1(parser),
+                    C.Character.char('_'),
+                ),
+            ),
+            func(nested_lists : List<List<A>>) : List<A> {
+                List.flatten(nested_lists);
             },
         );
     };
@@ -167,8 +163,8 @@ module CandidParser {
                             C.sepBy(
                                 C.map(
                                     C.seq(
-                                        C.Character.hex(),
-                                        C.Character.hex(),
+                                        hex_char(),
+                                        hex_char(),
                                     ),
                                     func((c1, c2) : (Char, Char)) : Nat8 {
                                         (fromHex(c1) << 4) + fromHex(c2);
@@ -292,6 +288,7 @@ module CandidParser {
     func intParser() : Parser<Char, Candid> {
         C.map(
             C.oneOf([
+                parseIntFromHex(),
                 parseIntWithUnderscore(),
                 parseInt(),
             ]),
@@ -308,37 +305,40 @@ module CandidParser {
     func parseNatWithUnderscore() : Parser<Char, Nat> {
         C.map(
             ignoreSpace(
-                C.sepBy1<Char, List<Char>, Char>(
-                    C.many1(C.Character.digit()),
-                    C.Character.char('_'),
-                ),
+                removeUnderscore(C.Character.digit()),
             ),
-            func(nested_lists : List<List<Char>>) : Nat {
-                let flattened = List.flatten(nested_lists);
+            listToNat,
+        );
+    };
 
-                debug {
-                    Debug.print("nested_lists: " # debug_show (nested_lists));
-                    Debug.print("flattened: " # debug_show (flattened));
+    func parseNatFromHex() : Parser<Char, Nat> {
+        C.map(
+            C.right(
+                C.String.string("0x"),
+                removeUnderscore(hex_char()),
+            ),
+            func(chars : List<Char>) : Nat {
+                var n : Nat64 = 0;
+
+                for (hex in Iter.fromList(chars)) {
+                    n := (n << 4) + NatX.from8To64(fromHex(hex));
                 };
 
-                listToNat(flattened);
+                debug { Debug.print("hex_chars: " # debug_show (chars, n)) };
+
+                Nat64.toNat(n);
             },
         );
     };
 
-    // func parseNatFromHex(): Parser<Char, Nat>{
-    //     C.right(
-    //         C.Character.char('0'),
-    //         C.right(
-    //             C.Character.char('x'),
-
-    //         )
-    //     )
-    // };
+    func parseIntFromHex() : Parser<Char, Int> {
+        wrapNatToIntParser(parseNatFromHex());
+    };
 
     func natParser() : Parser<Char, Candid> {
         C.map(
             C.oneOf<Char, Nat>([
+                parseNatFromHex(),
                 parseNatWithUnderscore(),
                 C.Nat.nat(),
                 // C.map(
@@ -414,6 +414,14 @@ module CandidParser {
     func any<T>() : Parser<T, T> {
         C.sat<T>(
             func(c : T) : Bool { true },
+        );
+    };
+
+    public func hex_char() : Parser<Char, Char> {
+        C.sat(
+            func(x : Char) : Bool {
+                '0' <= x and x <= '9' or 'a' <= x and x <= 'f' or 'A' <= x and x <= 'F';
+            },
         );
     };
 
