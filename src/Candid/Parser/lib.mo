@@ -32,6 +32,7 @@ import { optionParser } "Option";
 import { principalParser } "Principal";
 import { recordParser } "Record";
 import { textParser } "Text";
+import { variantParser } "Variant";
 
 module CandidParser {
     type Candid = Candid.Candid;
@@ -70,6 +71,7 @@ module CandidParser {
             arrayParser(candidParser),
             optionParser(candidParser),
             recordParser(candidParser),
+            variantParser(candidParser),
             boolParser(),
             principalParser(),
             natXParser(),

@@ -15,31 +15,6 @@ module {
     type Parser<T, A> = P.Parser<T, A>;
 
     public func recordParser(candidParser : () -> Parser<Char, Candid>) : Parser<Char, Candid> {
-        let keyParser : Parser<Char, Text> = C.oneOf([
-            C.map(
-                C.many1(
-                    C.choose(
-                        C.Character.alphanum(),
-                        C.Character.char('_'),
-                    ),
-                ),
-                toText,
-            ),
-            parseText()
-        ]);
-
-        let valueParser : Parser<Char, Candid> = P.delay(candidParser);
-
-        let fieldParser : Parser<Char, (Text, Candid)> = C.seq(
-            ignoreSpace(
-                C.left(
-                    keyParser,
-                    ignoreSpace(C.Character.char('=')),
-                ),
-            ),
-            ignoreSpace(valueParser),
-        );
-
         C.map(
             C.right(
                 C.String.string("record"),
@@ -47,7 +22,7 @@ module {
                     C.bracket(
                         C.String.string("{"),
                         C.sepBy(
-                            fieldParser,
+                            fieldParser(candidParser),
                             ignoreSpace(C.Character.char(';')),
                         ),
                         ignoreSpace(C.String.string("}")),
@@ -59,5 +34,33 @@ module {
                 #Record(records);
             },
         );
+    };
+
+    public func fieldParser<Candid>(valueParser: () -> Parser<Char, Candid>): Parser<Char, (Text, Candid)>{
+        C.seq(
+            ignoreSpace(
+                C.left(
+                    keyParser(),
+                    ignoreSpace(C.Character.char('=')),
+                ),
+            ),
+            ignoreSpace(P.delay(valueParser)),
+        );
+
+    };
+
+    public func keyParser(): Parser<Char, Text>{
+        C.oneOf([
+            C.map(
+                C.many1(
+                    C.choose(
+                        C.Character.alphanum(),
+                        C.Character.char('_'),
+                    ),
+                ),
+                toText,
+            ),
+            parseText()
+        ]);
     };
 };

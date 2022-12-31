@@ -422,13 +422,47 @@ let success = run(
                                     ],
                                 ),
 
-                                it("parse record type", do{
-                                    assertAllTrue([
-                                        Candid.fromText("record {}") == #Record([]),
-                                        Candid.fromText("record { first_name = \"John\"; second_name = \"Doe\" }") == #Record([("first_name", #Text("John")), ("second_name", #Text("Doe"))]),
-                                        Candid.fromText("record { \"name with spaces\" = 42; \"unicode, too: ☃\" = true }") == #Record([("name with spaces", #Nat(42)), ("unicode, too: ☃", #Bool(true))]),
-                                    ]);
-                                }),
+                                it(
+                                    "parse record type",
+                                    do {
+                                        assertAllTrue([
+                                            Candid.fromText("record {}") == #Record([]),
+                                            Candid.fromText("record { first_name = \"John\"; second_name = \"Doe\" }") == #Record([("first_name", #Text("John")), ("second_name", #Text("Doe"))]),
+                                            Candid.fromText("record { \"name with spaces\" = 42; \"unicode, too: ☃\" = true }") == #Record([("name with spaces", #Nat(42)), ("unicode, too: ☃", #Bool(true))]),
+                                            // nested record
+                                            Candid.fromText("record { first_name = \"John\"; second_name = \"Doe\"; address = record { street = \"Main Street\"; city = \"New York\" } }") == #Record([
+                                                ("first_name", #Text("John")),
+                                                ("second_name", #Text("Doe")),
+                                                ("address", #Record([("street", #Text("Main Street")), ("city", #Text("New York"))])),
+                                            ]),
+                                        ]);
+                                    },
+                                ),
+                                it(
+                                    "parser variant type",
+                                    do {
+                                        assertAllTrue([
+                                            Candid.fromText("variant { ok = \"hello\" }") == #Variant(("ok", #Text("hello"))),
+
+                                            // variant without a value
+                                            Candid.fromText("variant { \"ok\" }") == #Variant(("ok", #Null)),
+
+                                            // variant with unicode key
+                                            Candid.fromText("variant { \"unicode, too: ☃\" = \"hello\" }") == #Variant(("unicode, too: ☃", #Text("hello"))),
+                                            Candid.fromText("variant { \"☃\" }") == #Variant(("☃", #Null)),
+
+                                            // variant with record value
+                                            Candid.fromText("variant { ok = record { \"first name\" = \"John\"; second_name = \"Doe\" } }") == #Variant(("ok", #Record([("first name", #Text("John")), ("second_name", #Text("Doe"))]))),
+
+                                            // variant with array value
+                                            Candid.fromText("variant { ok = vec { 100; 200; 0xAB } }") == #Variant(("ok", #Array([#Nat(100), #Nat(200), #Nat(0xAB)]))),
+
+                                            // variant with variant value
+                                            Candid.fromText("variant { ok = variant { status = \"active\" } }") == #Variant(("ok", #Variant(("status", #Text("active"))))),
+
+                                        ]);
+                                    },
+                                ),
 
                                 describe(
                                     "should parse NatX types with type annotations",
