@@ -31,6 +31,7 @@ module {
             ]),
             func((nat, natType) : (Nat, Text)) : Candid {
                 switch (natType) {
+                    case ("nat") #Nat(nat);
                     case ("nat8") #Nat8(Nat8.fromNat(nat));
                     case ("nat16") #Nat16(Nat16.fromNat(nat));
                     case ("nat32") #Nat32(Nat32.fromNat(nat));
@@ -52,6 +53,7 @@ module {
                 ),
                 ignoreSpace(
                     C.oneOf([
+                        C.String.string("nat"),
                         C.String.string("nat8"),
                         C.String.string("nat16"),
                         C.String.string("nat32"),

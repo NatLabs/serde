@@ -31,6 +31,7 @@ module {
             ]),
             func((int, intType) : (Int, Text)) : Candid {
                 switch (intType) {
+                    case ("int") #Int(int);
                     case ("int8") #Int8(Int8.fromInt(int));
                     case ("int16") #Int16(Int16.fromInt(int));
                     case ("int32") #Int32(Int32.fromInt(int));
@@ -52,6 +53,7 @@ module {
                 ),
                 ignoreSpace(
                     C.oneOf([
+                        C.String.string("int"),
                         C.String.string("int8"),
                         C.String.string("int16"),
                         C.String.string("int32"),
