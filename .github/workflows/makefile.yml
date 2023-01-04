@@ -16,11 +16,21 @@ jobs:
               with:
                 vessel-version: 0.6.3
                 dfx-version: 0.12.1
-              
+
             - name: "install mops"
               run: |
-                  npm -g i mops
-                  $(npm bin)/mops i
+                  git clone https://github.com/ZenVoich/mops
+                  cd mops/cli
+                  npm i
+                  echo -e "#!/usr/bin/env node\n$(cat ./cli.js)" > .cli.js
+                  # echo "alias mops=node $(pwd)/cli.js" >> ~/.bashrc 
+                  # source ~/.bashrc 
+                  chmod +x ./cli.js
+                  ln -s ./cli.js /usr/local/bin/mops
+                  ls /usr/local/bin
+                  mops i
+                  mops sources
+
 
             - name: Detect Warnings
               run: make no-warn

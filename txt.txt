@@ -1,0 +1,2 @@
+alias mops=node /Users/dire.sol/Documents/dev/icp/serde/cli.js
+alias mops=node /Users/dire.sol/Documents/dev/icp/serde/cli.js
