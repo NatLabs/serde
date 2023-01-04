@@ -22,14 +22,10 @@ jobs:
                   git clone https://github.com/ZenVoich/mops
                   cd mops/cli
                   npm i
-                  echo -e "#!/usr/bin/env node\n$(cat ./cli.js)" > .cli.js
-                  # echo "alias mops=node $(pwd)/cli.js" >> ~/.bashrc 
-                  # source ~/.bashrc 
                   mkdir /home/runner/bin
                   echo "/home/runner/bin" >> $GITHUB_PATH
-                  chmod +x ./cli.js
-                  ln -s ./cli.js /home/runner/bin/mops
-                  ls /home/runner/bin
+                  echo "alias mops=node $(pwd)/cli.js" >> /home/runner/bin/mops
+                  chmod +x /home/runner/bin/mops
                   mops i
                   mops sources
 
