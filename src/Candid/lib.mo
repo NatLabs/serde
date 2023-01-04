@@ -8,6 +8,7 @@ import Prelude "mo:base/Prelude";
 import Encoder "Encoder";
 import Decoder "Decoder";
 import Parser "Parser";
+import ToText "ToText";
 
 import T "Types";
 
@@ -21,7 +22,9 @@ module {
     /// Converts a [Candid](#Candid) value to a motoko value
     public let { decode } = Decoder;
 
-    public func fromText(t: Text): Candid {
+    public func fromText(t : Text) : Candid {
         Parser.parse(t);
     };
+
+    public let { toText } = ToText;
 };

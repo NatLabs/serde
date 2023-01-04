@@ -1,22 +1,12 @@
-import Blob "mo:base/Blob";
 import Char "mo:base/Char";
 import Debug "mo:base/Debug";
 import Iter "mo:base/Iter";
-import Int "mo:base/Int";
-import Float "mo:base/Float";
-import Principal "mo:base/Principal";
-import Text "mo:base/Text";
 import List "mo:base/List";
-import Nat32 "mo:base/Nat32";
-import Nat64 "mo:base/Nat64";
 
 import C "mo:parser-combinators/Combinators";
 import P "mo:parser-combinators/Parser";
-import Itertools "mo:itertools/Iter";
-import NatX "mo:xtended-numbers/NatX";
 
 import Candid "../Types";
-import U "../../Utils";
 
 import { ignoreSpace; any } "Common";
 
@@ -80,7 +70,6 @@ module CandidParser {
             intParser(),
             floatParser(),
             nullParser(),
-            // emptyParser(),
         ];
 
         C.oneOf([
