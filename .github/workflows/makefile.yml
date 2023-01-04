@@ -20,6 +20,7 @@ jobs:
             - name: "install mops"
               run: |
                   npm -g i mops
+                  $(npm bin)/mops i
 
             - name: Detect Warnings
               run: make no-warn
