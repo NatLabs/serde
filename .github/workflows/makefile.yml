@@ -12,10 +12,10 @@ jobs:
 
         steps:
             - uses: actions/checkout@v3
-            - uses: aviate-labs/setup-dfx@v0.2.3
-              with:
-                vessel-version: 0.6.3
-                dfx-version: 0.12.1
+            # - uses: aviate-labs/setup-dfx@v0.2.3
+            #   with:
+            #     vessel-version: 0.6.3
+            #     dfx-version: 0.12.1
 
             - name: "install mops"
               run: |
@@ -25,9 +25,11 @@ jobs:
                   echo -e "#!/usr/bin/env node\n$(cat ./cli.js)" > .cli.js
                   # echo "alias mops=node $(pwd)/cli.js" >> ~/.bashrc 
                   # source ~/.bashrc 
+                  mkdir /home/runner/bin
+                  echo "/home/runner/bin" >> $GITHUB_PATH
                   chmod +x ./cli.js
-                  ln -s ./cli.js /usr/local/bin/mops
-                  ls /usr/local/bin
+                  ln -s ./cli.js /home/runner/bin/mops
+                  ls /home/runner/bin
                   mops i
                   mops sources
 
