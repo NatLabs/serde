@@ -286,277 +286,277 @@ let success = run(
                 describe(
                     "fromText()",
                     [
-                        // describe(
-                        //     "parsing Int and Nat formats",
-                        //     [
-                        //         it(
-                        //             "parse \"quoted text\" to #Text",
-                        //             do {
-                        //                 assertAllTrue([
-                        //                     Candid.fromText(" \"\" ") == #Text(""),
-                        //                     Candid.fromText(" \"hello\" ") == #Text("hello"),
-                        //                     Candid.fromText("\"hello world\"") == #Text("hello world"),
-                        //                     Candid.fromText("\"1_000_000\"") == #Text("1_000_000"),
-                        //                 ]);
-                        //             },
-                        //         ),
-                        //         it(
-                        //             "parse blob type",
-                        //             do {
-                        //                 assertAllTrue([
-                        //                     Candid.fromText("blob \"\"") == #Blob(Blob.fromArray([])),
-                        //                     Candid.fromText("blob \"\\AB\\CD\\EF\"") == #Blob(Blob.fromArray([0xAB, 0xCD, 0xEF])),
-                        //                     Candid.fromText("blob \"\\CA\\FF\\FE\"") == #Blob(Blob.fromArray([0xCA, 0xFF, 0xFE])),
-                        //                 ]);
-                        //             },
-                        //         ),
-                        //         it(
-                        //             "should parse principal type",
-                        //             do {
-                        //                 assertAllTrue([
-                        //                     Candid.fromText("principal \"aaaaa-aa\"") == #Principal(Principal.fromText("aaaaa-aa")),
-                        //                     Candid.fromText("principal \"w7x7r-cok77-xa\"") == #Principal(Principal.fromText("w7x7r-cok77-xa")),
-                        //                 ]);
-                        //             },
-                        //         ),
-                        //         it(
-                        //             "Positive integers to #Nat",
-                        //             do {
-                        //                 assertAllTrue([
-                        //                     Candid.fromText("  1000") == #Nat(1000),
-                        //                     Candid.fromText("(+2000)") == #Nat(2000),
-                        //                 ]);
-                        //             },
-                        //         ),
-                        //         it(
-                        //             "Negative integers to #Int",
-                        //             do {
-                        //                 assertAllTrue([
-                        //                     Candid.fromText("-3000") == #Int(-3000),
-                        //                     Candid.fromText("-4000") == #Int(-4000),
-                        //                 ]);
-                        //             },
-                        //         ),
-                        //         it(
-                        //             "should parse Int/Nats with leading zeroes",
-                        //             do {
-                        //                 assertAllTrue([
-                        //                     Candid.fromText("001") == #Nat(1),
-                        //                     Candid.fromText("(+00123)") == #Nat(123),
-                        //                     Candid.fromText("-0123") == #Int(-0123),
-                        //                 ]);
-                        //             },
-                        //         ),
-                        //         it(
-                        //             "should parse Int/Nat with underscores",
-                        //             do {
-                        //                 assertAllTrue([
-                        //                     Candid.fromText("   1_000") == #Nat(1000),
-                        //                     Candid.fromText("+1_000_000") == #Nat(1000000),
+                        describe(
+                            "parsing Int and Nat formats",
+                            [
+                                it(
+                                    "parse \"quoted text\" to #Text",
+                                    do {
+                                        assertAllTrue([
+                                            Candid.fromText(" \"\" ") == #Text(""),
+                                            Candid.fromText(" \"hello\" ") == #Text("hello"),
+                                            Candid.fromText("\"hello world\"") == #Text("hello world"),
+                                            Candid.fromText("\"1_000_000\"") == #Text("1_000_000"),
+                                        ]);
+                                    },
+                                ),
+                                it(
+                                    "parse blob type",
+                                    do {
+                                        assertAllTrue([
+                                            Candid.fromText("blob \"\"") == #Blob(Blob.fromArray([])),
+                                            Candid.fromText("blob \"\\AB\\CD\\EF\"") == #Blob(Blob.fromArray([0xAB, 0xCD, 0xEF])),
+                                            Candid.fromText("blob \"\\CA\\FF\\FE\"") == #Blob(Blob.fromArray([0xCA, 0xFF, 0xFE])),
+                                        ]);
+                                    },
+                                ),
+                                it(
+                                    "should parse principal type",
+                                    do {
+                                        assertAllTrue([
+                                            Candid.fromText("principal \"aaaaa-aa\"") == #Principal(Principal.fromText("aaaaa-aa")),
+                                            Candid.fromText("principal \"w7x7r-cok77-xa\"") == #Principal(Principal.fromText("w7x7r-cok77-xa")),
+                                        ]);
+                                    },
+                                ),
+                                it(
+                                    "Positive integers to #Nat",
+                                    do {
+                                        assertAllTrue([
+                                            Candid.fromText("  1000") == #Nat(1000),
+                                            Candid.fromText("(+2000)") == #Nat(2000),
+                                        ]);
+                                    },
+                                ),
+                                it(
+                                    "Negative integers to #Int",
+                                    do {
+                                        assertAllTrue([
+                                            Candid.fromText("-3000") == #Int(-3000),
+                                            Candid.fromText("-4000") == #Int(-4000),
+                                        ]);
+                                    },
+                                ),
+                                it(
+                                    "should parse Int/Nats with leading zeroes",
+                                    do {
+                                        assertAllTrue([
+                                            Candid.fromText("001") == #Nat(1),
+                                            Candid.fromText("(+00123)") == #Nat(123),
+                                            Candid.fromText("-0123") == #Int(-0123),
+                                        ]);
+                                    },
+                                ),
+                                it(
+                                    "should parse Int/Nat with underscores",
+                                    do {
+                                        assertAllTrue([
+                                            Candid.fromText("   1_000") == #Nat(1000),
+                                            Candid.fromText("+1_000_000") == #Nat(1000000),
 
-                        //                     Candid.fromText("-1_000   ") == #Int(-1000),
-                        //                     Candid.fromText("(-1_000_000)") == #Int(-1000000),
-                        //                 ]);
-                        //             },
-                        //         ),
-                        //         it(
-                        //             "should parse Int/Nat in hex format",
-                        //             do {
-                        //                 assertAllTrue([
-                        //                     Candid.fromText("0x10") == #Nat(16),
-                        //                     Candid.fromText("0xdead_beef") == #Nat(3_735_928_559),
-                        //                     Candid.fromText("0xDEAD_BEEF") == #Nat(3_735_928_559),
+                                            Candid.fromText("-1_000   ") == #Int(-1000),
+                                            Candid.fromText("(-1_000_000)") == #Int(-1000000),
+                                        ]);
+                                    },
+                                ),
+                                it(
+                                    "should parse Int/Nat in hex format",
+                                    do {
+                                        assertAllTrue([
+                                            Candid.fromText("0x10") == #Nat(16),
+                                            Candid.fromText("0xdead_beef") == #Nat(3_735_928_559),
+                                            Candid.fromText("0xDEAD_BEEF") == #Nat(3_735_928_559),
 
-                        //                     Candid.fromText("+0xa1_b2") == #Nat(41_394),
-                        //                     Candid.fromText("-0xA1_B2") == #Int(-41_394),
+                                            Candid.fromText("+0xa1_b2") == #Nat(41_394),
+                                            Candid.fromText("-0xA1_B2") == #Int(-41_394),
 
-                        //                     Candid.fromText("-0xABC_def") == #Int(-11_259_375),
-                        //                 ]);
-                        //             },
-                        //         ),
+                                            Candid.fromText("-0xABC_def") == #Int(-11_259_375),
+                                        ]);
+                                    },
+                                ),
 
-                        //         it(
-                        //             "should parse 'opt' type",
-                        //             do {
-                        //                 assertAllTrue([
-                        //                     Candid.fromText("opt 100") == #Option(#Nat(100)),
-                        //                     Candid.fromText("opt null") == #Option(#Null),
-                        //                     Candid.fromText("opt (-0xdead_beef)") == #Option(#Int(-3_735_928_559)),
-                        //                     Candid.fromText("opt \"hello\"") == #Option(#Text("hello")),
-                        //                     Candid.fromText("opt true") == #Option(#Bool(true)),
-                        //                     Candid.fromText("opt blob \"\\AB\\CD\\EF\\12\"") == #Option(#Blob(Blob.fromArray([0xAB, 0xCD, 0xEF, 0x12]))),
-                        //                     Candid.fromText("opt (principal \"w7x7r-cok77-xa\")") == #Option(#Principal(Principal.fromText("w7x7r-cok77-xa"))),
-                        //                 ]);
-                        //             },
-                        //         ),
+                                it(
+                                    "should parse 'opt' type",
+                                    do {
+                                        assertAllTrue([
+                                            Candid.fromText("opt 100") == #Option(#Nat(100)),
+                                            Candid.fromText("opt null") == #Option(#Null),
+                                            Candid.fromText("opt (-0xdead_beef)") == #Option(#Int(-3_735_928_559)),
+                                            Candid.fromText("opt \"hello\"") == #Option(#Text("hello")),
+                                            Candid.fromText("opt true") == #Option(#Bool(true)),
+                                            Candid.fromText("opt blob \"\\AB\\CD\\EF\\12\"") == #Option(#Blob(Blob.fromArray([0xAB, 0xCD, 0xEF, 0x12]))),
+                                            Candid.fromText("opt (principal \"w7x7r-cok77-xa\")") == #Option(#Principal(Principal.fromText("w7x7r-cok77-xa"))),
+                                        ]);
+                                    },
+                                ),
 
-                        //         describe(
-                        //             "should parse 'vec' type to #Array",
-                        //             [
-                        //                 it(
-                        //                     "parse different element types",
-                        //                     do {
-                        //                         assertAllTrue([
-                        //                             Candid.fromText("vec {}") == #Array([]),
-                        //                             Candid.fromText("vec { 100; 200; 0xAB }") == #Array([#Nat(100), #Nat(200), #Nat(0xAB)]),
-                        //                             Candid.fromText("vec { \"hello\"; \"world\" }") == #Array([#Text("hello"), #Text("world")]),
-                        //                             Candid.fromText("vec { true; false }") == #Array([#Bool(true), #Bool(false)]),
-                        //                             Candid.fromText("vec { blob \"\\AB\\CD\"; blob \"\\EF\\12\" }") == #Array([#Blob(Blob.fromArray([0xAB, 0xCD])), #Blob(Blob.fromArray([0xEF, 0x12]))]),
-                        //                             Candid.fromText("vec { principal \"w7x7r-cok77-xa\"; principal \"aaaaa-aa\" }") == #Array([#Principal(Principal.fromText("w7x7r-cok77-xa")), #Principal(Principal.fromText("aaaaa-aa"))]),
-                        //                         ]);
-                        //                     },
-                        //                 ),
-                        //                 it(
-                        //                     "parse nested array",
-                        //                     do {
-                        //                         assertAllTrue([
-                        //                             Candid.fromText("vec { vec { 100; 200; 0xAB }; vec { 100; 200; 0xAB } }") == #Array([#Array([#Nat(100), #Nat(200), #Nat(0xAB)]), #Array([#Nat(100), #Nat(200), #Nat(0xAB)])]),
+                                describe(
+                                    "should parse 'vec' type to #Array",
+                                    [
+                                        it(
+                                            "parse different element types",
+                                            do {
+                                                assertAllTrue([
+                                                    Candid.fromText("vec {}") == #Array([]),
+                                                    Candid.fromText("vec { 100; 200; 0xAB }") == #Array([#Nat(100), #Nat(200), #Nat(0xAB)]),
+                                                    Candid.fromText("vec { \"hello\"; \"world\" }") == #Array([#Text("hello"), #Text("world")]),
+                                                    Candid.fromText("vec { true; false }") == #Array([#Bool(true), #Bool(false)]),
+                                                    Candid.fromText("vec { blob \"\\AB\\CD\"; blob \"\\EF\\12\" }") == #Array([#Blob(Blob.fromArray([0xAB, 0xCD])), #Blob(Blob.fromArray([0xEF, 0x12]))]),
+                                                    Candid.fromText("vec { principal \"w7x7r-cok77-xa\"; principal \"aaaaa-aa\" }") == #Array([#Principal(Principal.fromText("w7x7r-cok77-xa")), #Principal(Principal.fromText("aaaaa-aa"))]),
+                                                ]);
+                                            },
+                                        ),
+                                        it(
+                                            "parse nested array",
+                                            do {
+                                                assertAllTrue([
+                                                    Candid.fromText("vec { vec { 100; 200; 0xAB }; vec { 100; 200; 0xAB } }") == #Array([#Array([#Nat(100), #Nat(200), #Nat(0xAB)]), #Array([#Nat(100), #Nat(200), #Nat(0xAB)])]),
 
-                        //                             Candid.fromText("vec { vec { vec { 100; 200; 0xAB }; vec { 100; 200; 0xAB } }; vec { vec { 100; 200; 0xAB }; vec { 100; 200; 0xAB } } }") == #Array([
-                        //                                 #Array([#Array([#Nat(100), #Nat(200), #Nat(0xAB)]), #Array([#Nat(100), #Nat(200), #Nat(0xAB)])]),
-                        //                                 #Array([#Array([#Nat(100), #Nat(200), #Nat(0xAB)]), #Array([#Nat(100), #Nat(200), #Nat(0xAB)])]),
-                        //                             ]),
-                        //                         ]);
-                        //                     },
-                        //                 ),
-                        //             ],
-                        //         ),
+                                                    Candid.fromText("vec { vec { vec { 100; 200; 0xAB }; vec { 100; 200; 0xAB } }; vec { vec { 100; 200; 0xAB }; vec { 100; 200; 0xAB } } }") == #Array([
+                                                        #Array([#Array([#Nat(100), #Nat(200), #Nat(0xAB)]), #Array([#Nat(100), #Nat(200), #Nat(0xAB)])]),
+                                                        #Array([#Array([#Nat(100), #Nat(200), #Nat(0xAB)]), #Array([#Nat(100), #Nat(200), #Nat(0xAB)])]),
+                                                    ]),
+                                                ]);
+                                            },
+                                        ),
+                                    ],
+                                ),
 
-                        //         it(
-                        //             "parse record type",
-                        //             do {
-                        //                 assertAllTrue([
-                        //                     Candid.fromText("record {}") == #Record([]),
-                        //                     Candid.fromText("record { first_name = \"John\"; second_name = \"Doe\" }") == #Record([("first_name", #Text("John")), ("second_name", #Text("Doe"))]),
-                        //                     Candid.fromText("record { \"name with spaces\" = 42; \"unicode, too: ☃\" = true }") == #Record([("name with spaces", #Nat(42)), ("unicode, too: ☃", #Bool(true))]),
-                        //                     // nested record
-                        //                     Candid.fromText("record { first_name = \"John\"; second_name = \"Doe\"; address = record { street = \"Main Street\"; city = \"New York\" } }") == #Record([
-                        //                         ("first_name", #Text("John")),
-                        //                         ("second_name", #Text("Doe")),
-                        //                         ("address", #Record([("street", #Text("Main Street")), ("city", #Text("New York"))])),
-                        //                     ]),
-                        //                 ]);
-                        //             },
-                        //         ),
-                        //         it(
-                        //             "parser variant type",
-                        //             do {
-                        //                 assertAllTrue([
-                        //                     Candid.fromText("variant { ok = \"hello\" }") == #Variant(("ok", #Text("hello"))),
+                                it(
+                                    "parse record type",
+                                    do {
+                                        assertAllTrue([
+                                            Candid.fromText("record {}") == #Record([]),
+                                            Candid.fromText("record { first_name = \"John\"; second_name = \"Doe\" }") == #Record([("first_name", #Text("John")), ("second_name", #Text("Doe"))]),
+                                            Candid.fromText("record { \"name with spaces\" = 42; \"unicode, too: ☃\" = true }") == #Record([("name with spaces", #Nat(42)), ("unicode, too: ☃", #Bool(true))]),
+                                            // nested record
+                                            Candid.fromText("record { first_name = \"John\"; second_name = \"Doe\"; address = record { street = \"Main Street\"; city = \"New York\" } }") == #Record([
+                                                ("first_name", #Text("John")),
+                                                ("second_name", #Text("Doe")),
+                                                ("address", #Record([("street", #Text("Main Street")), ("city", #Text("New York"))])),
+                                            ]),
+                                        ]);
+                                    },
+                                ),
+                                it(
+                                    "parser variant type",
+                                    do {
+                                        assertAllTrue([
+                                            Candid.fromText("variant { ok = \"hello\" }") == #Variant(("ok", #Text("hello"))),
 
-                        //                     // variant without a value
-                        //                     Candid.fromText("variant { \"ok\" }") == #Variant(("ok", #Null)),
+                                            // variant without a value
+                                            Candid.fromText("variant { \"ok\" }") == #Variant(("ok", #Null)),
 
-                        //                     // variant with unicode key
-                        //                     Candid.fromText("variant { \"unicode, too: ☃\" = \"hello\" }") == #Variant(("unicode, too: ☃", #Text("hello"))),
-                        //                     Candid.fromText("variant { \"☃\" }") == #Variant(("☃", #Null)),
+                                            // variant with unicode key
+                                            Candid.fromText("variant { \"unicode, too: ☃\" = \"hello\" }") == #Variant(("unicode, too: ☃", #Text("hello"))),
+                                            Candid.fromText("variant { \"☃\" }") == #Variant(("☃", #Null)),
 
-                        //                     // variant with record value
-                        //                     Candid.fromText("variant { ok = record { \"first name\" = \"John\"; second_name = \"Doe\" } }") == #Variant(("ok", #Record([("first name", #Text("John")), ("second_name", #Text("Doe"))]))),
+                                            // variant with record value
+                                            Candid.fromText("variant { ok = record { \"first name\" = \"John\"; second_name = \"Doe\" } }") == #Variant(("ok", #Record([("first name", #Text("John")), ("second_name", #Text("Doe"))]))),
 
-                        //                     // variant with array value
-                        //                     Candid.fromText("variant { ok = vec { 100; 200; 0xAB } }") == #Variant(("ok", #Array([#Nat(100), #Nat(200), #Nat(0xAB)]))),
+                                            // variant with array value
+                                            Candid.fromText("variant { ok = vec { 100; 200; 0xAB } }") == #Variant(("ok", #Array([#Nat(100), #Nat(200), #Nat(0xAB)]))),
 
-                        //                     // variant with variant value
-                        //                     Candid.fromText("variant { ok = variant { status = \"active\" } }") == #Variant(("ok", #Variant(("status", #Text("active"))))),
+                                            // variant with variant value
+                                            Candid.fromText("variant { ok = variant { status = \"active\" } }") == #Variant(("ok", #Variant(("status", #Text("active"))))),
 
-                        //                 ]);
-                        //             },
-                        //         ),
+                                        ]);
+                                    },
+                                ),
 
-                        //         describe(
-                        //             "should parse NatX types with type annotations",
-                        //             [
-                        //                 it(
-                        //                     "Nat8",
-                        //                     do {
-                        //                         assertAllTrue([
-                        //                             Candid.fromText("(100 : nat8)") == #Nat8(100 : Nat8),
-                        //                             Candid.fromText("00123:nat8") == #Nat8(123 : Nat8),
-                        //                             Candid.fromText("1_2_3 : nat8") == #Nat8(123 : Nat8),
-                        //                             Candid.fromText("0xA1 : nat8") == #Nat8(161 : Nat8),
-                        //                         ]);
-                        //                     },
-                        //                 ),
-                        //                 it(
-                        //                     "Nat16",
-                        //                     do {
-                        //                         assertAllTrue([
-                        //                             Candid.fromText("(1000 : nat16)") == #Nat16(1000 : Nat16),
-                        //                             Candid.fromText("0061234 : nat16") == #Nat16(61234 : Nat16),
-                        //                             Candid.fromText("32_892 : nat16") == #Nat16(32_892 : Nat16),
-                        //                             Candid.fromText("0xBEEF : nat16") == #Nat16(48_879 : Nat16),
-                        //                         ]);
-                        //                     },
-                        //                 ),
-                        //                 it(
-                        //                     "Nat32",
-                        //                     do {
-                        //                         assertAllTrue([
-                        //                             Candid.fromText("(1_000_000 : nat32)") == #Nat32(1_000_000 : Nat32),
-                        //                             Candid.fromText("0xdead_beef : nat32") == #Nat32(3_735_928_559 : Nat32),
-                        //                         ]);
-                        //                     },
-                        //                 ),
-                        //                 it(
-                        //                     "Nat64",
-                        //                     do {
-                        //                         assertAllTrue([
-                        //                             Candid.fromText("(100_000_000_000 : nat64)") == #Nat64(100_000_000_000 : Nat64),
-                        //                             Candid.fromText("0xdead_beef_1234 : nat64") == #Nat64(244_837_814_047_284 : Nat64),
-                        //                         ]);
-                        //                     },
-                        //                 ),
-                        //             ],
-                        //         ),
-                        //         describe(
-                        //             "should parse IntX types with type annotations",
-                        //             [
-                        //                 it(
-                        //                     "Int8",
-                        //                     do {
-                        //                         assertAllTrue([
-                        //                             Candid.fromText("(+100 : int8)") == #Int8(100 : Int8),
-                        //                             Candid.fromText("-00123:int8") == #Int8(-123 : Int8),
-                        //                             Candid.fromText("-1_2_3 : int8") == #Int8(-123 : Int8),
-                        //                             Candid.fromText("-0x7A : int8") == #Int8(-122 : Int8),
-                        //                         ]);
-                        //                     },
-                        //                 ),
-                        //                 it(
-                        //                     "Int16",
-                        //                     do {
-                        //                         assertAllTrue([
-                        //                             Candid.fromText("(+1000 : int16)") == #Int16(1000 : Int16),
-                        //                             Candid.fromText("+0031234 : int16") == #Int16(31234 : Int16),
-                        //                             Candid.fromText("-31_234 : int16") == #Int16(-31_234 : Int16),
-                        //                             Candid.fromText("-0x7A_BC : int16") == #Int16(-31_420 : Int16),
-                        //                         ]);
-                        //                     },
-                        //                 ),
-                        //                 it(
-                        //                     "Int32",
-                        //                     do {
-                        //                         assertAllTrue([
-                        //                             Candid.fromText("(+1_000_000 : int32)") == #Int32(1_000_000 : Int32),
-                        //                             Candid.fromText("-0xbad_beef : int32") == #Int32(-195_935_983 : Int32),
-                        //                         ]);
-                        //                     },
-                        //                 ),
-                        //                 it(
-                        //                     "Int64",
-                        //                     do {
-                        //                         assertAllTrue([
-                        //                             Candid.fromText("+100_000_000_000 : int64") == #Int64(100_000_000_000 : Int64),
-                        //                             Candid.fromText("(-0xdead_beef_1234 : int64)") == #Int64(-244_837_814_047_284 : Int64),
-                        //                         ]);
-                        //                     },
-                        //                 ),
-                        //             ],
-                        //         ),
+                                // describe(
+                                //     "should parse NatX types with type annotations",
+                                //     [
+                                //         it(
+                                //             "Nat8",
+                                //             do {
+                                //                 assertAllTrue([
+                                //                     Candid.fromText("(100 : nat8)") == #Nat8(100 : Nat8),
+                                //                     Candid.fromText("00123:nat8") == #Nat8(123 : Nat8),
+                                //                     Candid.fromText("1_2_3 : nat8") == #Nat8(123 : Nat8),
+                                //                     Candid.fromText("0xA1 : nat8") == #Nat8(161 : Nat8),
+                                //                 ]);
+                                //             },
+                                //         ),
+                                //         it(
+                                //             "Nat16",
+                                //             do {
+                                //                 assertAllTrue([
+                                //                     Candid.fromText("(1000 : nat16)") == #Nat16(1000 : Nat16),
+                                //                     Candid.fromText("0061234 : nat16") == #Nat16(61234 : Nat16),
+                                //                     Candid.fromText("32_892 : nat16") == #Nat16(32_892 : Nat16),
+                                //                     Candid.fromText("0xBEEF : nat16") == #Nat16(48_879 : Nat16),
+                                //                 ]);
+                                //             },
+                                //         ),
+                                //         it(
+                                //             "Nat32",
+                                //             do {
+                                //                 assertAllTrue([
+                                //                     Candid.fromText("(1_000_000 : nat32)") == #Nat32(1_000_000 : Nat32),
+                                //                     Candid.fromText("0xdead_beef : nat32") == #Nat32(3_735_928_559 : Nat32),
+                                //                 ]);
+                                //             },
+                                //         ),
+                                //         it(
+                                //             "Nat64",
+                                //             do {
+                                //                 assertAllTrue([
+                                //                     Candid.fromText("(100_000_000_000 : nat64)") == #Nat64(100_000_000_000 : Nat64),
+                                //                     Candid.fromText("0xdead_beef_1234 : nat64") == #Nat64(244_837_814_047_284 : Nat64),
+                                //                 ]);
+                                //             },
+                                //         ),
+                                //     ],
+                                // ),
+                                describe(
+                                    "should parse IntX types with type annotations",
+                                    [
+                                        // it(
+                                        //     "Int8",
+                                        //     do {
+                                        //         assertAllTrue([
+                                        //             Candid.fromText("(+100 : int8)") == #Int8(100 : Int8),
+                                        //             Candid.fromText("-00123:int8") == #Int8(-123 : Int8),
+                                        //             Candid.fromText("-1_2_3 : int8") == #Int8(-123 : Int8),
+                                        //             Candid.fromText("-0x7A : int8") == #Int8(-122 : Int8),
+                                        //         ]);
+                                        //     },
+                                        // ),
+                                        // it(
+                                        //     "Int16",
+                                        //     do {
+                                        //         assertAllTrue([
+                                        //             Candid.fromText("(+1000 : int16)") == #Int16(1000 : Int16),
+                                        //             Candid.fromText("+0031234 : int16") == #Int16(31234 : Int16),
+                                        //             Candid.fromText("-31_234 : int16") == #Int16(-31_234 : Int16),
+                                        //             Candid.fromText("-0x7A_BC : int16") == #Int16(-31_420 : Int16),
+                                        //         ]);
+                                        //     },
+                                        // ),
+                                        // it(
+                                        //     "Int32",
+                                        //     do {
+                                        //         assertAllTrue([
+                                        //             Candid.fromText("(+1_000_000 : int32)") == #Int32(1_000_000 : Int32),
+                                        //             Candid.fromText("-0xbad_beef : int32") == #Int32(-195_935_983 : Int32),
+                                        //         ]);
+                                        //     },
+                                        // ),
+                                        // it(
+                                        //     "Int64",
+                                        //     do {
+                                        //         assertAllTrue([
+                                        //             Candid.fromText("+100_000_000_000 : int64") == #Int64(100_000_000_000 : Int64),
+                                        //             Candid.fromText("(-0xdead_beef_1234 : int64)") == #Int64(-244_837_814_047_284 : Int64),
+                                        //         ]);
+                                        //     },
+                                        // ),
+                                    ],
+                                ),
 
-                        //     ],
-                        // ),
+                            ],
+                        ),
 
                         it(
                             "should decode candid text",
@@ -578,17 +578,26 @@ let success = run(
                 ),
                 
                 describe("toText()", [
+                    // it("should stringify int", do {
+                    //     let candid = [
+                    //     ]
+                    // }),
                     it("should parse candid text", do {
                         let candid = [
                             Candid.toText(#Nat(1000)),
                             Candid.toText(#Int(2000)),
                             Candid.toText(#Int(-3000)),
+                            Candid.toText(#Text("hello")),
+                            Candid.toText(#Record([("name", #Text("John")), ("age", #Nat(30))])),
+                            Candid.toText(#Array([#Nat((1000), )]))
                         ];
 
                         candid == [
                             "1000",
                             "2000",
                             "-3000",
+                            "\"hello\"",
+                            "record { name = \"John\"; age = 30; }",
                         ];
                     }),
                 ])

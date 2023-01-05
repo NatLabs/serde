@@ -64,10 +64,9 @@ module CandidParser {
             variantParser(candidParser),
             boolParser(),
             principalParser(),
+            natParser(),
             natXParser(),
             intXParser(),
-            natParser(),
-            intParser(),
             floatParser(),
             nullParser(),
         ];
