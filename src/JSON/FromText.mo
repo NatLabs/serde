@@ -22,7 +22,7 @@ module {
     /// Converts JSON text to a serialized Candid blob that can be decoded to motoko values using `from_candid()`
     public func fromText(rawText : Text) : Blob {
         let candid = toCandid(rawText);
-        Candid.encode(candid);
+        Candid.encodeOne(candid);
     };
 
     /// Convert JSON text to a Candid value

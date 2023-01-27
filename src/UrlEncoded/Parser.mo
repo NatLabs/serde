@@ -109,8 +109,14 @@ module {
 
     func parseInt() : Parser<Char, Int> {
         func(xs : List<Char>) : ?(Int, List<Char>) {
-            let (op, ys) = switch (C.Character.char('-')(xs)) {
+            let parseSign = C.oneOf([
+                C.Character.char('+'),
+                C.Character.char('-'),
+            ]);
+
+            let (op, ys) = switch (parseSign(xs)) {
                 case (null) { (func(n : Nat) : Int { n }, xs) };
+                case (?('+', xs)) { (func(n : Nat) : Int { n }, xs) };
                 case (?(_, xs)) { (func(n : Nat) : Int { -n }, xs) };
             };
 

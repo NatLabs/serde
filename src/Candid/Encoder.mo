@@ -23,18 +23,26 @@ module {
     type Candid = T.Candid;
     type KeyValuePair = T.KeyValuePair;
 
-    public func encode(candid : Candid) : Blob {
-        let args = toArgs(candid);
+    public func encode(candid_values : [Candid]) : Blob {
+        let args = toArgs(candid_values);
         Encoder.encode(args);
     };
 
-    public func toArgs(candid : Candid) : [Arg] {
-        let arg : Arg = {
-            _type = toArgType(candid);
-            value = toArgValue(candid);
-        };
+    public func encodeOne(candid : Candid) : Blob {
+        let args = toArgs([candid]);
+        Encoder.encode(args);
+    };
 
-        [arg];
+    public func toArgs(candid_values : [Candid]) : [Arg] {
+        Array.map(
+            candid_values,
+            func(candid : Candid) : Arg {
+                {
+                    _type = toArgType(candid);
+                    value = toArgValue(candid);
+                };
+            },
+        );
     };
 
     func toArgType(candid : Candid) : Type {
@@ -137,7 +145,7 @@ module {
                 #vector(transformedArr);
             };
 
-            case (#Blob(blob)){
+            case (#Blob(blob)) {
                 let array = Blob.toArray(blob);
 
                 let bytes = Array.map(

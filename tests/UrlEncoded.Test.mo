@@ -109,19 +109,6 @@ let success = run([
                             let user_val : ?{ variant : Variant } = from_candid (user_blob);
                             let array_val : ?{ variant : Variant } = from_candid (array_blob);
 
-                            Debug.print(
-                                debug_show ([
-                                    text_val,
-                                    nat_val,
-                                    int_val,
-                                    float_val,
-                                    bool_val,
-                                    record_val,
-                                    user_val,
-                                    array_val,
-                                ]),
-                            );
-
                             assertAllTrue([
                                 text_val == ?{ variant = #text("hello") },
                                 nat_val == ?{ variant = #nat(123) },
@@ -159,7 +146,6 @@ let success = run([
 
                             let blob = to_candid (info);
                             let text = UrlEncoded.toText(blob, ["name", "msg"]);
-
                             assertTrue(text == "msg=Hello World&name=John");
                         },
                     ),
@@ -180,7 +166,7 @@ let success = run([
                             let blob = to_candid ({ users });
 
                             let text = UrlEncoded.toText(blob, ["users", "name", "msg"]);
-
+    
                             assertTrue(
                                 text == "users[0][msg]=Hello World&users[0][name]=John&users[1][msg]=testing&users[1][name]=Jane",
                             );

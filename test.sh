@@ -29,13 +29,15 @@ for TEST in $TESTS_FILES
         if [ $TEST -nt $WASM ];
         then 
             echo "Compiling $TEST"
+            rm -f $WASM
             $(vessel bin)/moc $LIBS -wasi-system-api $TEST -o $WASM
             IS_COMPILED=1
         fi
 
         if [ $IS_COMPILED -eq 0 ] && [ -f $SRC_FILE ] && [$SRC_FILE -nt $WASM ];
         then 
-            echo "Compiling $TEST"
+            echo "Compiling because $SRC_FILE changed" 
+            rm -f $WASM
             $(vessel bin)/moc $LIBS -wasi-system-api $TEST -o $WASM
             IS_COMPILED=1
         fi
@@ -48,7 +50,7 @@ for TEST in $TESTS_FILES
                 do
                     if [ $NESTED_FILE -nt $WASM ]
                     then 
-                        echo "Compiling $TEST"
+                        echo "Compiling because $NESTED_FILE changed"
                         $(vessel bin)/moc $LIBS -wasi-system-api $TEST -o $WASM
                         IS_COMPILED=1
                         break

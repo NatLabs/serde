@@ -22,7 +22,7 @@ module {
     /// Converts serialized Candid blob to JSON text
     public func toText(blob : Blob, keys : [Text]) : Text {
         let candid = Candid.decode(blob, keys);
-        fromCandid(candid);
+        fromCandid(candid[0]);
     };
 
     /// Convert a Candid value to JSON text

@@ -11,6 +11,7 @@
 .dfx/
 .vessel/
 .mops/
+.wasm/
 
 # frontend code
 node_modules/

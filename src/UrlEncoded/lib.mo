@@ -14,8 +14,6 @@ import Float "mo:base/Float";
 import Option "mo:base/Option";
 import Prelude "mo:base/Prelude";
 
-import itertools "mo:itertools/Iter";
-
 import Candid "../Candid";
 import FromText "./FromText";
 import ToText "./ToText";
