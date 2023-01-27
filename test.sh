@@ -38,7 +38,6 @@ for TEST in $TESTS_FILES
         then 
             echo "Compiling because $SRC_FILE changed" 
             rm -f $WASM
-            echo " - removed $WASM"
             $(vessel bin)/moc $LIBS -wasi-system-api $TEST -o $WASM
             IS_COMPILED=1
         fi

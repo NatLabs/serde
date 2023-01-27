@@ -73,3 +73,9 @@ This implementation supports URL query strings and URL-encoded pairs, including 
     ] };
 
 ```
+## Tests
+- Install [mops](https://j4mwm-bqaaa-aaaam-qajbq-cai.ic0.app/#/docs/install)
+- Install [vessel](https://github.com/dfinity/vessel)
+- Install [wasmtime](https://github.com/bytecodealliance/wasmtime/blob/main/README.md#wasmtime)
+
+- Run `make compile-tests`

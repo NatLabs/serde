@@ -15,7 +15,7 @@ import T "Types";
 module {
     /// A representation of the Candid format with variants for all possible types.
     public type Candid = T.Candid;
-
+    
     /// Converts a motoko value to a [Candid](#Candid) value
     public let { encode; encodeOne } = Encoder;
 
