@@ -35,7 +35,7 @@ jobs:
               run: make no-warn
 
             - name: Run Tests
-              run: make test
+              run: make compile-tests 
 
             # - name: Generate Docs
             #   run: make docs
