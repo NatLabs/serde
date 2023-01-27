@@ -27,7 +27,9 @@ jobs:
                   mops sources
             
             - name: install wasmtime
-              run: curl https://wasmtime.dev/install.sh -sSf | bash
+              run: |
+                curl https://wasmtime.dev/install.sh -sSf | bash
+                exec "$SHELL"
 
             - name: Detect Warnings
               run: make no-warn

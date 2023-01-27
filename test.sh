@@ -56,6 +56,6 @@ for TEST in $TESTS_FILES
                 done
         fi
 
-        bash -c wasmtime $WASM || exit 1
+        wasmtime $WASM || exit 1
 
 	done
