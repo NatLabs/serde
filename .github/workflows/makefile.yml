@@ -29,7 +29,8 @@ jobs:
             - name: install wasmtime
               run: |
                 curl https://wasmtime.dev/install.sh -sSf | bash
-                exec "$SHELL"
+                source /root/.bashrc
+                echo $WASMTIME_HOME
 
             - name: Detect Warnings
               run: make no-warn
