@@ -27,6 +27,22 @@ A serialisation and deserialisation library for Motoko.
 
 ```
 
+### Candid Text
+```motoko
+    import serdeCandid "mo:serde/Candid";
+
+    type User = {
+        name: Text;
+        id: Nat;
+    };
+
+    let blob = serdeCandid.fromText("(record({ name = \"bar\"; id = 112 })");
+    let user : ?User = from_candid(blob);
+
+    assert user == ?{ name = "bar"; id = 112 };
+
+```
+
 ### URL-Encoded Pairs
 Serialization and deserialization for `application/x-www-form-urlencoded`.
 

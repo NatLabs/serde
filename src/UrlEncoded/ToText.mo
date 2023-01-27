@@ -28,7 +28,7 @@ module {
     /// Converts a serialized Candid blob to a URL-Encoded string.
     public func toText(blob : Blob, keys : [Text]) : Text {
         let candid = Candid.decode(blob, keys);
-        fromCandid(candid);
+        fromCandid(candid[0]);
     };
 
     /// Convert a Candid Record to a URL-Encoded string.

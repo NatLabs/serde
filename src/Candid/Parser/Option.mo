@@ -29,4 +29,13 @@ module {
             },
         );
     };
+
+    public func nullParser() : Parser<Char, Candid> {
+        C.map(
+            ignoreSpace(C.String.string("null")),
+            func(_ : Text) : Candid {
+                #Null;
+            },
+        );
+    };
 };

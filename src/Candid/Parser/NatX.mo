@@ -11,7 +11,7 @@ import P "mo:parser-combinators/Parser";
 
 import Candid "../Types";
 import { ignoreSpace; toText } "Common";
-import { parseNat } "Nat";
+import { parseNat; natParser } "Nat";
 
 module {
     type Candid = Candid.Candid;
@@ -21,14 +21,7 @@ module {
 
     public func natXParser() : Parser<Char, Candid> {
         C.map(
-            C.oneOf([
-                C.bracket(
-                    C.Character.char('('),
-                    parseNatX(),
-                    ignoreSpace(C.Character.char(')')),
-                ),
-                parseNatX(),
-            ]),
+            parseNatX(),
             func((nat, natType) : (Nat, Text)) : Candid {
                 switch (natType) {
                     case ("nat") #Nat(nat);
@@ -43,22 +36,22 @@ module {
     };
 
     func parseNatX() : Parser<Char, (Nat, Text)> {
-        C.seq(
-            ignoreSpace(
+        ignoreSpace(
+            C.seq(
                 parseNat(),
-            ),
-            C.right(
                 ignoreSpace(
-                    C.Character.char(':'),
-                ),
-                ignoreSpace(
-                    C.oneOf([
-                        C.String.string("nat"),
-                        C.String.string("nat8"),
-                        C.String.string("nat16"),
-                        C.String.string("nat32"),
-                        C.String.string("nat64"),
-                    ]),
+                    C.right(
+                        C.Character.char(':'),
+                        ignoreSpace(
+                            C.oneOf([
+                                C.String.string("nat64"),
+                                C.String.string("nat32"),
+                                C.String.string("nat16"),
+                                C.String.string("nat8"),
+                                C.String.string("nat"),
+                            ]),
+                        ),
+                    ),
                 ),
             ),
         );

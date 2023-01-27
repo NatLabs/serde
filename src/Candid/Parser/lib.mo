@@ -18,7 +18,7 @@ import { intParser } "Int";
 import { intXParser } "IntX";
 import { natParser } "Nat";
 import { natXParser } "NatX";
-import { optionParser } "Option";
+import { optionParser; nullParser } "Option";
 import { principalParser } "Principal";
 import { recordParser } "Record";
 import { textParser } "Text";
@@ -30,17 +30,17 @@ module CandidParser {
 
     type Parser<T, A> = P.Parser<T, A>;
 
-    public func parse(text : Text) : Candid {
+    public func parse(text : Text) : [Candid] {
         let chars = Iter.toList(text.chars());
 
         switch (parseCandid(chars)) {
             case (?candid) candid;
-            case (null) Debug.trap("Failed to parse Candid text");
+            case (null) Debug.trap("Failed to parse Candid text for input: " # debug_show (chars));
         };
     };
 
-    func parseCandid(l : List.List<Char>) : ?Candid {
-        switch (candidParser()(l)) {
+    func parseCandid(l : List.List<Char>) : ?[Candid] {
+        switch (multiValueCandidParser()(l)) {
             case (null) { null };
             case (?(x, xs)) {
                 switch (xs) {
@@ -54,45 +54,63 @@ module CandidParser {
         };
     };
 
-    func candidParser() : Parser<Char, Candid> {
+    public func multiValueCandidParser() : Parser<Char, [Candid]> {
+        C.bracket(
+            C.String.string("("),
+            C.map(
+                C.sepBy(
+                    ignoreSpace(candidParser()),
+                    ignoreSpace(C.Character.char(',')),
+                ),
+                func(list : List<Candid>) : [Candid] {
+                    List.toArray(list);
+                },
+            ),
+            ignoreSpace(C.String.string(")")),
+        );
+    };
+
+    public func candidParser() : Parser<Char, Candid> {
         let supportedParsers = [
-            blobParser(),
+            intXParser(),
+            natXParser(),
+
+            intParser(),
+            natParser(),
+
             textParser(),
+
+            blobParser(),
             arrayParser(candidParser),
             optionParser(candidParser),
             recordParser(candidParser),
             variantParser(candidParser),
             boolParser(),
             principalParser(),
-            natParser(),
-            natXParser(),
-            intXParser(),
             floatParser(),
             nullParser(),
+            bracketParser(candidParser)
         ];
 
         C.oneOf([
             C.bracket(
-                C.String.string("("),
-                ignoreSpace(
-                    C.oneOf(supportedParsers),
-                ),
+                ignoreSpace(C.String.string("(")),
+                ignoreSpace(C.oneOf(supportedParsers)),
                 ignoreSpace(C.String.string(")")),
             ),
             C.bracket(
                 C.many(C.Character.space()),
-                ignoreSpace(C.oneOf(supportedParsers)),
+                C.oneOf(supportedParsers),
                 C.many(C.Character.space()),
             ),
         ]);
     };
 
-    func nullParser() : Parser<Char, Candid> {
-        C.map(
-            ignoreSpace(C.String.string("null")),
-            func(_ : Text) : Candid {
-                #Null;
-            },
-        );
+    func bracketParser(parser : () -> Parser<Char, Candid>) : Parser<Char, Candid> {
+        C.bracket(
+            ignoreSpace(C.String.string("(")),
+            ignoreSpace(P.delay(parser)),
+            ignoreSpace(C.String.string(")")),
+        )
     };
 };

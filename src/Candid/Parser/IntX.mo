@@ -11,7 +11,7 @@ import P "mo:parser-combinators/Parser";
 
 import Candid "../Types";
 import { ignoreSpace; toText } "Common";
-import { parseInt } "Int";
+import { parseInt; intParser } "Int";
 
 module {
     type Candid = Candid.Candid;
@@ -21,14 +21,7 @@ module {
 
     public func intXParser() : Parser<Char, Candid> {
         C.map(
-            C.oneOf([
-                C.bracket(
-                    C.Character.char('('),
-                    parseIntX(),
-                    ignoreSpace(C.Character.char(')')),
-                ),
-                parseIntX(),
-            ]),
+            parseIntX(),
             func((int, intType) : (Int, Text)) : Candid {
                 switch (intType) {
                     case ("int") #Int(int);
@@ -53,11 +46,11 @@ module {
                 ),
                 ignoreSpace(
                     C.oneOf([
-                        C.String.string("int"),
-                        C.String.string("int8"),
-                        C.String.string("int16"),
-                        C.String.string("int32"),
                         C.String.string("int64"),
+                        C.String.string("int32"),
+                        C.String.string("int16"),
+                        C.String.string("int8"),
+                        C.String.string("int"),
                     ]),
                 ),
             ),

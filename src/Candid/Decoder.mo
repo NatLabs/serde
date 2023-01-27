@@ -33,7 +33,7 @@ module {
     type Candid = T.Candid;
     type KeyValuePair = T.KeyValuePair;
 
-    public func decode(blob : Blob, recordKeys : [Text]) : Candid {
+    public func decode(blob : Blob, recordKeys : [Text]) : [Candid] {
         let res = Decoder.decode(blob);
 
         let keyEntries = Iter.map<Text, (Nat32, Text)>(
@@ -50,20 +50,21 @@ module {
         );
 
         switch (res) {
-            case (?args) {
-                fromArgs(args, recordKeyMap);
-            };
-            case (_) { Prelude.unreachable() };
+            case (?args) fromArgs(args, recordKeyMap);
+            case (_) Debug.trap("Failed to decode candid blob");
         };
     };
 
-    public func fromArgs(args : [Arg], recordKeyMap : TrieMap.TrieMap<Nat32, Text>) : Candid {
-        let arg = args[0];
-
-        fromArgValue(arg._type, arg.value, recordKeyMap);
+    public func fromArgs(args : [Arg], recordKeyMap : TrieMap.TrieMap<Nat32, Text>) : [Candid] {
+        Array.map(
+            args,
+            func(arg : Arg) : Candid {
+                fromArgType(arg._type, arg.value, recordKeyMap);
+            },
+        )
     };
 
-    func fromArgValue(_type : Type, val : Value, recordKeyMap : TrieMap.TrieMap<Nat32, Text>) : Candid {
+    func fromArgType(_type : Type, val : Value, recordKeyMap : TrieMap.TrieMap<Nat32, Text>) : Candid {
         switch (_type, val) {
             case (_, #nat(n)) #Nat(n);
             case (_, #nat8(n)) #Nat8(n);
@@ -99,7 +100,7 @@ module {
                     case (#opt(#_null), _) #Null;
                     case (#opt(_), null) #Null;
                     case (#opt(innerType), ?val) {
-                        fromArgValue(innerType, val, recordKeyMap);
+                        fromArgType(innerType, val, recordKeyMap);
                     };
                     case (_) Debug.trap("Expected value in #opt");
                 };
@@ -127,7 +128,7 @@ module {
                         let newArr = Array.map(
                             arr,
                             func(elem : Value) : Candid {
-                                fromArgValue(innerType, elem, recordKeyMap);
+                                fromArgType(innerType, elem, recordKeyMap);
                             },
                         );
 
@@ -145,7 +146,7 @@ module {
                         let {tag; value} = records[i];
 
                         let key = getKey(tag, recordKeyMap);
-                        let val = fromArgValue(innerType, value, recordKeyMap);
+                        let val = fromArgType(innerType, value, recordKeyMap);
 
                         (key, val)
                     },
@@ -159,7 +160,7 @@ module {
                 for ({tag; _type = innerType} in variantTypes.vals()) {
                     if (tag == v.tag) {
                         let key = getKey(tag, recordKeyMap);
-                        let val = fromArgValue(innerType, v.value, recordKeyMap);
+                        let val = fromArgType(innerType, v.value, recordKeyMap);
 
                         return #Variant((key, val));
                     };
