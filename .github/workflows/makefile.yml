@@ -12,23 +12,19 @@ jobs:
 
         steps:
             - uses: actions/checkout@v3
-            # - uses: aviate-labs/setup-dfx@v0.2.3
-            #   with:
-            #     vessel-version: 0.6.3
-            #     dfx-version: 0.12.1
+            - uses: actions/setup-node@v3
+              with:
+                node-version: 14
+            - uses: aviate-labs/setup-dfx@v0.2.3
+              with:
+                vessel-version: 0.6.3
+                dfx-version: 0.12.1
 
             - name: "install mops"
               run: |
-                  git clone https://github.com/ZenVoich/mops
-                  cd mops/cli
-                  npm i
-                  mkdir /home/runner/bin
-                  echo "/home/runner/bin" >> $GITHUB_PATH
-                  echo "alias mops=node $(pwd)/cli.js" >> /home/runner/bin/mops
-                  chmod +x /home/runner/bin/mops
+                  npm --yes -g i ic-mops
                   mops i
                   mops sources
-
 
             - name: Detect Warnings
               run: make no-warn
@@ -36,5 +32,5 @@ jobs:
             - name: Run Tests
               run: make test
 
-            - name: Generate Docs
-              run: make docs
+            # - name: Generate Docs
+            #   run: make docs
