@@ -5,7 +5,7 @@ TESTS_FILES=`find tests -type f -name '*.Test.mo'`
 
 if [ -z $1 ]
 then
-    echo "No argument supplied"
+    echo "Compiling all test files (*.Test.mo)"
 else
     echo $1
     TESTS_FILES=`find tests -type f -name '*.Test.mo' | grep $1`

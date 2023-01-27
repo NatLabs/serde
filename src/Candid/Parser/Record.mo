@@ -25,7 +25,13 @@ module {
                             fieldParser(candidParser),
                             ignoreSpace(C.Character.char(';')),
                         ),
-                        ignoreSpace(C.String.string("}")),
+                        C.oneOf([
+                            C.right(
+                                ignoreSpace(C.Character.char(';')),
+                                ignoreSpace(C.String.string("}")),
+                            ),
+                            ignoreSpace(C.String.string("}")),
+                        ])
                     ),
                 ),
             ),

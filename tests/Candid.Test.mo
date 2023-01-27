@@ -402,10 +402,10 @@ let success = run(
                                                 assertAllTrue([
                                                     Candid.fromText("(vec {})") == [#Array([])],
                                                     Candid.fromText("(vec { 100; 200; 0xAB })") == [#Array([#Nat(100), #Nat(200), #Nat(0xAB)])],
-                                                    Candid.fromText("(vec { \"hello\"; \"world\" })") == [#Array([#Text("hello"), #Text("world")])],
+                                                    Candid.fromText("(vec { \"hello\"; \"world\"; })") == [#Array([#Text("hello"), #Text("world")])],
                                                     Candid.fromText("(vec { true; false })") == [#Array([#Bool(true), #Bool(false)])],
                                                     Candid.fromText("(vec { blob \"\\AB\\CD\"; blob \"\\EF\\12\" })") == [#Array([#Blob(Blob.fromArray([0xAB, 0xCD])), #Blob(Blob.fromArray([0xEF, 0x12]))])],
-                                                    Candid.fromText("(vec { principal \"w7x7r-cok77-xa\"; principal \"aaaaa-aa\" })") == [#Array([#Principal(Principal.fromText("w7x7r-cok77-xa")), #Principal(Principal.fromText("aaaaa-aa"))])],
+                                                    Candid.fromText("(vec { principal \"w7x7r-cok77-xa\"; principal \"aaaaa-aa\"; })") == [#Array([#Principal(Principal.fromText("w7x7r-cok77-xa")), #Principal(Principal.fromText("aaaaa-aa"))])],
                                                 ]);
                                             },
                                         ),
@@ -428,9 +428,9 @@ let success = run(
                                         assertAllTrue([
                                             Candid.fromText("(record {})") == [#Record([])],
                                             Candid.fromText("(record { first_name = \"John\"; second_name = \"Doe\" })") == [#Record([("first_name", #Text("John")), ("second_name", #Text("Doe"))])],
-                                            Candid.fromText("(record { \"name with spaces\" = 42; \"unicode, too: ☃\" = true })") == [#Record([("name with spaces", #Nat(42)), ("unicode, too: ☃", #Bool(true))])],
+                                            Candid.fromText("(record { \"name with spaces\" = 42; \"unicode, too: ☃\" = true; })") == [#Record([("name with spaces", #Nat(42)), ("unicode, too: ☃", #Bool(true))])],
                                             // nested record
-                                            Candid.fromText("(record { first_name = \"John\"; second_name = \"Doe\"; address = record { street = \"Main Street\"; city = \"New York\" } })") == [#Record([("first_name", #Text("John")), ("second_name", #Text("Doe")), ("address", #Record([("street", #Text("Main Street")), ("city", #Text("New York"))]))])],
+                                            Candid.fromText("(record { first_name = \"John\"; second_name = \"Doe\"; address = record { street = \"Main Street\"; city = \"New York\"; } })") == [#Record([("first_name", #Text("John")), ("second_name", #Text("Doe")), ("address", #Record([("street", #Text("Main Street")), ("city", #Text("New York"))]))])],
                                         ]);
                                     },
                                 ),
