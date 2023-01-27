@@ -20,11 +20,14 @@ jobs:
                 vessel-version: 0.6.3
                 dfx-version: 0.12.1
 
-            - name: "install mops"
+            - name: install mops
               run: |
                   npm --yes -g i ic-mops
                   mops i
                   mops sources
+            
+            - name: install wasmtime
+              run: curl https://wasmtime.dev/install.sh -sSf | bash
 
             - name: Detect Warnings
               run: make no-warn
