@@ -45,8 +45,6 @@ module {
             toKeyValuePairs(pairs, key, value);
         };
 
-        toKeyValuePairs(pairs, "", candid);
-        
         Text.join(
             "&",
             Iter.map(

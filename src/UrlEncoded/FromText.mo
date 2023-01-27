@@ -41,8 +41,6 @@ module {
     /// Converts a Url-Encoded Text to a serialized Candid Record
     public func fromText(text : Text) : Blob {
         let candid = toCandid(text);
-
-        debug { Debug.print("UrlEncoded fromText: " # debug_show (candid)) };
         Candid.encodeOne(candid);
     };
 
