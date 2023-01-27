@@ -29,8 +29,7 @@ jobs:
             - name: install wasmtime
               run: |
                 curl https://wasmtime.dev/install.sh -sSf | bash
-                source /home/runner/.bashrc
-                echo $WASMTIME_HOME
+                echo "$HOME/.wasmtime/bin" >> $GITHUB_PATH
 
             - name: Detect Warnings
               run: make no-warn
