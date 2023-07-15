@@ -1,3 +1,4 @@
+// @testmode wasi
 import Debug "mo:base/Debug";
 import Iter "mo:base/Iter";
 
@@ -32,7 +33,7 @@ let success = run([
                         "single record",
                         do {
 
-                            let blob = UrlEncoded.fromText("msg=Hello World&name=John");
+                            let blob = UrlEncoded.fromText("msg=Hello World&name=John", null);
 
                             let res : ?User = from_candid (blob);
 
@@ -47,9 +48,9 @@ let success = run([
                     it(
                         "record with array",
                         do {
-                            let blob = UrlEncoded.fromText(
-                                "users[0][name]=John&users[0][msg]=Hello World&users[1][name]=Jane&users[1][msg]=testing",
-                            );
+
+                            let text = "users[0][name]=John&users[0][msg]=Hello World&users[1][name]=Jane&users[1][msg]=testing";
+                            let blob = UrlEncoded.fromText(text, null);
 
                             let res : ?{ users : [User] } = from_candid (blob);
                             assertTrue(
@@ -91,14 +92,14 @@ let success = run([
                             let user = "variant[#user][name]=John&variant[#user][msg]=Hello World";
                             let array = "variant[#array][0]=1&variant[#array][1]=2&variant[#array][2]=3";
 
-                            let text_blob = UrlEncoded.fromText(text);
-                            let nat_blob = UrlEncoded.fromText(nat);
-                            let int_blob = UrlEncoded.fromText(int);
-                            let float_blob = UrlEncoded.fromText(float);
-                            let bool_blob = UrlEncoded.fromText(bool);
-                            let record_blob = UrlEncoded.fromText(record);
-                            let user_blob = UrlEncoded.fromText(user);
-                            let array_blob = UrlEncoded.fromText(array);
+                            let text_blob = UrlEncoded.fromText(text, null);
+                            let nat_blob = UrlEncoded.fromText(nat, null);
+                            let int_blob = UrlEncoded.fromText(int, null);
+                            let float_blob = UrlEncoded.fromText(float, null);
+                            let bool_blob = UrlEncoded.fromText(bool, null);
+                            let record_blob = UrlEncoded.fromText(record, null);
+                            let user_blob = UrlEncoded.fromText(user, null);
+                            let array_blob = UrlEncoded.fromText(array, null);
 
                             let text_val : ?{ variant : Variant } = from_candid (text_blob);
                             let nat_val : ?{ variant : Variant } = from_candid (nat_blob);
@@ -145,7 +146,7 @@ let success = run([
                             };
 
                             let blob = to_candid (info);
-                            let text = UrlEncoded.toText(blob, ["name", "msg"]);
+                            let text = UrlEncoded.toText(blob, ["name", "msg"], null);
                             assertTrue(text == "msg=Hello World&name=John");
                         },
                     ),
@@ -165,7 +166,7 @@ let success = run([
 
                             let blob = to_candid ({ users });
 
-                            let text = UrlEncoded.toText(blob, ["users", "name", "msg"]);
+                            let text = UrlEncoded.toText(blob, ["users", "name", "msg"], null);
     
                             assertTrue(
                                 text == "users[0][msg]=Hello World&users[0][name]=John&users[1][msg]=testing&users[1][name]=Jane",
