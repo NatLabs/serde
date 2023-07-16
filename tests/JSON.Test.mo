@@ -1,3 +1,4 @@
+// @testmode wasi
 import Blob "mo:base/Blob";
 import Debug "mo:base/Debug";
 import Iter "mo:base/Iter";
@@ -33,10 +34,10 @@ let success = run(
                     "fromText()",
                     [
                         it(
-                            "fromText()",
+                            "record type",
                             do {
                                 let text = "{\"name\": \"Tomi\", \"id\": 32}";
-                                let blob = JSON.fromText(text);
+                                let blob = JSON.fromText(text, null);
                                 let user : ?User = from_candid (blob);
 
                                 user == ?{ name = "Tomi"; id = ?32 };
@@ -61,11 +62,11 @@ let success = run(
                                 let record = "{\"#record\": {\"site\": \"github\"}}";
                                 let array = "{\"#array\": [1, 2, 3] }";
 
-                                let text_blob = JSON.fromText(text);
-                                let nat_blob = JSON.fromText(nat);
-                                let bool_blob = JSON.fromText(bool);
-                                let record_blob = JSON.fromText(record);
-                                let array_blob = JSON.fromText(array);
+                                let text_blob = JSON.fromText(text, null);
+                                let nat_blob = JSON.fromText(nat, null);
+                                let bool_blob = JSON.fromText(bool, null);
+                                let record_blob = JSON.fromText(record, null);
+                                let array_blob = JSON.fromText(array, null);
 
                                 let text_val : ?Variant = from_candid (text_blob);
                                 let nat_val : ?Variant = from_candid (nat_blob);
@@ -84,6 +85,28 @@ let success = run(
                                 ]);
                             },
                         ),
+                        it(
+                            "renaming record fields",
+                            do {
+                                // type Original = {
+                                //     label : Nat;
+                                //     query : Text;
+                                // };
+                                
+                                type UserData = {
+                                    account_label : Nat;
+                                    user_query : Text;
+                                };
+
+                                let text = "{\"label\": 123, \"query\": \"?user_id=12&address=2014%20Forest%20Hill%20Drive\"}";
+                                let options = { renameKeys = [("label", "account_label"), ("query", "user_query")] };
+                                let blob = JSON.fromText(text, ?options);
+
+                                let user : ?UserData = from_candid (blob);
+
+                                user == ?{ account_label = 123; user_query = "?user_id=12&address=2014%20Forest%20Hill%20Drive" };
+                            },
+                        ),
                     ],
                 ),
                 describe(
@@ -94,7 +117,7 @@ let success = run(
                             do {
                                 let user = { name = "Tomi"; id = null };
                                 let blob = to_candid (user);
-                                let jsonText = JSON.toText(blob, ["name", "id"]);
+                                let jsonText = JSON.toText(blob, ["name", "id"], null);
 
                                 jsonText == "{\"id\": null, \"name\": \"Tomi\"}";
                             },
@@ -122,11 +145,11 @@ let success = run(
                                 let record_blob = to_candid (record);
                                 let array_blob = to_candid (array);
 
-                                let text_json = JSON.toText(text_blob, ["text"]);
-                                let nat_json = JSON.toText(nat_blob, ["nat"]);
-                                let bool_json = JSON.toText(bool_blob, ["bool"]);
-                                let record_json = JSON.toText(record_blob, ["record", "site"]);
-                                let array_json = JSON.toText(array_blob, ["array"]);
+                                let text_json = JSON.toText(text_blob, ["text"], null);
+                                let nat_json = JSON.toText(nat_blob, ["nat"], null);
+                                let bool_json = JSON.toText(bool_blob, ["bool"], null);
+                                let record_json = JSON.toText(record_blob, ["record", "site"], null);
+                                let array_json = JSON.toText(array_blob, ["array"], null);
 
                                 assertAllTrue([
                                     text_json == "{\"#text\": \"hello\"}",
@@ -135,6 +158,29 @@ let success = run(
                                     record_json == "{\"#record\": {\"site\": \"github\"}}",
                                     array_json == "{\"#array\": [1, 2, 3]}",
                                 ]);
+                            },
+                        ),
+                        it(
+                            "renaming record fields",
+                            do {
+                                // type Original = {
+                                //     label : Nat;   // reserved keyword that is renamed to account_label 
+                                //     query : Text;  // reserved keyword that is renamed to user_query
+                                // };
+                                
+                                type UserData = {
+                                    account_label : Nat;
+                                    user_query : Text;
+                                };
+
+                                let UserDataKeys = ["account_label", "user_query"];
+                                let options = { renameKeys = [("account_label", "label"), ("user_query", "query")] };
+
+                                let data : UserData = { account_label = 123; user_query = "?user_id=12&address=2014%20Forest%20Hill%20Drive" };
+                                let blob = to_candid (data);
+                                let jsonText = JSON.toText(blob, UserDataKeys, ?options);
+                                
+                                jsonText == "{\"label\": 123, \"query\": \"?user_id=12&address=2014%20Forest%20Hill%20Drive\"}";
                             },
                         ),
                     ],

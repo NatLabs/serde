@@ -5,10 +5,10 @@ import Debug "mo:base/Debug";
 import Result "mo:base/Result";
 import Prelude "mo:base/Prelude";
 
-import Encoder "Encoder";
-import Decoder "Decoder";
-import Parser "Parser";
-import ToText "ToText";
+import Encoder "Blob/Encoder";
+import Decoder "Blob/Decoder";
+import Parser "Text/Parser";
+import ToText "Text/ToText";
 
 import T "Types";
 

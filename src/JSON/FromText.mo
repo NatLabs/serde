@@ -14,15 +14,16 @@ import JSON "mo:json/JSON";
 
 import Candid "../Candid";
 import U "../Utils";
+import CandidTypes "../Candid/Types";
 
 module {
     type JSON = JSON.JSON;
     type Candid = Candid.Candid;
 
     /// Converts JSON text to a serialized Candid blob that can be decoded to motoko values using `from_candid()`
-    public func fromText(rawText : Text) : Blob {
+    public func fromText(rawText : Text, options: ?CandidTypes.Options) : Blob {
         let candid = toCandid(rawText);
-        Candid.encodeOne(candid);
+        Candid.encodeOne(candid, options);
     };
 
     /// Convert JSON text to a Candid value

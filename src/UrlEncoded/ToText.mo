@@ -20,14 +20,15 @@ import itertools "mo:itertools/Iter";
 
 import Candid "../Candid";
 import U "../Utils";
+import CandidTypes "../Candid/Types";
 
 module {
     type Candid = Candid.Candid;
     type TrieMap<K, V> = TrieMap.TrieMap<K, V>;
 
     /// Converts a serialized Candid blob to a URL-Encoded string.
-    public func toText(blob : Blob, keys : [Text]) : Text {
-        let candid = Candid.decode(blob, keys);
+    public func toText(blob : Blob, keys : [Text], options: ?CandidTypes.Options) : Text {
+        let candid = Candid.decode(blob, keys, options);
         fromCandid(candid[0]);
     };
 

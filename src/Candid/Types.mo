@@ -32,4 +32,10 @@ module {
 
     };
 
+    /// Encoding and Decoding options
+    public type Options = {
+        /// Contains an array of tuples of the form (old_name, new_name) to rename the record keys.
+        renameKeys : [(Text, Text)];
+    }; 
+
 };

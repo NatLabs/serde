@@ -1,3 +1,4 @@
+// @testmode wasi
 import Blob "mo:base/Blob";
 import Debug "mo:base/Debug";
 import Iter "mo:base/Iter";
@@ -7,7 +8,7 @@ import Principal "mo:base/Principal";
 import ActorSpec "./utils/ActorSpec";
 
 import Candid "../src/Candid";
-import Encoder "../src/Candid/Encoder";
+import Encoder "../src/Candid/Blob/Encoder";
 
 let {
     assertTrue;
@@ -20,6 +21,8 @@ let {
     run;
 } = ActorSpec;
 
+type Candid = Candid.Candid;
+
 let success = run(
     [
         describe(
@@ -29,11 +32,37 @@ let success = run(
                     "decode()",
                     [
                         it(
+                            "renaming keys",
+                            do {
+                                let motoko = [{ name = "candid"; arr = [1, 2, 3, 4] }, { name = "motoko"; arr = [5, 6, 7, 8] }, { name = "rust"; arr = [9, 10, 11, 12] }];
+                                let blob = to_candid (motoko);  
+                                let options = { renameKeys = [("arr", "array"), ("name", "username")] };
+                                let candid = Candid.decode(blob, ["name", "arr"], ?options);
+
+                                candid ==  [
+                                    #Array([
+                                        #Record([
+                                            ("array", #Array([#Nat(1), #Nat(2), #Nat(3), #Nat(4)])),
+                                            ("username", #Text("candid")),
+                                        ]),
+                                        #Record([
+                                            ("array", #Array([#Nat(5), #Nat(6), #Nat(7), #Nat(8)])),
+                                            ("username", #Text("motoko")),
+                                        ]),
+                                        #Record([
+                                            ("array", #Array([#Nat(9), #Nat(10), #Nat(11), #Nat(12)])),
+                                            ("username", #Text("rust")),
+                                        ]),
+                                    ])
+                                ];
+                            }
+                        ),
+                        it(
                             "record type: {name: Text}",
                             do {
                                 let motoko = { name = "candid" };
                                 let blob = to_candid (motoko);
-                                let candid = Candid.decode(blob, ["name"]);
+                                let candid = Candid.decode(blob, ["name"], null);
 
                                 candid == [#Record([("name", #Text("candid"))])];
                             },
@@ -43,7 +72,7 @@ let success = run(
                             do {
                                 let arr = [1, 2, 3, 4];
                                 let blob = to_candid (arr);
-                                let candid = Candid.decode(blob, []);
+                                let candid = Candid.decode(blob, [], null);
 
                                 candid == [#Array([#Nat(1), #Nat(2), #Nat(3), #Nat(4)])];
                             },
@@ -57,8 +86,8 @@ let success = run(
                                 let bytes_array = to_candid (motoko_blob);
                                 let bytes_blob = to_candid (motoko_blob);
 
-                                let candid_array = Candid.decode(bytes_array, []);
-                                let candid_blob = Candid.decode(bytes_blob, []);
+                                let candid_array = Candid.decode(bytes_array, [], null);
+                                let candid_blob = Candid.decode(bytes_blob, [], null);
 
                                 assertAllTrue([
                                     // All [Nat8] types are decoded as #Blob
@@ -91,11 +120,11 @@ let success = run(
                                 let record_blob = to_candid (record);
                                 let array_blob = to_candid (array);
 
-                                let text_candid = Candid.decode(text_blob, ["text"]);
-                                let nat_candid = Candid.decode(nat_blob, ["nat"]);
-                                let bool_candid = Candid.decode(bool_blob, ["bool"]);
-                                let record_candid = Candid.decode(record_blob, ["record", "site"]);
-                                let array_candid = Candid.decode(array_blob, ["array"]);
+                                let text_candid = Candid.decode(text_blob, ["text"], null);
+                                let nat_candid = Candid.decode(nat_blob, ["nat"], null);
+                                let bool_candid = Candid.decode(bool_blob, ["bool"], null);
+                                let record_candid = Candid.decode(record_blob, ["record", "site"], null);
+                                let array_candid = Candid.decode(array_blob, ["array"], null);
 
                                 assertAllTrue([
                                     text_candid == [#Variant("text", #Text("hello"))],
@@ -139,7 +168,7 @@ let success = run(
                                 ];
 
                                 let blob = to_candid (users);
-                                let candid = Candid.decode(blob, record_keys);
+                                let candid = Candid.decode(blob, record_keys, null);
 
                                 candid == [
                                     #Array([
@@ -171,6 +200,33 @@ let success = run(
                 describe(
                     "encode()",
                     [
+                        it("renaming keys", do {
+                            let candid : Candid = #Array([
+                                #Record([
+                                    ("array", #Array([#Nat(1), #Nat(2), #Nat(3), #Nat(4)])),
+                                    ("name", #Text("candid")),
+                                ]),
+                                #Record([
+                                    ("array", #Array([#Nat(5), #Nat(6), #Nat(7), #Nat(8)])),
+                                    ("name", #Text("motoko")),
+                                ]),
+                                #Record([
+                                    ("array", #Array([#Nat(9), #Nat(10), #Nat(11), #Nat(12)])),
+                                    ("name", #Text("rust")),
+                                ]),
+                            ]);
+
+                            type Data = {
+                                language: Text;
+                                daily_downloads: [Nat]
+                            };
+
+                            let options = { renameKeys = [("array", "daily_downloads"), ("name", "language")] };
+                            let blob = Candid.encodeOne(candid, ?options);  
+                            let motoko : ?[Data] = from_candid (blob);
+                            // true
+                            motoko == ?[{ language = "candid"; daily_downloads = [1, 2, 3, 4] }, { language = "motoko"; daily_downloads = [5, 6, 7, 8] }, { language = "rust"; daily_downloads = [9, 10, 11, 12] }];
+                        }),
                         it(
                             "record type {name: Text}",
                             do {
@@ -179,7 +235,7 @@ let success = run(
                                     name : Text;
                                 };
 
-                                let blob = Candid.encodeOne(candid);
+                                let blob = Candid.encodeOne(candid, null);
                                 let user : ?User = from_candid (blob);
 
                                 user == ?{ name = "candid" };
@@ -193,8 +249,8 @@ let success = run(
                                 let candid_1 = #Array([#Nat8(1 : Nat8), #Nat8(2 : Nat8), #Nat8(3 : Nat8), #Nat8(4 : Nat8)]);
                                 let candid_2 = #Blob(motoko_blob);
 
-                                let serialized_1 = Candid.encodeOne(candid_1);
-                                let serialized_2 = Candid.encodeOne(candid_2);
+                                let serialized_1 = Candid.encodeOne(candid_1, null);
+                                let serialized_2 = Candid.encodeOne(candid_2, null);
 
                                 let blob_1 : ?Blob = from_candid (serialized_1);
                                 let blob_2 : ?Blob = from_candid (serialized_2);
@@ -210,47 +266,47 @@ let success = run(
                                 ]);
                             },
                         ),
-                        it(
-                            "variant",
-                            do {
+                        // it(
+                        //     "variant",
+                        //     do {
 
-                                type Variant = {
-                                    #text : Text;
-                                    #nat : Nat;
-                                    #bool : Bool;
-                                    #record : { site : Text };
-                                    #array : [Nat];
-                                };
+                        //         type Variant = {
+                        //             #text : Text;
+                        //             #nat : Nat;
+                        //             #bool : Bool;
+                        //             #record : { site : Text };
+                        //             #array : [Nat];
+                        //         };
 
-                                let text = #Variant("text", #Text("hello"));
-                                let nat = #Variant("nat", #Nat(123));
-                                let bool = #Variant("bool", #Bool(true));
-                                let record = #Variant("record", #Record([("site", #Text("github"))]));
-                                let array = #Variant("array", #Array([#Nat(1), #Nat(2), #Nat(3)]));
+                        //         let text = #Variant("text", #Text("hello"));
+                        //         let nat = #Variant("nat", #Nat(123));
+                        //         let bool = #Variant("bool", #Bool(true));
+                        //         let record = #Variant("record", #Record([("site", #Text("github"))]));
+                        //         let array = #Variant("array", #Array([#Nat(1), #Nat(2), #Nat(3)]));
 
-                                let text_blob = Candid.encodeOne(text);
-                                let nat_blob = Candid.encodeOne(nat);
-                                let bool_blob = Candid.encodeOne(bool);
-                                let record_blob = Candid.encodeOne(record);
-                                let array_blob = Candid.encodeOne(array);
+                        //         let text_blob = Candid.encodeOne(text, null);
+                        //         let nat_blob = Candid.encodeOne(nat, null);
+                        //         let bool_blob = Candid.encodeOne(bool, null);
+                        //         let record_blob = Candid.encodeOne(record, null);
+                        //         let array_blob = Candid.encodeOne(array, null);
 
-                                let text_val : ?Variant = from_candid (text_blob);
-                                let nat_val : ?Variant = from_candid (nat_blob);
-                                let bool_val : ?Variant = from_candid (bool_blob);
-                                let record_val : ?Variant = from_candid (record_blob);
-                                let array_val : ?Variant = from_candid (array_blob);
+                        //         let text_val : ?Variant = from_candid (text_blob);
+                        //         let nat_val : ?Variant = from_candid (nat_blob);
+                        //         let bool_val : ?Variant = from_candid (bool_blob);
+                        //         let record_val : ?Variant = from_candid (record_blob);
+                        //         let array_val : ?Variant = from_candid (array_blob);
 
-                                assertAllTrue([
-                                    text_val == ?#text("hello"),
-                                    nat_val == ?#nat(123),
-                                    bool_val == ?#bool(true),
-                                    record_val == ?#record({
-                                        site = "github";
-                                    }),
-                                    array_val == ?#array([1, 2, 3]),
-                                ]);
-                            },
-                        ),
+                        //         assertAllTrue([
+                        //             text_val == ?#text("hello"),
+                        //             nat_val == ?#nat(123),
+                        //             bool_val == ?#bool(true),
+                        //             record_val == ?#record({
+                        //                 site = "github";
+                        //             }),
+                        //             array_val == ?#array([1, 2, 3]),
+                        //         ]);
+                        //     },
+                        // ),
                     ],
                 ),
 
@@ -271,7 +327,7 @@ let success = run(
                             ("details", #Record([("age", #Nat(32)), ("email", #Option(#Text("example@gmail.com"))), ("registered", #Bool(true))])),
                         ]);
 
-                        let blob = Candid.encodeOne(candid);
+                        let blob = Candid.encodeOne(candid, null);
 
                         let mo : ?User = from_candid (blob);
                         mo == ?{

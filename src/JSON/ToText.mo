@@ -14,14 +14,15 @@ import NatX "mo:xtended-numbers/NatX";
 import IntX "mo:xtended-numbers/IntX";
 
 import Candid "../Candid";
+import CandidTypes "../Candid/Types";
 
 module {
     type JSON = JSON.JSON;
     type Candid = Candid.Candid;
 
     /// Converts serialized Candid blob to JSON text
-    public func toText(blob : Blob, keys : [Text]) : Text {
-        let candid = Candid.decode(blob, keys);
+    public func toText(blob : Blob, keys : [Text], options: ?CandidTypes.Options) : Text {
+        let candid = Candid.decode(blob, keys, options);
         fromCandid(candid[0]);
     };
 
@@ -84,7 +85,8 @@ module {
                 let (key, val) = variant;
                 #Object([("#" # key, candidToJSON(val))]);
             };
-
+            
+            // #Blob(_), #Empty and #Principal(_) are not supported
             case (_) Prelude.unreachable();
         };
     };

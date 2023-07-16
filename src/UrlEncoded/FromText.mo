@@ -17,6 +17,7 @@ import Prelude "mo:base/Prelude";
 import itertools "mo:itertools/Iter";
 
 import Candid "../Candid";
+import CandidTypes "../Candid/Types";
 import { parseValue } "./Parser";
 import U "../Utils";
 
@@ -39,9 +40,9 @@ module {
     func newMap() : NestedTrieMap = TrieMap.TrieMap(Text.equal, Text.hash);
 
     /// Converts a Url-Encoded Text to a serialized Candid Record
-    public func fromText(text : Text) : Blob {
+    public func fromText(text : Text, options: ?CandidTypes.Options) : Blob {
         let candid = toCandid(text);
-        Candid.encodeOne(candid);
+        Candid.encodeOne(candid, options);
     };
 
     /// Converts a Url-Encoded Text to a Candid Record
@@ -203,6 +204,7 @@ module {
             return #Array(array);
         };
 
+        // check if single value is a variant
         if (triemap.size() == 1) {
             let (variant_key, value) = switch (triemap.entries().next()) {
                 case (?(k, v))(k, v);
