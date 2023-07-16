@@ -73,7 +73,7 @@ import { JSON; Candid; UrlEncoded } "mo:serde";
 For more usage examples see [usage.md](https://github.com/NatLabs/serde/blob/main/usage.md):
 - [Candid Text](https://github.com/NatLabs/serde/blob/main/usage.md#candid-text)
 - [URL-Encoded Pairs](https://github.com/NatLabs/serde/blob/main/usage.md#url-encoded-pairs)
-  
+
 ## Limitations
 - Requires that the user provides a list of record keys and variant names when converting from Motoko. This is because the candid format used for serializing Motoko stores record keys as their hash, making it impossible to retrieve the original key names.
 - Does not have specific syntax to support the conversion between `Blob`, `Principal`, and Bounded `Nat`/`Int` types.
