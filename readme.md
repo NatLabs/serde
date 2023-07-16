@@ -9,73 +9,79 @@ A serialisation and deserialisation library for Motoko.
 - Run `mops install serde`, in your project directory
 
 ## Usage
-
-### JSON
-
+#### Import statement 
 ```motoko
-    import serdeJson "mo:serde/JSON";
-    
-    type User = {
-        name: Text;
-        id: Nat;
-    };
-
-    let blob = serdeJson.fromText("{\"name\": \"bar\", \"id\": 112}");
-    let user : ?User = from_candid(blob);
-
-    assert user == ?{ name = "bar"; id = 112 };
-
+import { JSON; Candid; UrlEncoded } "mo:serde";
 ```
 
-### Candid Text
-```motoko
-    import serdeCandid "mo:serde/Candid";
+#### JSON
 
-    type User = {
-        name: Text;
-        id: Nat;
+- Converting a specific data type, for example `User`:
+  ```motoko
+      type User = {
+          name: Text;
+          id: Nat;
+          email: ?Text;
+      };
+  ```
+
+  - JSON to Motoko
+  ```motoko
+      let blob = JSON.fromText("{\"name\": \"bar\", \"id\": 112}", null);
+      let user : ?User = from_candid(blob);
+
+      assert user == ?{ name = "bar"; id = 112; email = null };
+  ```
+
+  - Motoko to JSON
+  ```motoko
+      let UserKeys = ["name", "id", "email"];
+
+      let user : User = { name = "bar"; id = 112; email = null };
+      let blob = to_candid(user);
+      let json = JSON.toText(blob, UserKeys, null);
+
+      assert json == "{\"name\": \"bar\", \"id\": 112, \"email\": null}";
+   ```
+
+- Renaming field keys (Useful for fields with reserved keywords in Motoko )
+```motoko
+    import Serde "mo:serde";
+
+    // type JsonItemSchemaWithReservedKeys = {
+    //     type: Text; // reserved
+    //     label: Text;  // reserved
+    //     id: Nat;
+    // };
+
+    type Item = {
+        item_type: Text;
+        item_label: Text;
+        id: Nat
     };
 
-    let blob = serdeCandid.fromText("(record({ name = \"bar\"; id = 112 })");
-    let user : ?User = from_candid(blob);
-
-    assert user == ?{ name = "bar"; id = 112 };
-
-```
-
-### URL-Encoded Pairs
-Serialization and deserialization for `application/x-www-form-urlencoded`.
-
-This implementation supports URL query strings and URL-encoded pairs, including arrays and nested objects, using the format `items[0]=value&items[1]=value` and `items[subKey]=value`."
-
-```motoko
-    import serde_urlencoded "mo:serde/URLEncoded";
-    
-    type User = {
-        name: Text;
-        id: Nat; 
+    let jsonText = "{\"type\": \"bar\", \"label\": \"foo\", \"id\": 112}";
+    let options : Serde.Options = { 
+        renameKeys = [("type", "item_type"), ("label", "item_label")] 
     };
-    
-    let payload = "users[0][id]=123&users[0][name]=John&users[1][id]=456&users[1][name]=Jane";
 
-    let blob = serde_urlencoded.fromText(payload);
-    let res : ?{ users: [User]} = from_candid(blob);
+    let blob = Serde.JSON.fromText(jsonText, ?options);
+    let renamedKeys : ?Item = from_candid(blob);
 
-    assert res == ?{ users = [
-        {
-            name = "John";
-            id = 123;
-        },
-        {
-            name = "Jane";
-            id = 456;
-        },
-    ] };
-
+    assert renamedKeys == ?{ item_type = "bar"; item_label = "foo"; id = 112 };
 ```
+For more usage examples see [usage.md](https://github.com/NatLabs/serde/blob/main/usage.md):
+- [Candid Text](https://github.com/NatLabs/serde/blob/main/usage.md#candid-text)
+- [URL-Encoded Pairs](https://github.com/NatLabs/serde/blob/main/usage.md#url-encoded-pairs)
+  
+## Limitations
+- Requires that the user provides a list of record keys and variant names when converting from Motoko. This is because the candid format used for serializing Motoko stores record keys as their hash, making it impossible to retrieve the original key names.
+- Does not have specific syntax to support the conversion between `Blob`, `Principal`, and Bounded `Nat`/`Int` types.
+
+
 ## Tests
 - Install [mops](https://j4mwm-bqaaa-aaaam-qajbq-cai.ic0.app/#/docs/install)
-- Install [vessel](https://github.com/dfinity/vessel)
+- Install [mocv](https://github.com/ZenVoich/mocv)
 - Install [wasmtime](https://github.com/bytecodealliance/wasmtime/blob/main/README.md#wasmtime)
 
-- Run `make compile-tests`
+- Run `mops test` in the project directory
