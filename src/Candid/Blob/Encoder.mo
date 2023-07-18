@@ -117,7 +117,7 @@ module {
                 }]);
             };
 
-            case (c) Prelude.unreachable();
+            case (#Empty) #empty;
         };
     };
 
@@ -197,7 +197,8 @@ module {
                 });
             };
 
-            case (c) Prelude.unreachable();
+            case (#Empty) #empty;
+
         };
     };
 

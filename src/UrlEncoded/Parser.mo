@@ -35,7 +35,7 @@ module {
             case ("true") return #Bool(true);
             case ("false") return #Bool(false);
             case ("null") return #Null;
-            case ("") return #Empty;
+            case ("") return #Null;
             case (t) t;
         };
 
