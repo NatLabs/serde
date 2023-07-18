@@ -93,12 +93,12 @@ module {
             let entry_iter = Text.split(entry, #char '=');
             let key = switch (entry_iter.next()) {
                 case (?_key) _key;
-                case (_) Debug.trap("1. improper formatting of key value pair in '" # entry # "'");
+                case (_) Debug.trap("Missing key: improper formatting of key-value pair in '" # entry # "'");
             };
 
             let value = switch (entry_iter.next()) {
                 case (?val) val;
-                case (_) Debug.trap("2. improper formatting of key value pair in '" # entry # "'");
+                case (_) Debug.trap("Missing value: improper formatting of key value pair in '" # entry # "'");
             };
 
             switch (
@@ -112,11 +112,11 @@ module {
 
                     let stripped_key = switch (Text.stripEnd(key, #text "]")) {
                         case (?stripped_key) stripped_key;
-                        case (_) Debug.trap("4. improper formatting of key value pair in '" # entry # "'");
+                        case (_) Debug.trap("Improper formatting of key value pair in '" # entry # "' -> Missing closing bracket ']'");
                     };
 
-                    if (stripped_key == key or first_field.size() == 0) {
-                        return Debug.trap("3. improper formatting of key value pair in '" # entry # "'");
+                    if (first_field.size() == 0) {
+                        return Debug.trap("Missing field name between brackets '[]' in '" # entry # "'");
                     };
 
                     let other_fields = Text.split(
@@ -189,14 +189,10 @@ module {
             let array = Array.tabulate<Candid>(
                 triemap.size(),
                 func(i : Nat) {
-                    let val = switch (triemap.get(Nat.toText(i))) {
-                        case (?val) val;
+                    switch (triemap.get(Nat.toText(i))) {
+                        case (?(#text(text))) parseValue(text);
+                        case (?(#triemap(map))) trieMapToCandid(map);
                         case (_) Prelude.unreachable();
-                    };
-
-                    switch (val) {
-                        case (#text(text)) parseValue(text);
-                        case (#triemap(map)) trieMapToCandid(map);
                     };
                 },
             );

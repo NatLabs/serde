@@ -41,8 +41,35 @@ let success = run([
                                 res == ?{
                                     name = "John";
                                     msg = "Hello World";
-                                },
+                                }
                             );
+                        },
+                    ),
+                    it(
+                        "pairs with empty values",
+                        do {
+
+                            let unknown_blob = UrlEncoded.fromText("msg=Hello&name=", null);
+                            let known_blob = UrlEncoded.fromText("msg=Hello&name=John", null);
+
+                            type UserOptionalName = {
+                                name : ?Text;
+                                msg : Text;
+                            };
+
+                            let unknown_user : ?UserOptionalName = from_candid (unknown_blob);
+                            let known_user : ?UserOptionalName = from_candid (known_blob);
+
+                            assertAllTrue([
+                                unknown_user == ?{
+                                    name = null;
+                                    msg = "Hello";
+                                },
+                                known_user == ?{
+                                    name = ?"John";
+                                    msg = "Hello";
+                                },
+                            ]);
                         },
                     ),
                     it(
@@ -65,7 +92,7 @@ let success = run([
                                             msg = "testing";
                                         },
                                     ];
-                                },
+                                }
                             );
                         },
                     ),
@@ -167,9 +194,9 @@ let success = run([
                             let blob = to_candid ({ users });
 
                             let text = UrlEncoded.toText(blob, ["users", "name", "msg"], null);
-    
+
                             assertTrue(
-                                text == "users[0][msg]=Hello World&users[0][name]=John&users[1][msg]=testing&users[1][name]=Jane",
+                                text == "users[0][msg]=Hello World&users[0][name]=John&users[1][msg]=testing&users[1][name]=Jane"
                             );
                         },
                     ),
