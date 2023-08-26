@@ -6,8 +6,7 @@ import Nat "mo:base/Nat";
 
 import ActorSpec "./utils/ActorSpec";
 
-import JSON "../src/JSON";
-import Candid "../src/Candid";
+import { Candid; JSON } "../src";
 
 let {
     assertTrue;
@@ -75,16 +74,37 @@ let success = run(
                                 let array_val : ?Variant = from_candid (array_blob);
 
                                 assertAllTrue([
-                                    text_val == ?#text("hello"),
-                                    nat_val == ?#nat(123),
-                                    bool_val == ?#bool(true),
-                                    record_val == ?#record({
+                                    text_val == ? #text("hello"),
+                                    nat_val == ? #nat(123),
+                                    bool_val == ? #bool(true),
+                                    record_val == ? #record({
                                         site = "github";
                                     }),
-                                    array_val == ?#array([1, 2, 3]),
+                                    array_val == ? #array([1, 2, 3]),
                                 ]);
                             },
                         ),
+                        it(
+                            "multi-dimensional arrays",
+                            do {
+                                let arr2 = "[[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11]]";
+
+                                let arr3 = "[[[\"hello\", \"world\"], [\"foo\", \"bar\"]], [[\"hello\", \"world\"], [\"foo\", \"bar\"]], [[\"hello\", \"world\"], [\"foo\", \"bar\"]]]";
+
+                                let encoded_arr2 : ?[[Nat]] = from_candid (JSON.fromText(arr2, null));
+                                let encoded_arr3 : ?[[[Text]]] = from_candid (JSON.fromText(arr3, null));
+
+                                assertAllTrue([
+                                    encoded_arr2 == ?[[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11]],
+                                    encoded_arr3 == ?[
+                                        [["hello", "world"], ["foo", "bar"]],
+                                        [["hello", "world"], ["foo", "bar"]],
+                                        [["hello", "world"], ["foo", "bar"]],
+                                    ],
+                                ]);
+                            },
+                        ),
+
                         it(
                             "renaming record fields",
                             do {
@@ -92,19 +112,24 @@ let success = run(
                                 //     label : Nat;
                                 //     query : Text;
                                 // };
-                                
+
                                 type UserData = {
                                     account_label : Nat;
                                     user_query : Text;
                                 };
 
                                 let text = "{\"label\": 123, \"query\": \"?user_id=12&address=2014%20Forest%20Hill%20Drive\"}";
-                                let options = { renameKeys = [("label", "account_label"), ("query", "user_query")] };
+                                let options = {
+                                    renameKeys = [("label", "account_label"), ("query", "user_query")];
+                                };
                                 let blob = JSON.fromText(text, ?options);
 
                                 let user : ?UserData = from_candid (blob);
 
-                                user == ?{ account_label = 123; user_query = "?user_id=12&address=2014%20Forest%20Hill%20Drive" };
+                                user == ?{
+                                    account_label = 123;
+                                    user_query = "?user_id=12&address=2014%20Forest%20Hill%20Drive";
+                                };
                             },
                         ),
                     ],
@@ -161,25 +186,47 @@ let success = run(
                             },
                         ),
                         it(
+                            "multi-dimensional arrays",
+                            do {
+                                let arr2 : [[Nat]] = [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11]];
+
+                                let arr3 : [[[Text]]] = [
+                                    [["hello", "world"], ["foo", "bar"]],
+                                    [["hello", "world"], ["foo", "bar"]],
+                                    [["hello", "world"], ["foo", "bar"]],
+                                ];
+
+                                assertAllTrue([
+                                    JSON.toText(to_candid (arr2), [], null) == "[[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11]]",
+                                    JSON.toText(to_candid (arr3), [], null) == "[[[\"hello\", \"world\"], [\"foo\", \"bar\"]], [[\"hello\", \"world\"], [\"foo\", \"bar\"]], [[\"hello\", \"world\"], [\"foo\", \"bar\"]]]",
+                                ]);
+                            },
+                        ),
+                        it(
                             "renaming record fields",
                             do {
                                 // type Original = {
-                                //     label : Nat;   // reserved keyword that is renamed to account_label 
+                                //     label : Nat;   // reserved keyword that is renamed to account_label
                                 //     query : Text;  // reserved keyword that is renamed to user_query
                                 // };
-                                
+
                                 type UserData = {
                                     account_label : Nat;
                                     user_query : Text;
                                 };
 
                                 let UserDataKeys = ["account_label", "user_query"];
-                                let options = { renameKeys = [("account_label", "label"), ("user_query", "query")] };
+                                let options = {
+                                    renameKeys = [("account_label", "label"), ("user_query", "query")];
+                                };
 
-                                let data : UserData = { account_label = 123; user_query = "?user_id=12&address=2014%20Forest%20Hill%20Drive" };
+                                let data : UserData = {
+                                    account_label = 123;
+                                    user_query = "?user_id=12&address=2014%20Forest%20Hill%20Drive";
+                                };
                                 let blob = to_candid (data);
                                 let jsonText = JSON.toText(blob, UserDataKeys, ?options);
-                                
+
                                 jsonText == "{\"label\": 123, \"query\": \"?user_id=12&address=2014%20Forest%20Hill%20Drive\"}";
                             },
                         ),
@@ -187,7 +234,7 @@ let success = run(
                 ),
             ],
         ),
-    ],
+    ]
 );
 
 if (success == false) {

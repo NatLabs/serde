@@ -35,11 +35,13 @@ let success = run(
                             "renaming keys",
                             do {
                                 let motoko = [{ name = "candid"; arr = [1, 2, 3, 4] }, { name = "motoko"; arr = [5, 6, 7, 8] }, { name = "rust"; arr = [9, 10, 11, 12] }];
-                                let blob = to_candid (motoko);  
-                                let options = { renameKeys = [("arr", "array"), ("name", "username")] };
+                                let blob = to_candid (motoko);
+                                let options = {
+                                    renameKeys = [("arr", "array"), ("name", "username")];
+                                };
                                 let candid = Candid.decode(blob, ["name", "arr"], ?options);
 
-                                candid ==  [
+                                candid == [
                                     #Array([
                                         #Record([
                                             ("array", #Array([#Nat(1), #Nat(2), #Nat(3), #Nat(4)])),
@@ -55,7 +57,7 @@ let success = run(
                                         ]),
                                     ])
                                 ];
-                            }
+                            },
                         ),
                         it(
                             "record type: {name: Text}",
@@ -75,6 +77,35 @@ let success = run(
                                 let candid = Candid.decode(blob, [], null);
 
                                 candid == [#Array([#Nat(1), #Nat(2), #Nat(3), #Nat(4)])];
+                            },
+                        ),
+                        it(
+                            "multi-dimensional arrays",
+                            do {
+                                let arr2 : [[Nat]] = [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11]];
+
+                                let arr3 : [[[Text]]] = [
+                                    [["hello", "world"], ["foo", "bar"]],
+                                    [["hello", "world"], ["foo", "bar"]],
+                                    [["hello", "world"], ["foo", "bar"]],
+                                ];
+
+                                assertAllTrue([
+                                    Candid.decode(to_candid (arr2), [], null) == [
+                                        #Array([
+                                            #Array([#Nat(1), #Nat(2), #Nat(3), #Nat(4)]),
+                                            #Array([#Nat(5), #Nat(6), #Nat(7), #Nat(8)]),
+                                            #Array([#Nat(9), #Nat(10), #Nat(11)]),
+                                        ])
+                                    ],
+                                    Candid.decode(to_candid (arr3), [], null) == [
+                                        #Array([
+                                            #Array([#Array([#Text("hello"), #Text("world")]), #Array([#Text("foo"), #Text("bar")])]),
+                                            #Array([#Array([#Text("hello"), #Text("world")]), #Array([#Text("foo"), #Text("bar")])]),
+                                            #Array([#Array([#Text("hello"), #Text("world")]), #Array([#Text("foo"), #Text("bar")])]),
+                                        ])
+                                    ],
+                                ]);
                             },
                         ),
                         it(
@@ -200,33 +231,38 @@ let success = run(
                 describe(
                     "encode()",
                     [
-                        it("renaming keys", do {
-                            let candid : Candid = #Array([
-                                #Record([
-                                    ("array", #Array([#Nat(1), #Nat(2), #Nat(3), #Nat(4)])),
-                                    ("name", #Text("candid")),
-                                ]),
-                                #Record([
-                                    ("array", #Array([#Nat(5), #Nat(6), #Nat(7), #Nat(8)])),
-                                    ("name", #Text("motoko")),
-                                ]),
-                                #Record([
-                                    ("array", #Array([#Nat(9), #Nat(10), #Nat(11), #Nat(12)])),
-                                    ("name", #Text("rust")),
-                                ]),
-                            ]);
+                        it(
+                            "renaming keys",
+                            do {
+                                let candid : Candid = #Array([
+                                    #Record([
+                                        ("array", #Array([#Nat(1), #Nat(2), #Nat(3), #Nat(4)])),
+                                        ("name", #Text("candid")),
+                                    ]),
+                                    #Record([
+                                        ("array", #Array([#Nat(5), #Nat(6), #Nat(7), #Nat(8)])),
+                                        ("name", #Text("motoko")),
+                                    ]),
+                                    #Record([
+                                        ("array", #Array([#Nat(9), #Nat(10), #Nat(11), #Nat(12)])),
+                                        ("name", #Text("rust")),
+                                    ]),
+                                ]);
 
-                            type Data = {
-                                language: Text;
-                                daily_downloads: [Nat]
-                            };
+                                type Data = {
+                                    language : Text;
+                                    daily_downloads : [Nat];
+                                };
 
-                            let options = { renameKeys = [("array", "daily_downloads"), ("name", "language")] };
-                            let blob = Candid.encodeOne(candid, ?options);  
-                            let motoko : ?[Data] = from_candid (blob);
-                            // true
-                            motoko == ?[{ language = "candid"; daily_downloads = [1, 2, 3, 4] }, { language = "motoko"; daily_downloads = [5, 6, 7, 8] }, { language = "rust"; daily_downloads = [9, 10, 11, 12] }];
-                        }),
+                                let options = {
+                                    renameKeys = [("array", "daily_downloads"), ("name", "language")];
+                                };
+                                let blob = Candid.encodeOne(candid, ?options);
+                                let motoko : ?[Data] = from_candid (blob);
+                                // true
+                                motoko == ?[{ language = "candid"; daily_downloads = [1, 2, 3, 4] }, { language = "motoko"; daily_downloads = [5, 6, 7, 8] }, { language = "rust"; daily_downloads = [9, 10, 11, 12] }];
+                            },
+                        ),
                         it(
                             "record type {name: Text}",
                             do {
@@ -239,6 +275,34 @@ let success = run(
                                 let user : ?User = from_candid (blob);
 
                                 user == ?{ name = "candid" };
+                            },
+                        ),
+                        it(
+                            "multi-dimensional arrays",
+                            do {
+                                let arr2 : Candid = #Array([
+                                    #Array([#Nat(1), #Nat(2), #Nat(3), #Nat(4)]),
+                                    #Array([#Nat(5), #Nat(6), #Nat(7), #Nat(8)]),
+                                    #Array([#Nat(9), #Nat(10), #Nat(11)]),
+                                ]);
+
+                                let arr3 : Candid = #Array([
+                                    #Array([#Array([#Text("hello"), #Text("world")]), #Array([#Text("foo"), #Text("bar")])]),
+                                    #Array([#Array([#Text("hello"), #Text("world")]), #Array([#Text("foo"), #Text("bar")])]),
+                                    #Array([#Array([#Text("hello"), #Text("world")]), #Array([#Text("foo"), #Text("bar")])]),
+                                ]);
+
+                                let encoded_arr2 : ?[[Nat]] = from_candid (Candid.encodeOne(arr2, null));
+                                let encoded_arr3 : ?[[[Text]]] = from_candid (Candid.encodeOne(arr3, null));
+
+                                assertAllTrue([
+                                    encoded_arr2 == ?[[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11]],
+                                    encoded_arr3 == ?[
+                                        [["hello", "world"], ["foo", "bar"]],
+                                        [["hello", "world"], ["foo", "bar"]],
+                                        [["hello", "world"], ["foo", "bar"]],
+                                    ],
+                                ]);
                             },
                         ),
                         it(
@@ -266,47 +330,47 @@ let success = run(
                                 ]);
                             },
                         ),
-                        // it(
-                        //     "variant",
-                        //     do {
+                        it(
+                            "variant",
+                            do {
 
-                        //         type Variant = {
-                        //             #text : Text;
-                        //             #nat : Nat;
-                        //             #bool : Bool;
-                        //             #record : { site : Text };
-                        //             #array : [Nat];
-                        //         };
+                                type Variant = {
+                                    #text : Text;
+                                    #nat : Nat;
+                                    #bool : Bool;
+                                    #record : { site : Text };
+                                    #array : [Nat];
+                                };
 
-                        //         let text = #Variant("text", #Text("hello"));
-                        //         let nat = #Variant("nat", #Nat(123));
-                        //         let bool = #Variant("bool", #Bool(true));
-                        //         let record = #Variant("record", #Record([("site", #Text("github"))]));
-                        //         let array = #Variant("array", #Array([#Nat(1), #Nat(2), #Nat(3)]));
+                                let text = #Variant("text", #Text("hello"));
+                                let nat = #Variant("nat", #Nat(123));
+                                let bool = #Variant("bool", #Bool(true));
+                                let record = #Variant("record", #Record([("site", #Text("github"))]));
+                                let array = #Variant("array", #Array([#Nat(1), #Nat(2), #Nat(3)]));
 
-                        //         let text_blob = Candid.encodeOne(text, null);
-                        //         let nat_blob = Candid.encodeOne(nat, null);
-                        //         let bool_blob = Candid.encodeOne(bool, null);
-                        //         let record_blob = Candid.encodeOne(record, null);
-                        //         let array_blob = Candid.encodeOne(array, null);
+                                let text_blob = Candid.encodeOne(text, null);
+                                let nat_blob = Candid.encodeOne(nat, null);
+                                let bool_blob = Candid.encodeOne(bool, null);
+                                let record_blob = Candid.encodeOne(record, null);
+                                let array_blob = Candid.encodeOne(array, null);
 
-                        //         let text_val : ?Variant = from_candid (text_blob);
-                        //         let nat_val : ?Variant = from_candid (nat_blob);
-                        //         let bool_val : ?Variant = from_candid (bool_blob);
-                        //         let record_val : ?Variant = from_candid (record_blob);
-                        //         let array_val : ?Variant = from_candid (array_blob);
+                                let text_val : ?Variant = from_candid (text_blob);
+                                let nat_val : ?Variant = from_candid (nat_blob);
+                                let bool_val : ?Variant = from_candid (bool_blob);
+                                let record_val : ?Variant = from_candid (record_blob);
+                                let array_val : ?Variant = from_candid (array_blob);
 
-                        //         assertAllTrue([
-                        //             text_val == ?#text("hello"),
-                        //             nat_val == ?#nat(123),
-                        //             bool_val == ?#bool(true),
-                        //             record_val == ?#record({
-                        //                 site = "github";
-                        //             }),
-                        //             array_val == ?#array([1, 2, 3]),
-                        //         ]);
-                        //     },
-                        // ),
+                                assertAllTrue([
+                                    text_val == ? #text("hello"),
+                                    nat_val == ? #nat(123),
+                                    bool_val == ? #bool(true),
+                                    record_val == ? #record({
+                                        site = "github";
+                                    }),
+                                    array_val == ? #array([1, 2, 3]),
+                                ]);
+                            },
+                        ),
                     ],
                 ),
 
@@ -432,9 +496,12 @@ let success = run(
                                         ]);
                                     },
                                 ),
-                                it("should parse types with nested brackets", do{
-                                    Candid.fromText("( ( ( ( 100_000 ) ) ) )") == [#Nat(100_000)]
-                                }),
+                                it(
+                                    "should parse types with nested brackets",
+                                    do {
+                                        Candid.fromText("( ( ( ( 100_000 ) ) ) )") == [#Nat(100_000)];
+                                    },
+                                ),
                                 it(
                                     "should parse 'opt' type",
                                     do {
@@ -682,7 +749,7 @@ let success = run(
                 ),
             ],
         ),
-    ],
+    ]
 );
 
 if (success == false) {
