@@ -192,7 +192,12 @@ module {
                     switch (triemap.get(Nat.toText(i))) {
                         case (?(#text(text))) parseValue(text);
                         case (?(#triemap(map))) trieMapToCandid(map);
-                        case (_) Prelude.unreachable();
+                        case (_) {
+                            Debug.print("Prelude.Unreachable() Error: trieMapToCandid() fn in UrlEncoded/FromText.mo");
+                            Debug.print("                       Hint: Array might be improperly formatted");
+
+                            Prelude.unreachable();
+                        }
                     };
                 },
             );
@@ -204,7 +209,11 @@ module {
         if (triemap.size() == 1) {
             let (variant_key, value) = switch (triemap.entries().next()) {
                 case (?(k, v))(k, v);
-                case (_) Prelude.unreachable();
+                case (_) {
+                    Debug.print("Prelude.Unreachable() Error: trieMapToCandid() fn in UrlEncoded/FromText.mo");
+                    Debug.print("                       Hint: Variant might be improperly formatted");
+                    Prelude.unreachable();
+                }
             };
 
             let isVariant = Text.startsWith(variant_key, #text "#");

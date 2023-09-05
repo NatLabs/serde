@@ -69,7 +69,7 @@ module {
 
         switch (res) {
             case (?args) fromArgs(args, recordKeyMap);
-            case (_) Debug.trap("Failed to decode candid blob");
+            case (_) Debug.trap("Candid Error: Failed to decode candid blob");
         };
     };
 
@@ -77,13 +77,13 @@ module {
         Array.map(
             args,
             func(arg : Arg) : Candid {
-                fromArgType(arg._type, arg.value, recordKeyMap);
+                fromArgType(arg.type_, arg.value, recordKeyMap);
             },
         )
     };
 
-    func fromArgType(_type : Type, val : Value, recordKeyMap : TrieMap.TrieMap<Nat32, Text>) : Candid {
-        switch (_type, val) {
+    func fromArgType(type_ : Type, val : Value, recordKeyMap : TrieMap.TrieMap<Nat32, Text>) : Candid {
+        switch (type_, val) {
             case (_, #nat(n)) #Nat(n);
             case (_, #nat8(n)) #Nat8(n);
             case (_, #nat16(n)) #Nat16(n);
@@ -100,26 +100,17 @@ module {
 
             case (_, #bool(b)) #Bool(b);
 
-            case (_, #principal(service)) {
-                switch (service) {
-                    case (#transparent(p)) {
-                        #Principal(p);
-                    };
-                    case (_) Prelude.unreachable();
-                };
-            };
+            case (_, #principal(p)) #Principal(p);
 
             case (_, #text(n)) #Text(n);
 
-            case (_, #_null) #Null;
+            case (_, #null_) #Null;
 
             case (optionType, #opt(optVal)) {
                 let val = switch (optionType, optVal) {
-                    case (#opt(#_null), _) #Null;
-                    case (#opt(_), null) #Null;
-                    case (#opt(innerType), ?val) {
-                        fromArgType(innerType, val, recordKeyMap);
-                    };
+                    case (#opt(#null_), #null_) #Null;
+                    case (#opt(#null_), _) Debug.trap("Candid Error: Expected Null in candid '#opt' variant");
+                    case (#opt(innerType), val)  fromArgType(innerType, val, recordKeyMap);
                     case (_) Debug.trap("Expected value in #opt");
                 };
 
@@ -160,7 +151,7 @@ module {
                 let newRecords = Array.tabulate(
                     records.size(),
                     func (i: Nat): KeyValuePair {
-                        let {_type = innerType} = recordTypes[i];
+                        let {type_ = innerType} = recordTypes[i];
                         let {tag; value} = records[i];
 
                         let key = getKey(tag, recordKeyMap);
@@ -175,7 +166,7 @@ module {
 
             case (#variant(variantTypes), #variant(v)) {
                 
-                for ({tag; _type = innerType} in variantTypes.vals()) {
+                for ({tag; type_ = innerType} in variantTypes.vals()) {
                     if (tag == v.tag) {
                         let key = getKey(tag, recordKeyMap);
                         let val = fromArgType(innerType, v.value, recordKeyMap);
@@ -187,7 +178,11 @@ module {
                 Debug.trap("Could not find variant type for '" # debug_show v.tag # "'");
             };
 
-            case (_) { Prelude.unreachable() };
+            case (x) { 
+                Debug.print("Prelude.Unreachable() Error: fromArgType() fn in Candid/Blob/Decoder.mo");
+                Debug.print("   Error Log: Could not match '" # debug_show(x) # "' type to any case");
+                Prelude.unreachable() 
+            };
         };
     };
 

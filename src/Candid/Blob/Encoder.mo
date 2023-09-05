@@ -49,7 +49,7 @@ module {
             candid_values,
             func(candid : Candid) : Arg {
                 {
-                    _type = toArgType(candid, renaming_map);
+                    type_ = toArgType(candid, renaming_map);
                     value = toArgValue(candid, renaming_map);
                 };
             },
@@ -79,7 +79,7 @@ module {
             case (#Text(_)) #text;
             case (#Blob(_)) #vector(#nat8);
 
-            case (#Null) #_null;
+            case (#Null) #null_;
 
             case (#Option(optType)) {
                 #opt(toArgType(optType, renaming_map));
@@ -100,7 +100,7 @@ module {
 
                         {
                             tag = #name(renamed_key);
-                            _type = toArgType(val, renaming_map);
+                            type_ = toArgType(val, renaming_map);
                         };
                     },
                 );
@@ -113,7 +113,7 @@ module {
 
                 #variant([{
                     tag = #name(renamed_key);
-                    _type = toArgType(val, renaming_map);
+                    type_ = toArgType(val, renaming_map);
                 }]);
             };
 
@@ -139,14 +139,14 @@ module {
 
             case (#Bool(b)) #bool(b);
 
-            case (#Principal(n)) #principal(#transparent(n));
+            case (#Principal(p)) #principal(p);
 
             case (#Text(n)) #text(n);
 
-            case (#Null) #_null;
+            case (#Null) #null_;
 
             case (#Option(optVal)) {
-                #opt(?toArgValue(optVal, renaming_map));
+                #opt(toArgValue(optVal, renaming_map));
             };
             case (#Array(arr)) {
                 let transformedArr = Array.map(
