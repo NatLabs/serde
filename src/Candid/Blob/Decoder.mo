@@ -29,6 +29,7 @@ module {
     type Value = Value.Value;
     type RecordFieldType = Type.RecordFieldType;
     type RecordFieldValue = Value.RecordFieldValue;
+    type Iter<A> = Iter.Iter<A>;
 
     type TrieMap<K, V> = TrieMap.TrieMap<K, V>;
     type Candid = T.Candid;
@@ -42,22 +43,10 @@ module {
     /// - **options** - An optional arguement to specify options for decoding.
 
     public func decode(blob : Blob, record_keys: [Text], options: ?T.Options) : [Candid] {
-        let res = Decoder.decode(blob);
-
-        let renaming_map : TrieMap<Text, Text> = switch (options) {
-            case (?{renameKeys}) TrieMap.fromEntries(renameKeys.vals(), Text.equal, Text.hash);
-            case (_) TrieMap.TrieMap(Text.equal, Text.hash);
-        };
-
         let keyEntries = Iter.map<Text, (Nat32, Text)>(
-            record_keys.vals(),
-            func(original_key : Text) : (Nat32, Text) {
-                let new_key = switch(renaming_map.get(original_key)) {
-                    case (?key) key;
-                    case (_) original_key;
-                };
-
-                (hashName(original_key), new_key);
+            formatVariantKeys(record_keys.vals()),
+            func(key : Text) : (Nat32, Text) {
+                (hashName(key), key);
             },
         );
 
@@ -66,11 +55,46 @@ module {
             Nat32.equal,
             func(n : Nat32) : Hash.Hash = n,
         );
+        
+        ignore do ? {
+            let key_pairs_to_rename = options!.renameKeys;
+
+            let new_entries = Iter.map<(Text, Text), (Nat32, Text)>(
+                key_pairs_to_rename.vals(),
+                func (entry: (Text, Text)): (Nat32, Text){
+                    let original_key = formatVariantKey(entry.0);
+                    let new_key = formatVariantKey(entry.1);
+
+                    (hashName(original_key), new_key);
+                }
+            );
+
+            for ((hash, key) in new_entries){
+                recordKeyMap.put(hash, key)
+            }
+        };
+
+        let res = Decoder.decode(blob);
 
         switch (res) {
             case (?args) fromArgs(args, recordKeyMap);
             case (_) Debug.trap("Candid Error: Failed to decode candid blob");
         };
+    };
+
+    func formatVariantKey(key: Text): Text {
+        let opt = Text.stripStart(key, #text("#"));
+        switch(opt){
+            case (?stripped_text) stripped_text;
+            case (null) key;
+        }
+    };
+
+    func formatVariantKeys(record_keys_iter: Iter<Text>): Iter<Text> {
+        Iter.map(
+            record_keys_iter,
+            formatVariantKey
+        )
     };
 
     public func fromArgs(args : [Arg], recordKeyMap : TrieMap.TrieMap<Nat32, Text>) : [Candid] {

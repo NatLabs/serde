@@ -170,8 +170,8 @@ let success = run(
                                 let record_blob = to_candid (record);
                                 let array_blob = to_candid (array);
 
-                                let text_json = JSON.toText(text_blob, ["text"], null);
-                                let nat_json = JSON.toText(nat_blob, ["nat"], null);
+                                let text_json = JSON.toText(text_blob, ["#text"], null);
+                                let nat_json = JSON.toText(nat_blob, ["#nat"], null);
                                 let bool_json = JSON.toText(bool_blob, ["bool"], null);
                                 let record_json = JSON.toText(record_blob, ["record", "site"], null);
                                 let array_json = JSON.toText(array_blob, ["array"], null);
