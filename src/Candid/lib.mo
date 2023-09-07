@@ -1,9 +1,15 @@
 import Array "mo:base/Array";
 import Debug "mo:base/Debug";
+import Text "mo:base/Text";
+import Order "mo:base/Order";
+
 /// A representation of the Candid format with variants for all possible types.
 
 import Result "mo:base/Result";
 import Prelude "mo:base/Prelude";
+
+import Itertools "mo:itertools/Iter";
+
 
 import Encoder "Blob/Encoder";
 import Decoder "Blob/Decoder";
@@ -11,6 +17,7 @@ import Parser "Text/Parser";
 import ToText "Text/ToText";
 
 import T "Types";
+
 
 module {
     /// A representation of the Candid format with variants for all possible types.
@@ -27,4 +34,5 @@ module {
     };
 
     public let { toText } = ToText;
+
 };
