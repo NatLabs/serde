@@ -31,6 +31,46 @@ let success = run([
                 "decode()",
                 [
                     it(
+                        "duplicate compound types in record",
+                        do {
+                            type User = {
+                                name : Text;
+                                age : Nat;
+                            };
+
+                            let user_james = {
+                                name = "James";
+                                age = 23;
+                            };
+
+                            let user_steven = {
+                                name = "Steven";
+                                age = 32;
+                            };
+
+                            type Record = {
+                                first : User;
+                                second : User;
+                            };
+
+                            let record = {
+                                first = user_james;
+                                second = user_steven;
+                            };
+
+                            let record_blob = to_candid (record);
+                            let candid = Candid.decode(record_blob, ["first", "second", "name", "age"], null);
+
+                            candid == [
+                                #Record([
+                                    ("first", #Record([("age", #Nat(23)), ("name", #Text("James"))])),
+                                    ("second", #Record([("age", #Nat(32)), ("name", #Text("Steven"))])),
+                                ]),
+                            ];
+
+                        },
+                    ),
+                    it(
                         "recursive types",
                         do {
                             type RecursiveType = {
@@ -59,10 +99,10 @@ let success = run([
                             let candid_rust = #Record([("next", #Option(#Null)), ("user", #Text("rust"))]);
                             let candid_typescript = #Record([("next", #Option(candid_rust)), ("user", #Text("typescript"))]);
                             let candid_motoko = #Record([("next", #Option(candid_typescript)), ("user", #Text("motoko"))]);
-                            
-                            Debug.print("candid: " # debug_show(candid));
-                            Debug.print("candid_motoko: " # debug_show(candid_motoko));
-                            
+
+                            Debug.print("candid: " # debug_show (candid));
+                            Debug.print("candid_motoko: " # debug_show (candid_motoko));
+
                             candid == [candid_motoko];
                         },
                     ),
