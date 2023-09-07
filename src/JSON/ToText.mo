@@ -87,7 +87,11 @@ module {
             };
             
             // #Blob(_), #Empty and #Principal(_) are not supported
-            case (_) Prelude.unreachable();
+            case (_) { 
+                Debug.print("Prelude.Unreachable() Error: candidToJSON() fn in JSON/ToText.mo");
+                Debug.print("                       Hint: #Blob, #Empty and #Principal are not supported by JSON");
+                Prelude.unreachable() 
+            };
         };
     };
 };

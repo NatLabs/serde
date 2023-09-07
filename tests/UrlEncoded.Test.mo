@@ -174,6 +174,7 @@ let success = run([
 
                             let blob = to_candid (info);
                             let text = UrlEncoded.toText(blob, ["name", "msg"], null);
+                            Debug.print("single record: " #debug_show(text));
                             assertTrue(text == "msg=Hello World&name=John");
                         },
                     ),
@@ -194,6 +195,8 @@ let success = run([
                             let blob = to_candid ({ users });
 
                             let text = UrlEncoded.toText(blob, ["users", "name", "msg"], null);
+
+                            Debug.print("record with array: " #debug_show(text));
 
                             assertTrue(
                                 text == "users[0][msg]=Hello World&users[0][name]=John&users[1][msg]=testing&users[1][name]=Jane"

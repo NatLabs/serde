@@ -29,35 +29,24 @@ module {
     type Value = Value.Value;
     type RecordFieldType = Type.RecordFieldType;
     type RecordFieldValue = Value.RecordFieldValue;
+    type Iter<A> = Iter.Iter<A>;
 
     type TrieMap<K, V> = TrieMap.TrieMap<K, V>;
     type Candid = T.Candid;
     type KeyValuePair = T.KeyValuePair;
 
     /// Decodes a blob encoded in the candid format into a list of the [Candid](./Types.mo#Candid) type in motoko
-    /// 
+    ///
     /// ### Inputs
     /// - **blob** -  A blob encoded in the candid format
     /// - **record_keys** - The record keys to use when decoding a record.
     /// - **options** - An optional arguement to specify options for decoding.
 
-    public func decode(blob : Blob, record_keys: [Text], options: ?T.Options) : [Candid] {
-        let res = Decoder.decode(blob);
-
-        let renaming_map : TrieMap<Text, Text> = switch (options) {
-            case (?{renameKeys}) TrieMap.fromEntries(renameKeys.vals(), Text.equal, Text.hash);
-            case (_) TrieMap.TrieMap(Text.equal, Text.hash);
-        };
-
+    public func decode(blob : Blob, record_keys : [Text], options : ?T.Options) : [Candid] {
         let keyEntries = Iter.map<Text, (Nat32, Text)>(
-            record_keys.vals(),
-            func(original_key : Text) : (Nat32, Text) {
-                let new_key = switch(renaming_map.get(original_key)) {
-                    case (?key) key;
-                    case (_) original_key;
-                };
-
-                (hashName(original_key), new_key);
+            formatVariantKeys(record_keys.vals()),
+            func(key : Text) : (Nat32, Text) {
+                (hashName(key), key);
             },
         );
 
@@ -67,118 +56,171 @@ module {
             func(n : Nat32) : Hash.Hash = n,
         );
 
+        ignore do ? {
+            let key_pairs_to_rename = options!.renameKeys;
+
+            let new_entries = Iter.map<(Text, Text), (Nat32, Text)>(
+                key_pairs_to_rename.vals(),
+                func(entry : (Text, Text)) : (Nat32, Text) {
+                    let original_key = formatVariantKey(entry.0);
+                    let new_key = formatVariantKey(entry.1);
+
+                    (hashName(original_key), new_key);
+                },
+            );
+
+            for ((hash, key) in new_entries) {
+                recordKeyMap.put(hash, key);
+            };
+        };
+
+        let res = Decoder.decode(blob);
+
         switch (res) {
             case (?args) fromArgs(args, recordKeyMap);
-            case (_) Debug.trap("Failed to decode candid blob");
+            case (_) Debug.trap("Candid Error: Failed to decode candid blob");
         };
+    };
+
+    func formatVariantKey(key : Text) : Text {
+        let opt = Text.stripStart(key, #text("#"));
+        switch (opt) {
+            case (?stripped_text) stripped_text;
+            case (null) key;
+        };
+    };
+
+    func formatVariantKeys(record_keys_iter : Iter<Text>) : Iter<Text> {
+        Iter.map(
+            record_keys_iter,
+            formatVariantKey,
+        );
     };
 
     public func fromArgs(args : [Arg], recordKeyMap : TrieMap.TrieMap<Nat32, Text>) : [Candid] {
         Array.map(
             args,
             func(arg : Arg) : Candid {
-                fromArgType(arg._type, arg.value, recordKeyMap);
+                fromArg(arg.type_, arg.value, recordKeyMap);
             },
-        )
+        );
     };
 
-    func fromArgType(_type : Type, val : Value, recordKeyMap : TrieMap.TrieMap<Nat32, Text>) : Candid {
-        switch (_type, val) {
-            case (_, #nat(n)) #Nat(n);
-            case (_, #nat8(n)) #Nat8(n);
-            case (_, #nat16(n)) #Nat16(n);
-            case (_, #nat32(n)) #Nat32(n);
-            case (_, #nat64(n)) #Nat64(n);
+    func fromArg(type_ : Type, val : Value, recordKeyMap : TrieMap.TrieMap<Nat32, Text>) : Candid {
+        switch (type_, val) {
+            case ((#recursiveReference(_) or #nat), #nat(n)) #Nat(n);
+            case ((#recursiveReference(_) or #nat8), #nat8(n)) #Nat8(n);
+            case ((#recursiveReference(_) or #nat16), #nat16(n)) #Nat16(n);
+            case ((#recursiveReference(_) or #nat32), #nat32(n)) #Nat32(n);
+            case ((#recursiveReference(_) or #nat64), #nat64(n)) #Nat64(n);
 
-            case (_, #int(n)) #Int(n);
-            case (_, #int8(n)) #Int8(n);
-            case (_, #int16(n)) #Int16(n);
-            case (_, #int32(n)) #Int32(n);
-            case (_, #int64(n)) #Int64(n);
+            case ((#recursiveReference(_) or #int), #int(n)) #Int(n);
+            case ((#recursiveReference(_) or #int8), #int8(n)) #Int8(n);
+            case ((#recursiveReference(_) or #int16), #int16(n)) #Int16(n);
+            case ((#recursiveReference(_) or #int32), #int32(n)) #Int32(n);
+            case ((#recursiveReference(_) or #int64), #int64(n)) #Int64(n);
 
-            case (_, #float64(n)) #Float(n);
+            case ((#recursiveReference(_) or #float64), #float64(n)) #Float(n);
 
-            case (_, #bool(b)) #Bool(b);
+            case ((#recursiveReference(_) or #bool), #bool(b)) #Bool(b);
 
-            case (_, #principal(service)) {
-                switch (service) {
-                    case (#transparent(p)) {
-                        #Principal(p);
-                    };
-                    case (_) Prelude.unreachable();
-                };
-            };
+            case ((#recursiveReference(_) or #principal), #principal(p)) #Principal(p);
 
-            case (_, #text(n)) #Text(n);
+            case ((#recursiveReference(_) or #text), #text(n)) #Text(n);
 
-            case (_, #_null) #Null;
+            case ((#recursiveReference(_) or #null_), #null_) #Null;
+            case ((#recursiveReference(_) or #empty), #empty) #Empty;
+            
+            // option
+            case (_, #opt(#null_)) { #Option(#Null) };
 
-            case (optionType, #opt(optVal)) {
-                let val = switch (optionType, optVal) {
-                    case (#opt(#_null), _) #Null;
-                    case (#opt(_), null) #Null;
-                    case (#opt(innerType), ?val) {
-                        fromArgType(innerType, val, recordKeyMap);
-                    };
-                    case (_) Debug.trap("Expected value in #opt");
-                };
-
+            case (#opt(innerType), #opt(optVal)) {
+                let val = fromArg(innerType, optVal, recordKeyMap);
                 #Option(val);
             };
-            case (vectorType, #vector(arr)) {
 
-                switch (vectorType) {
-                    case (#vector(#nat8)) {
-                        let bytes = Array.map(
-                            arr,
-                            func(elem : Value) : Nat8 {
-                                switch (elem) {
-                                    case (#nat8(n)) n;
-                                    case (_) Debug.trap("Expected nat8 in #vector");
-                                };
-                            },
-                        );
-
-                        let blob = Blob.fromArray(bytes);
-                        return #Blob(blob);
-                    };
-                    case (#vector(innerType)) {
-                        let newArr = Array.map(
-                            arr,
-                            func(elem : Value) : Candid {
-                                fromArgType(innerType, elem, recordKeyMap);
-                            },
-                        );
-
-                        return #Array(newArr);
-                    };
-                    case (_) Debug.trap("Mismatched type '" # debug_show (vectorType)# "'' to value of '#vector'");
-                };
+            case (#recursiveReference(ref_id), #opt(optVal)){
+                let val = fromArg(#recursiveReference(ref_id), optVal, recordKeyMap);
+                #Option(val);
             };
 
+            // #vector
+            // #vector(#nat8) -> blob
+            case (#vector(#nat8), #vector(arr)) {
+                let bytes = Array.map(
+                    arr,
+                    func(elem : Value) : Nat8 {
+                        switch (elem) {
+                            case (#nat8(n)) n;
+                            case (_) Debug.trap("Expected nat8 in #vector");
+                        };
+                    },
+                );
+
+                let blob = Blob.fromArray(bytes);
+                return #Blob(blob);
+            };
+            case (#vector(innerType), #vector(arr)) {
+                let newArr = Array.map(
+                    arr,
+                    func(elem : Value) : Candid {
+                        fromArg(innerType, elem, recordKeyMap);
+                    },
+                );
+
+                return #Array(newArr);
+            };
+            case (#recursiveReference(ref_id), #vector(arr)) {
+                let newArr = Array.map(
+                    arr,
+                    func(elem : Value) : Candid {
+                        fromArg(#recursiveReference(ref_id), elem, recordKeyMap);
+                    },
+                );
+
+                return #Array(newArr);
+            };
+
+            // #record
             case (#record(recordTypes), #record(records)) {
                 let newRecords = Array.tabulate(
                     records.size(),
-                    func (i: Nat): KeyValuePair {
-                        let {_type = innerType} = recordTypes[i];
-                        let {tag; value} = records[i];
+                    func(i : Nat) : KeyValuePair {
+                        let { type_ = innerType } = recordTypes[i];
+                        let { tag; value } = records[i];
 
                         let key = getKey(tag, recordKeyMap);
-                        let val = fromArgType(innerType, value, recordKeyMap);
+                        let val = fromArg(innerType, value, recordKeyMap);
 
-                        (key, val)
+                        (key, val);
                     },
-                ); 
-                
+                );
+
                 #Record(Array.sort(newRecords, U.cmpRecords));
             };
 
-            case (#variant(variantTypes), #variant(v)) {
-                
-                for ({tag; _type = innerType} in variantTypes.vals()) {
+            case (#recursiveReference(ref_id), #record(records)) {
+                let newRecords = Array.tabulate(
+                    records.size(),
+                    func(i : Nat) : KeyValuePair {
+                        let { tag; value } = records[i];
+
+                        let key = getKey(tag, recordKeyMap);
+                        let val = fromArg(#recursiveReference(ref_id), value, recordKeyMap);
+
+                        (key, val);
+                    },
+                );
+
+                #Record(Array.sort(newRecords, U.cmpRecords));
+            };
+
+            case ( #variant(variantTypes), #variant(v)) {
+
+                for ({ tag; type_ = innerType } in variantTypes.vals()) {
                     if (tag == v.tag) {
                         let key = getKey(tag, recordKeyMap);
-                        let val = fromArgType(innerType, v.value, recordKeyMap);
+                        let val = fromArg(innerType, v.value, recordKeyMap);
 
                         return #Variant((key, val));
                     };
@@ -187,9 +229,27 @@ module {
                 Debug.trap("Could not find variant type for '" # debug_show v.tag # "'");
             };
 
-            case (_) { Prelude.unreachable() };
+            case (#recursiveReference(ref_id), #variant(v)) {
+                let key = getKey(v.tag, recordKeyMap);
+                let val = fromArg(#recursiveReference(ref_id), v.value, recordKeyMap);
+
+                return #Variant((key, val));
+            };
+
+            case (#recursiveType({ type_ }), value_) {
+                fromArg(type_, value_, recordKeyMap);
+            };
+
+            case (x) {
+                Debug.trap(
+                    "
+                    Serde Decoding Error from fromArg() fn in Candid/Blob/Decoder.mo
+                    Error Log: Could not match '" # debug_show (x) # "' type to any case
+                    "
+                );
+            };
         };
-    };
+    };  
 
     func getKey(tag : Tag.Tag, recordKeyMap : TrieMap.TrieMap<Nat32, Text>) : Text {
         switch (tag) {
