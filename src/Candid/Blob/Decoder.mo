@@ -1,5 +1,6 @@
 import Array "mo:base/Array";
 import Blob "mo:base/Blob";
+import Buffer "mo:base/Buffer";
 import Debug "mo:base/Debug";
 import Result "mo:base/Result";
 import TrieMap "mo:base/TrieMap";
@@ -12,16 +13,17 @@ import Prelude "mo:base/Prelude";
 
 import Encoder "mo:candid/Encoder";
 import Decoder "mo:candid/Decoder";
-
 import Arg "mo:candid/Arg";
 import Value "mo:candid/Value";
 import Type "mo:candid/Type";
 import Tag "mo:candid/Tag";
 
 import { hashName } "mo:candid/Tag";
+import Itertools "mo:itertools/Iter";
 
 import T "../Types";
 import U "../../Utils";
+import Utils "../../Utils";
 
 module {
     type Arg = Arg.Arg;
@@ -30,6 +32,7 @@ module {
     type RecordFieldType = Type.RecordFieldType;
     type RecordFieldValue = Value.RecordFieldValue;
     type Iter<A> = Iter.Iter<A>;
+    type Result<A, B> = Result.Result<A, B>;
 
     type TrieMap<K, V> = TrieMap.TrieMap<K, V>;
     type Candid = T.Candid;
@@ -42,7 +45,7 @@ module {
     /// - **record_keys** - The record keys to use when decoding a record.
     /// - **options** - An optional arguement to specify options for decoding.
 
-    public func decode(blob : Blob, record_keys : [Text], options : ?T.Options) : [Candid] {
+    public func decode(blob : Blob, record_keys : [Text], options : ?T.Options) : Result<[Candid], Text> {
         let keyEntries = Iter.map<Text, (Nat32, Text)>(
             formatVariantKeys(record_keys.vals()),
             func(key : Text) : (Nat32, Text) {
@@ -74,12 +77,11 @@ module {
             };
         };
 
-        let res = Decoder.decode(blob);
+        let decoded = Decoder.decode(blob);
 
-        switch (res) {
-            case (?args) fromArgs(args, recordKeyMap);
-            case (_) Debug.trap("Candid Error: Failed to decode candid blob");
-        };
+        let ?(args) = decoded else return #err("Candid Error: Failed to decode candid blob");
+
+        fromArgs(args, recordKeyMap);
     };
 
     func formatVariantKey(key : Text) : Text {
@@ -97,17 +99,20 @@ module {
         );
     };
 
-    public func fromArgs(args : [Arg], recordKeyMap : TrieMap.TrieMap<Nat32, Text>) : [Candid] {
-        Array.map(
-            args,
-            func(arg : Arg) : Candid {
-                fromArg(arg.type_, arg.value, recordKeyMap);
-            },
-        );
+    public func fromArgs(args : [Arg], recordKeyMap : TrieMap.TrieMap<Nat32, Text>) : Result<[Candid], Text> {
+        let buffer = Buffer.Buffer<Candid>(args.size());
+
+        for (arg in args.vals()) {
+            let res = fromArg(arg.type_, arg.value, recordKeyMap);
+            let #ok(val) = res else return Utils.send_error(res);
+            buffer.add(val);
+        };
+
+        #ok(Buffer.toArray(buffer));
     };
 
-    func fromArg(type_ : Type, val : Value, recordKeyMap : TrieMap.TrieMap<Nat32, Text>) : Candid {
-        switch (type_, val) {
+    func fromArg(type_ : Type, val : Value, recordKeyMap : TrieMap.TrieMap<Nat32, Text>) : Result<Candid, Text> {
+        let result : Candid = switch (type_, val) {
             case ((#recursiveReference(_) or #nat), #nat(n)) #Nat(n);
             case ((#recursiveReference(_) or #nat8), #nat8(n)) #Nat8(n);
             case ((#recursiveReference(_) or #nat16), #nat16(n)) #Nat16(n);
@@ -135,84 +140,97 @@ module {
             case (_, #opt(#null_)) { #Option(#Null) };
 
             case (#opt(innerType), #opt(optVal)) {
-                let val = fromArg(innerType, optVal, recordKeyMap);
+                let res = fromArg(innerType, optVal, recordKeyMap);
+                let #ok(val) = res else return Utils.send_error(res);
                 #Option(val);
             };
 
             case (#recursiveReference(ref_id), #opt(optVal)){
-                let val = fromArg(#recursiveReference(ref_id), optVal, recordKeyMap);
+                let res = fromArg(#recursiveReference(ref_id), optVal, recordKeyMap);
+                let #ok(val) = res else return Utils.send_error(res);
                 #Option(val);
             };
 
             // #vector
             // #vector(#nat8) -> blob
             case (#vector(#nat8), #vector(arr)) {
-                let bytes = Array.map(
-                    arr,
-                    func(elem : Value) : Nat8 {
-                        switch (elem) {
-                            case (#nat8(n)) n;
-                            case (_) Debug.trap("Expected nat8 in #vector");
-                        };
-                    },
-                );
+                let buffer = Buffer.Buffer<Nat8>(arr.size());
 
-                let blob = Blob.fromArray(bytes);
-                return #Blob(blob);
+                for ((i, elem) in Itertools.enumerate(arr.vals())){
+                    let #nat8(val) = elem else return #err("Expected #nat8 in #vector but found '" # debug_show(elem)  # "' at index '" # debug_show i # "' of #vector(" # debug_show arr # ")");
+                    buffer.add(val);
+                };
+
+                let blob = Blob.fromArray(Buffer.toArray(buffer));
+                #Blob(blob);
             };
             case (#vector(innerType), #vector(arr)) {
-                let newArr = Array.map(
-                    arr,
-                    func(elem : Value) : Candid {
-                        fromArg(innerType, elem, recordKeyMap);
-                    },
-                );
+                let buffer = Buffer.Buffer<Candid>(arr.size());
 
-                return #Array(newArr);
+                for (elem in arr.vals()){
+                    let res = fromArg(innerType, elem, recordKeyMap);
+                    let #ok(val) = res else return Utils.send_error(res);
+                    buffer.add(val);
+                };
+
+                let newArr = Buffer.toArray(buffer);
+
+                #Array(newArr);
             };
             case (#recursiveReference(ref_id), #vector(arr)) {
-                let newArr = Array.map(
-                    arr,
-                    func(elem : Value) : Candid {
-                        fromArg(#recursiveReference(ref_id), elem, recordKeyMap);
-                    },
-                );
 
-                return #Array(newArr);
+                let buffer = Buffer.Buffer<Candid>(arr.size());
+
+                for (elem in arr.vals()){
+                    let res = fromArg(#recursiveReference(ref_id), elem, recordKeyMap);
+                    let #ok(val) = res else return Utils.send_error(res);
+                    buffer.add(val);
+                };
+
+                let newArr = Buffer.toArray(buffer);
+
+                #Array(newArr);
             };
 
             // #record
             case (#record(recordTypes), #record(records)) {
-                let newRecords = Array.tabulate(
-                    records.size(),
-                    func(i : Nat) : KeyValuePair {
-                        let { type_ = innerType } = recordTypes[i];
-                        let { tag; value } = records[i];
+                let newRecords = Buffer.Buffer<KeyValuePair>(records.size());
 
-                        let key = getKey(tag, recordKeyMap);
-                        let val = fromArg(innerType, value, recordKeyMap);
+                let zippedTypesAndValues = Itertools.zip(recordTypes.vals(), records.vals());
 
-                        (key, val);
-                    },
-                );
+                for ((record_type, record_val) in zippedTypesAndValues) {
+                    let { type_ = innerType } = record_type;
+                    let { tag; value } = record_val;
 
-                #Record(Array.sort(newRecords, U.cmpRecords));
+                    let key = getKey(tag, recordKeyMap);
+                    let res = fromArg(innerType, value, recordKeyMap);
+                    let #ok(val) = res else return Utils.send_error(res);
+
+                    newRecords.add((key, val));
+                };
+
+                newRecords.sort(U.cmpRecords);
+
+                #Record(Buffer.toArray(newRecords));
             };
 
             case (#recursiveReference(ref_id), #record(records)) {
-                let newRecords = Array.tabulate(
-                    records.size(),
-                    func(i : Nat) : KeyValuePair {
-                        let { tag; value } = records[i];
 
-                        let key = getKey(tag, recordKeyMap);
-                        let val = fromArg(#recursiveReference(ref_id), value, recordKeyMap);
+                let newRecords = Buffer.Buffer<KeyValuePair>(records.size());
 
-                        (key, val);
-                    },
-                );
+                for (record in records.vals()){
+                    let { tag; value } = record;
 
-                #Record(Array.sort(newRecords, U.cmpRecords));
+                    let key = getKey(tag, recordKeyMap);
+                    let res = fromArg(#recursiveReference(ref_id), value, recordKeyMap);
+                    let #ok(val) = res else return Utils.send_error(res);
+
+                    newRecords.add((key, val));
+                };
+
+                newRecords.sort(U.cmpRecords);
+
+                #Record(Buffer.toArray(newRecords));
             };
 
             case ( #variant(variantTypes), #variant(v)) {
@@ -220,28 +238,34 @@ module {
                 for ({ tag; type_ = innerType } in variantTypes.vals()) {
                     if (tag == v.tag) {
                         let key = getKey(tag, recordKeyMap);
-                        let val = fromArg(innerType, v.value, recordKeyMap);
+                        let res = fromArg(innerType, v.value, recordKeyMap);
 
-                        return #Variant((key, val));
+                        let #ok(val) = res else return Utils.send_error(res);
+
+                        return #ok(#Variant((key, val)));
                     };
                 };
 
-                Debug.trap("Could not find variant type for '" # debug_show v.tag # "'");
+                return #err("Could not find variant type for '" # debug_show #variant(v) # "' in " # debug_show #variant(variantTypes));
             };
 
             case (#recursiveReference(ref_id), #variant(v)) {
                 let key = getKey(v.tag, recordKeyMap);
-                let val = fromArg(#recursiveReference(ref_id), v.value, recordKeyMap);
+                let res = fromArg(#recursiveReference(ref_id), v.value, recordKeyMap);
 
-                return #Variant((key, val));
+                let #ok(val) = res else return Utils.send_error(res);
+
+                #Variant((key, val));
             };
 
             case (#recursiveType({ type_ }), value_) {
-                fromArg(type_, value_, recordKeyMap);
+                let res = fromArg(type_, value_, recordKeyMap);
+                let #ok(val) = res else return Utils.send_error(res);
+                val;
             };
 
             case (x) {
-                Debug.trap(
+                return #err(
                     "
                     Serde Decoding Error from fromArg() fn in Candid/Blob/Decoder.mo
                     Error Log: Could not match '" # debug_show (x) # "' type to any case
@@ -249,6 +273,8 @@ module {
                 );
             };
         };
+
+        #ok(result);
     };  
 
     func getKey(tag : Tag.Tag, recordKeyMap : TrieMap.TrieMap<Nat32, Text>) : Text {

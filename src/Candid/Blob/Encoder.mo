@@ -1,5 +1,6 @@
 import Array "mo:base/Array";
 import Blob "mo:base/Blob";
+import Buffer "mo:base/Buffer";
 import Debug "mo:base/Debug";
 import Result "mo:base/Result";
 import Prelude "mo:base/Prelude";
@@ -14,6 +15,7 @@ import Type "mo:candid/Type";
 import T "../Types";
 import U "../../Utils";
 import TrieMap "mo:base/TrieMap";
+import Utils "../../Utils";
 
 module {
     type Arg = Arg.Arg;
@@ -22,11 +24,12 @@ module {
     type RecordFieldType = Type.RecordFieldType;
     type RecordFieldValue = Value.RecordFieldValue;
     type TrieMap<K, V> = TrieMap.TrieMap<K, V>;
+    type Result<A, B> = Result.Result<A, B>;
 
     type Candid = T.Candid;
     type KeyValuePair = T.KeyValuePair;
 
-    public func encode(candid_values : [Candid], options: ?T.Options) : Blob {
+    public func encode(candid_values : [Candid], options: ?T.Options) : Result<Blob, Text> {
         let renaming_map = TrieMap.TrieMap<Text, Text>(Text.equal, Text.hash);
 
         ignore do ? {
@@ -36,28 +39,34 @@ module {
             };
         };
 
-        let args = toArgs(candid_values, renaming_map);
-        Encoder.encode(args);
+        let res = toArgs(candid_values, renaming_map);
+        let #ok(args) = res else return Utils.send_error(res);
+        
+        #ok(Encoder.encode(args));
     };
 
-    public func encodeOne(candid : Candid, options: ?T.Options) : Blob {
+    public func encodeOne(candid : Candid, options: ?T.Options) : Result<Blob, Text> {
         encode([candid], options);
     };
 
-    public func toArgs(candid_values : [Candid], renaming_map: TrieMap<Text, Text>) : [Arg] {
-        Array.map(
-            candid_values,
-            func(candid : Candid) : Arg {
-                {
-                    type_ = toArgType(candid, renaming_map);
-                    value = toArgValue(candid, renaming_map);
-                };
-            },
-        );
+    public func toArgs(candid_values : [Candid], renaming_map: TrieMap<Text, Text>) : Result<[Arg], Text> {
+        let buffer = Buffer.Buffer<Arg>(candid_values.size());
+
+        for (candid in candid_values.vals()) {
+            let type_res = toArgType(candid, renaming_map);
+            let #ok(type_) = type_res else return Utils.send_error(type_res);
+
+            let value_res = toArgValue(candid, renaming_map);
+            let #ok(value) = value_res else return Utils.send_error(value_res);
+
+            buffer.add({type_; value});
+        };
+
+        #ok(Buffer.toArray(buffer));
     };
 
-    func toArgType(candid : Candid, renaming_map: TrieMap<Text, Text>) : Type {
-        switch (candid) {
+    func toArgType(candid : Candid, renaming_map: TrieMap<Text, Text>) : Result<Type, Text> {
+        let arg_type: Type = switch (candid) {
             case (#Nat(_)) #nat;
             case (#Nat8(_)) #nat8;
             case (#Nat16(_)) #nat16;
@@ -82,47 +91,55 @@ module {
             case (#Null) #null_;
 
             case (#Option(optType)) {
-                #opt(toArgType(optType, renaming_map));
+                let res = toArgType(optType, renaming_map);
+                let #ok(type_) = res else return Utils.send_error(res);
+                #opt(type_);
             };
             case (#Array(arr)) {
                 if (arr.size() > 0) {
-                    #vector(toArgType(arr[0], renaming_map));
+                    let res = toArgType(arr[0], renaming_map);
+                    let #ok(vector_type) = res else return Utils.send_error(res);
+                    #vector(vector_type);
                 } else {
                     #vector(#empty);
                 };
             };
 
             case (#Record(records)) {
-                let newRecords = Array.map(
-                    Array.sort(records, U.cmpRecords),
-                    func((key, val) : KeyValuePair) : RecordFieldType {
-                        let renamed_key = get_renamed_key(renaming_map, key);
+                let newRecords = Buffer.Buffer<RecordFieldType>(records.size());
 
-                        {
-                            tag = #name(renamed_key);
-                            type_ = toArgType(val, renaming_map);
-                        };
-                    },
-                );
+                for ((key, val) in records.vals()) {
+                    let renamed_key = get_renamed_key(renaming_map, key);
 
-                #record(newRecords);
+                    let res = toArgType(val, renaming_map);
+                    let #ok(type_) = res else return Utils.send_error(res);
+
+                    newRecords.add({
+                        tag = #name(renamed_key);
+                        type_;
+                    });
+                };
+
+                #record(Buffer.toArray(newRecords));
             };
 
             case (#Variant((key, val))) {
                 let renamed_key = get_renamed_key(renaming_map, key);
 
-                #variant([{
-                    tag = #name(renamed_key);
-                    type_ = toArgType(val, renaming_map);
-                }]);
+                let res = toArgType(val, renaming_map);
+                let #ok(type_) = res else return Utils.send_error(res);
+
+                #variant([ { tag = #name(renamed_key); type_; } ]);
             };
 
             case (#Empty) #empty;
         };
+
+        #ok(arg_type);
     };
 
-    func toArgValue(candid : Candid, renaming_map: TrieMap<Text, Text>) : Value {
-        switch (candid) {
+    func toArgValue(candid : Candid, renaming_map: TrieMap<Text, Text>) : Result<Value, Text> {
+        let value : Value = switch (candid) {
             case (#Nat(n)) #nat(n);
             case (#Nat8(n)) #nat8(n);
             case (#Nat16(n)) #nat16(n);
@@ -146,17 +163,20 @@ module {
             case (#Null) #null_;
 
             case (#Option(optVal)) {
-                #opt(toArgValue(optVal, renaming_map));
+                let res = toArgValue(optVal, renaming_map);
+                let #ok(val) = res else return Utils.send_error(res);
+                #opt(val);
             };
             case (#Array(arr)) {
-                let transformedArr = Array.map(
-                    arr,
-                    func(elem : Candid) : Value {
-                        toArgValue(elem, renaming_map);
-                    },
-                );
+                let newArr = Buffer.Buffer<Value>(arr.size());
 
-                #vector(transformedArr);
+                for (item in arr.vals()){
+                    let res = toArgValue(item, renaming_map);
+                    let #ok(val) = res else return Utils.send_error(res);
+                    newArr.add(val);
+                };
+               
+                #vector(Buffer.toArray(newArr));
             };
 
             case (#Blob(blob)) {
@@ -173,33 +193,39 @@ module {
             };
 
             case (#Record(records)) {
-                let newRecords = Array.map(
-                    records,
-                    func((key, val) : KeyValuePair) : RecordFieldValue {
-                        let renamed_key = get_renamed_key(renaming_map, key);
+                let newRecords = Buffer.Buffer<RecordFieldValue>(records.size());
 
-                        {
-                            tag = #name(renamed_key);
-                            value = toArgValue(val, renaming_map);
-                        };
-                    },
-                );
+                for ((record_key, record_val) in records.vals()){
+                    let renamed_key = get_renamed_key(renaming_map, record_key);
 
-                #record(newRecords);
+                    let res = toArgValue(record_val, renaming_map);
+                    let #ok(value) = res else return Utils.send_error(res);
+
+                    newRecords.add({
+                        tag = #name(renamed_key);
+                        value;
+                    });
+                };
+
+                #record(Buffer.toArray(newRecords));
             };
 
             case (#Variant((key, val))) {
                 let renamed_key = get_renamed_key(renaming_map, key);
+                let res = toArgValue(val, renaming_map);
+                let #ok(value) = res else return Utils.send_error(res);
 
                 #variant({
                     tag = #name(renamed_key);
-                    value = toArgValue(val, renaming_map);
+                    value;
                 });
             };
 
             case (#Empty) #empty;
 
         };
+
+        #ok(value);
     };
 
     func get_renamed_key(renaming_map: TrieMap<Text, Text>, key: Text) : Text {

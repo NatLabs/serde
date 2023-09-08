@@ -1,10 +1,22 @@
 import Order "mo:base/Order";
 import Float "mo:base/Float";
 import Text "mo:base/Text";
+import Result "mo:base/Result";
 
+import Prelude "mo:base/Prelude";
 import itertools "mo:itertools/Iter";
 
 module {
+
+    type Result<A, B> = Result.Result<A, B>;
+
+    public func send_error<OldOk, NewOk, Error>(res: Result<OldOk, Error>): Result<NewOk, Error>{
+        switch (res) {
+            case (#ok(_)) Prelude.unreachable();
+            case (#err(errorMsg)) #err(errorMsg);
+        };
+    };
+
     public func subText(text : Text, start : Nat, end : Nat) : Text {
         itertools.toText(
             itertools.skip(

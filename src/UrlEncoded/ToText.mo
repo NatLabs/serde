@@ -20,24 +20,27 @@ import itertools "mo:itertools/Iter";
 
 import Candid "../Candid";
 import U "../Utils";
+import Utils "../Utils";
 import CandidTypes "../Candid/Types";
 
 module {
     type Candid = Candid.Candid;
     type TrieMap<K, V> = TrieMap.TrieMap<K, V>;
+    type Result<K, V> = Result.Result<K, V>;
 
     /// Converts a serialized Candid blob to a URL-Encoded string.
-    public func toText(blob : Blob, keys : [Text], options: ?CandidTypes.Options) : Text {
-        let candid = Candid.decode(blob, keys, options);
+    public func toText(blob : Blob, keys : [Text], options: ?CandidTypes.Options) : Result<Text, Text> {
+        let res = Candid.decode(blob, keys, options);
+        let #ok(candid) = res else return Utils.send_error(res);
         fromCandid(candid[0]);
     };
 
     /// Convert a Candid Record to a URL-Encoded string.
-    public func fromCandid(candid : Candid) : Text {
+    public func fromCandid(candid : Candid) : Result<Text, Text> {
 
         let records = switch (candid) {
             case (#Record(records)) records;
-            case (_) Debug.trap("invalid type: the value must be a record");
+            case (_) return #err("invalid type: the value must be a record");
         };
 
         let pairs = TrieMap.TrieMap<Text, Text>(Text.equal, Text.hash);
@@ -46,7 +49,7 @@ module {
             toKeyValuePairs(pairs, key, value);
         };
 
-        Text.join(
+        let url_encoding = Text.join(
             "&",
             Iter.map(
                 pairs.entries(),
@@ -55,6 +58,8 @@ module {
                 },
             ),
         );
+
+        #ok(url_encoding);
     };
 
     func toKeyValuePairs(

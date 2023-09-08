@@ -36,7 +36,7 @@ let success = run(
                             "record type",
                             do {
                                 let text = "{\"name\": \"Tomi\", \"id\": 32}";
-                                let blob = JSON.fromText(text, null);
+                                let #ok(blob) = JSON.fromText(text, null);
                                 let user : ?User = from_candid (blob);
 
                                 user == ?{ name = "Tomi"; id = ?32 };
@@ -61,11 +61,11 @@ let success = run(
                                 let record = "{\"#record\": {\"site\": \"github\"}}";
                                 let array = "{\"#array\": [1, 2, 3] }";
 
-                                let text_blob = JSON.fromText(text, null);
-                                let nat_blob = JSON.fromText(nat, null);
-                                let bool_blob = JSON.fromText(bool, null);
-                                let record_blob = JSON.fromText(record, null);
-                                let array_blob = JSON.fromText(array, null);
+                                let #ok(text_blob) = JSON.fromText(text, null);
+                                let #ok(nat_blob) = JSON.fromText(nat, null);
+                                let #ok(bool_blob) = JSON.fromText(bool, null);
+                                let #ok(record_blob) = JSON.fromText(record, null);
+                                let #ok(array_blob) = JSON.fromText(array, null);
 
                                 let text_val : ?Variant = from_candid (text_blob);
                                 let nat_val : ?Variant = from_candid (nat_blob);
@@ -88,15 +88,17 @@ let success = run(
                             "multi-dimensional arrays",
                             do {
                                 let arr2 = "[[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11]]";
-
                                 let arr3 = "[[[\"hello\", \"world\"], [\"foo\", \"bar\"]], [[\"hello\", \"world\"], [\"foo\", \"bar\"]], [[\"hello\", \"world\"], [\"foo\", \"bar\"]]]";
 
-                                let encoded_arr2 : ?[[Nat]] = from_candid (JSON.fromText(arr2, null));
-                                let encoded_arr3 : ?[[[Text]]] = from_candid (JSON.fromText(arr3, null));
+                                let #ok(arr2_blob) = JSON.fromText(arr2, null);
+                                let #ok(arr3_blob) = JSON.fromText(arr3, null);
+
+                                let arr2_encoded : ?[[Nat]] = from_candid (arr2_blob);
+                                let arr3_encoded : ?[[[Text]]] = from_candid (arr3_blob);
 
                                 assertAllTrue([
-                                    encoded_arr2 == ?[[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11]],
-                                    encoded_arr3 == ?[
+                                    arr2_encoded == ?[[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11]],
+                                    arr3_encoded == ?[
                                         [["hello", "world"], ["foo", "bar"]],
                                         [["hello", "world"], ["foo", "bar"]],
                                         [["hello", "world"], ["foo", "bar"]],
@@ -104,7 +106,6 @@ let success = run(
                                 ]);
                             },
                         ),
-
                         it(
                             "renaming record fields",
                             do {
@@ -122,7 +123,8 @@ let success = run(
                                 let options = {
                                     renameKeys = [("label", "account_label"), ("query", "user_query")];
                                 };
-                                let blob = JSON.fromText(text, ?options);
+
+                                let #ok(blob) = JSON.fromText(text, ?options);
 
                                 let user : ?UserData = from_candid (blob);
 
@@ -142,9 +144,9 @@ let success = run(
                             do {
                                 let user = { name = "Tomi"; id = null };
                                 let blob = to_candid (user);
-                                let jsonText = JSON.toText(blob, ["name", "id"], null);
+                                let (jsonText) = JSON.toText(blob, ["name", "id"], null);
 
-                                jsonText == "{\"id\": null, \"name\": \"Tomi\"}";
+                                jsonText == #ok("{\"id\": null, \"name\": \"Tomi\"}");
                             },
                         ),
                         it(
@@ -177,11 +179,11 @@ let success = run(
                                 let array_json = JSON.toText(array_blob, ["array"], null);
 
                                 assertAllTrue([
-                                    text_json == "{\"#text\": \"hello\"}",
-                                    nat_json == "{\"#nat\": 123}",
-                                    bool_json == "{\"#bool\": true}",
-                                    record_json == "{\"#record\": {\"site\": \"github\"}}",
-                                    array_json == "{\"#array\": [1, 2, 3]}",
+                                    text_json == #ok("{\"#text\": \"hello\"}"),
+                                    nat_json == #ok("{\"#nat\": 123}"),
+                                    bool_json == #ok("{\"#bool\": true}"),
+                                    record_json == #ok("{\"#record\": {\"site\": \"github\"}}"),
+                                    array_json == #ok("{\"#array\": [1, 2, 3]}"),
                                 ]);
                             },
                         ),
@@ -197,8 +199,8 @@ let success = run(
                                 ];
 
                                 assertAllTrue([
-                                    JSON.toText(to_candid (arr2), [], null) == "[[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11]]",
-                                    JSON.toText(to_candid (arr3), [], null) == "[[[\"hello\", \"world\"], [\"foo\", \"bar\"]], [[\"hello\", \"world\"], [\"foo\", \"bar\"]], [[\"hello\", \"world\"], [\"foo\", \"bar\"]]]",
+                                    JSON.toText(to_candid (arr2), [], null) == #ok("[[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11]]"),
+                                    JSON.toText(to_candid (arr3), [], null) == #ok("[[[\"hello\", \"world\"], [\"foo\", \"bar\"]], [[\"hello\", \"world\"], [\"foo\", \"bar\"]], [[\"hello\", \"world\"], [\"foo\", \"bar\"]]]"),
                                 ]);
                             },
                         ),
@@ -227,7 +229,7 @@ let success = run(
                                 let blob = to_candid (data);
                                 let jsonText = JSON.toText(blob, UserDataKeys, ?options);
 
-                                jsonText == "{\"label\": 123, \"query\": \"?user_id=12&address=2014%20Forest%20Hill%20Drive\"}";
+                                jsonText == #ok("{\"label\": 123, \"query\": \"?user_id=12&address=2014%20Forest%20Hill%20Drive\"}");
                             },
                         ),
                     ],
