@@ -1,4 +1,5 @@
 import Array "mo:base/Array";
+import Buffer "mo:base/Buffer";
 import Debug "mo:base/Debug";
 import Result "mo:base/Result";
 import TrieMap "mo:base/TrieMap";
@@ -15,26 +16,33 @@ import IntX "mo:xtended-numbers/IntX";
 
 import Candid "../Candid";
 import CandidTypes "../Candid/Types";
+import Utils "../Utils";
 
 module {
     type JSON = JSON.JSON;
     type Candid = Candid.Candid;
+    type Result<A, B> = Result.Result<A, B>;
 
     /// Converts serialized Candid blob to JSON text
-    public func toText(blob : Blob, keys : [Text], options: ?CandidTypes.Options) : Text {
-        let candid = Candid.decode(blob, keys, options);
-        fromCandid(candid[0]);
+    public func toText(blob : Blob, keys : [Text], options: ?CandidTypes.Options) : Result<Text, Text> {
+        let decoded_res = Candid.decode(blob, keys, options);
+        let #ok(candid) = decoded_res else return Utils.send_error(decoded_res);
+
+        let json_res = fromCandid(candid[0]);
+        let #ok(json) = json_res else return Utils.send_error(json_res);
+        #ok(json);
     };
 
     /// Convert a Candid value to JSON text
-    public func fromCandid(candid : Candid) : Text {
-        let json = candidToJSON(candid);
+    public func fromCandid(candid : Candid) : Result<Text, Text> {
+        let res = candidToJSON(candid);
+        let #ok(json) = res else return Utils.send_error(res);
 
-        JSON.show(json);
+        #ok(JSON.show(json));
     };
 
-    func candidToJSON(candid : Candid) : JSON {
-        switch (candid) {
+    func candidToJSON(candid : Candid) : Result<JSON, Text> {
+        let json : JSON = switch (candid) {
             case (#Null) #Null;
             case (#Bool(n)) #Boolean(n);
             case (#Text(n)) #String(n);
@@ -54,44 +62,59 @@ module {
             case (#Float(n)) #Number(Float.toInt(n));
 
             case (#Option(val)) {
-                switch (val) {
-                    case (#Null) #Null;
+                let res = switch (val) {
+                    case (#Null) return #ok(#Null);
                     case (v) candidToJSON(v);
                 };
+
+                let #ok(optional_val) = res else return Utils.send_error(res);
+                optional_val;
             };
             case (#Array(arr)) {
-                let newArr = Array.map(
-                    arr,
-                    func(n : Candid) : JSON {
-                        candidToJSON(n);
-                    },
-                );
+                let newArr = Buffer.Buffer<JSON>(arr.size());
 
-                #Array(newArr);
+                for (item in arr.vals()){
+                    let res = candidToJSON(item);
+                    let #ok(json) = res else return Utils.send_error(res);
+                    newArr.add(json);
+                };
+
+                #Array(Buffer.toArray(newArr));
             };
 
             case (#Record(records)) {
-                let objs = Array.map<(Text, Candid), (Text, JSON)>(
-                    records,
-                    func((key, val) : (Text, Candid)) : (Text, JSON) {
-                        (key, candidToJSON(val));
-                    },
-                );
+                let newRecords = Buffer.Buffer<(Text, JSON)>(records.size());
 
-                #Object(objs);
+                for ((key, val) in records.vals()){
+                    let res = candidToJSON(val);
+                    let #ok(json) = res else return Utils.send_error(res);
+                    newRecords.add((key, json));
+                };
+
+                #Object(Buffer.toArray(newRecords));
             };
 
             case (#Variant(variant)) {
                 let (key, val) = variant;
-                #Object([("#" # key, candidToJSON(val))]);
+                let res = candidToJSON(val);
+                let #ok(json_val) = res else return Utils.send_error(res);
+
+                #Object([("#" # key, json_val)]);
             };
             
-            // #Blob(_), #Empty and #Principal(_) are not supported
-            case (_) { 
-                Debug.print("Prelude.Unreachable() Error: candidToJSON() fn in JSON/ToText.mo");
-                Debug.print("                       Hint: #Blob, #Empty and #Principal are not supported by JSON");
-                Prelude.unreachable() 
+            case (#Blob(_)){
+                return #err("#Blob(_) is not supported by JSON");
+            };
+
+            case (#Empty){
+                return #err("#Empty is not supported by JSON");
+            };
+
+            case (#Principal(_)){
+                return #err("#Principal(_) is not supported by JSON");
             };
         };
+
+        #ok(json)
     };
 };

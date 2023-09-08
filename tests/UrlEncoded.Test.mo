@@ -33,7 +33,10 @@ let success = run([
                         "single record",
                         do {
 
-                            let blob = UrlEncoded.fromText("msg=Hello World&name=John", null);
+                            let blob = switch(UrlEncoded.fromText("msg=Hello World&name=John", null)){
+                                case (#ok(b)) b;
+                                case (#err(errorMsg)) Debug.trap(errorMsg);
+                            };
 
                             let res : ?User = from_candid (blob);
 
@@ -49,8 +52,8 @@ let success = run([
                         "pairs with empty values",
                         do {
 
-                            let unknown_blob = UrlEncoded.fromText("msg=Hello&name=", null);
-                            let known_blob = UrlEncoded.fromText("msg=Hello&name=John", null);
+                            let #ok(unknown_blob) = UrlEncoded.fromText("msg=Hello&name=", null);
+                            let #ok(known_blob) = UrlEncoded.fromText("msg=Hello&name=John", null);
 
                             type UserOptionalName = {
                                 name : ?Text;
@@ -77,7 +80,7 @@ let success = run([
                         do {
 
                             let text = "users[0][name]=John&users[0][msg]=Hello World&users[1][name]=Jane&users[1][msg]=testing";
-                            let blob = UrlEncoded.fromText(text, null);
+                            let #ok(blob) = UrlEncoded.fromText(text, null);
 
                             let res : ?{ users : [User] } = from_candid (blob);
                             assertTrue(
@@ -119,14 +122,14 @@ let success = run([
                             let user = "variant[#user][name]=John&variant[#user][msg]=Hello World";
                             let array = "variant[#array][0]=1&variant[#array][1]=2&variant[#array][2]=3";
 
-                            let text_blob = UrlEncoded.fromText(text, null);
-                            let nat_blob = UrlEncoded.fromText(nat, null);
-                            let int_blob = UrlEncoded.fromText(int, null);
-                            let float_blob = UrlEncoded.fromText(float, null);
-                            let bool_blob = UrlEncoded.fromText(bool, null);
-                            let record_blob = UrlEncoded.fromText(record, null);
-                            let user_blob = UrlEncoded.fromText(user, null);
-                            let array_blob = UrlEncoded.fromText(array, null);
+                            let #ok(text_blob) = UrlEncoded.fromText(text, null);
+                            let #ok(nat_blob) = UrlEncoded.fromText(nat, null);
+                            let #ok(int_blob) = UrlEncoded.fromText(int, null);
+                            let #ok(float_blob) = UrlEncoded.fromText(float, null);
+                            let #ok(bool_blob) = UrlEncoded.fromText(bool, null);
+                            let #ok(record_blob) = UrlEncoded.fromText(record, null);
+                            let #ok(user_blob) = UrlEncoded.fromText(user, null);
+                            let #ok(array_blob) = UrlEncoded.fromText(array, null);
 
                             let text_val : ?{ variant : Variant } = from_candid (text_blob);
                             let nat_val : ?{ variant : Variant } = from_candid (nat_blob);
@@ -175,7 +178,7 @@ let success = run([
                             let blob = to_candid (info);
                             let text = UrlEncoded.toText(blob, ["name", "msg"], null);
                             Debug.print("single record: " #debug_show(text));
-                            assertTrue(text == "msg=Hello World&name=John");
+                            assertTrue(text == #ok("msg=Hello World&name=John"));
                         },
                     ),
                     it(
@@ -199,7 +202,7 @@ let success = run([
                             Debug.print("record with array: " #debug_show(text));
 
                             assertTrue(
-                                text == "users[0][msg]=Hello World&users[0][name]=John&users[1][msg]=testing&users[1][name]=Jane"
+                                text == #ok("users[0][msg]=Hello World&users[0][name]=John&users[1][msg]=testing&users[1][name]=Jane")
                             );
                         },
                     ),

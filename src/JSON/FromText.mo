@@ -15,27 +15,28 @@ import JSON "mo:json/JSON";
 import Candid "../Candid";
 import U "../Utils";
 import CandidTypes "../Candid/Types";
+import Utils "../Utils";
 
 module {
     type JSON = JSON.JSON;
     type Candid = Candid.Candid;
+    type Result<A, B> = Result.Result<A, B>;
 
     /// Converts JSON text to a serialized Candid blob that can be decoded to motoko values using `from_candid()`
-    public func fromText(rawText : Text, options: ?CandidTypes.Options) : Blob {
-        let candid = toCandid(rawText);
+    public func fromText(rawText : Text, options: ?CandidTypes.Options) : Result<Blob, Text> {
+        let candid_res = toCandid(rawText);
+        let #ok(candid) = candid_res else return Utils.send_error(candid_res);
         Candid.encodeOne(candid, options);
     };
 
     /// Convert JSON text to a Candid value
-    public func toCandid(rawText: Text): Candid {
+    public func toCandid(rawText: Text): Result<Candid, Text> {
         let json = JSON.parse(rawText);
 
-        let candid = switch (json) {
-            case (?json) jsonToCandid(json);
-            case (_) Debug.trap("Failed to parse JSON");
+        switch (json) {
+            case (?json) #ok(jsonToCandid(json));
+            case (_) #err("Failed to parse JSON text");
         };
-
-        candid
     };
 
     func jsonToCandid(json : JSON) : Candid {

@@ -14,12 +14,13 @@ import Float "mo:base/Float";
 import Option "mo:base/Option";
 import Prelude "mo:base/Prelude";
 
-import itertools "mo:itertools/Iter";
+import Itertools "mo:itertools/Iter";
 
 import Candid "../Candid";
 import CandidTypes "../Candid/Types";
 import { parseValue } "./Parser";
 import U "../Utils";
+import Utils "../Utils";
 
 module {
     let { subText } = U;
@@ -29,6 +30,7 @@ module {
     type Buffer<A> = Buffer.Buffer<A>;
     type Iter<A> = Iter.Iter<A>;
     type TrieMap<K, V> = TrieMap.TrieMap<K, V>;
+    type Result<A, B> = Result.Result<A, B>;
 
     type TextOrTrieMap = {
         #text : Text;
@@ -40,15 +42,20 @@ module {
     func newMap() : NestedTrieMap = TrieMap.TrieMap(Text.equal, Text.hash);
 
     /// Converts a Url-Encoded Text to a serialized Candid Record
-    public func fromText(text : Text, options: ?CandidTypes.Options) : Blob {
-        let candid = toCandid(text);
+    public func fromText(text : Text, options: ?CandidTypes.Options) : Result<Blob, Text> {
+        let res = toCandid(text);
+        let #ok(candid) = res else return Utils.send_error(res);
+
         Candid.encodeOne(candid, options);
     };
 
     /// Converts a Url-Encoded Text to a Candid Record
-    public func toCandid(text : Text) : Candid {
-        let nestedTriemap = entriesToTrieMap(text);
-        trieMapToCandid(nestedTriemap);
+    public func toCandid(text : Text) : Result<Candid, Text> {
+        let triemap_res = entriesToTrieMap(text);
+
+        let #ok(triemap) = triemap_res else return Utils.send_error(triemap_res);
+
+        trieMapToCandid(triemap);
     };
 
     // Converting entries from UrlSearchParams
@@ -81,7 +88,7 @@ module {
     //     },
     // }
     // --------------------------------------------------
-    func entriesToTrieMap(text : Text) : NestedTrieMap {
+    func entriesToTrieMap(text : Text) : Result<NestedTrieMap, Text> {
         let entries : [Text] = Array.sort(
             Iter.toArray(Text.split(text, #char '&')),
             Text.compare,
@@ -93,16 +100,16 @@ module {
             let entry_iter = Text.split(entry, #char '=');
             let key = switch (entry_iter.next()) {
                 case (?_key) _key;
-                case (_) Debug.trap("Missing key: improper formatting of key-value pair in '" # entry # "'");
+                case (_) return #err("Missing key: improper formatting of key-value pair in '" # entry # "'");
             };
 
             let value = switch (entry_iter.next()) {
                 case (?val) val;
-                case (_) Debug.trap("Missing value: improper formatting of key value pair in '" # entry # "'");
+                case (_) return #err("Missing value: improper formatting of key value pair in '" # entry # "'");
             };
 
             switch (
-                itertools.findIndex(
+                Itertools.findIndex(
                     key.chars(),
                     func(c : Char) : Bool = c == '[',
                 ),
@@ -112,11 +119,11 @@ module {
 
                     let stripped_key = switch (Text.stripEnd(key, #text "]")) {
                         case (?stripped_key) stripped_key;
-                        case (_) Debug.trap("Improper formatting of key value pair in '" # entry # "' -> Missing closing bracket ']'");
+                        case (_) return #err("Improper formatting of key value pair in '" # entry # "' -> Missing closing bracket ']'");
                     };
 
                     if (first_field.size() == 0) {
-                        return Debug.trap("Missing field name between brackets '[]' in '" # entry # "'");
+                        return return #err("Missing field name between brackets '[]' in '" # entry # "'");
                     };
 
                     let other_fields = Text.split(
@@ -124,15 +131,17 @@ module {
                         #text "][",
                     );
 
-                    insert(triemap, first_field, other_fields, value);
+                    let res = insert(triemap, first_field, other_fields, value);
+                    let #ok(_) = res else return Utils.send_error(res);
                 };
                 case (_) {
-                    insert(triemap, key, itertools.empty(), value);
+                    let res = insert(triemap, key, Itertools.empty(), value);
+                    let #ok(_) = res else return Utils.send_error(res);
                 };
             };
         };
 
-        triemap;
+        #ok(triemap);
     };
 
     // Convert from a nested TrieMap
@@ -174,9 +183,9 @@ module {
     // }
     // --------------------------------------------------
 
-    func trieMapToCandid(triemap : NestedTrieMap) : Candid {
+    func trieMapToCandid(triemap : NestedTrieMap) : Result<Candid, Text> {
         var i = 0;
-        let isArray = itertools.all(
+        let isArray = Itertools.all(
             Iter.sort(triemap.keys(), Text.compare),
             func(key : Text) : Bool {
                 let res = key == Nat.toText(i);
@@ -186,34 +195,35 @@ module {
         );
 
         if (isArray) {
-            let array = Array.tabulate<Candid>(
-                triemap.size(),
-                func(i : Nat) {
-                    switch (triemap.get(Nat.toText(i))) {
-                        case (?(#text(text))) parseValue(text);
-                        case (?(#triemap(map))) trieMapToCandid(map);
-                        case (_) {
-                            Debug.print("Prelude.Unreachable() Error: trieMapToCandid() fn in UrlEncoded/FromText.mo");
-                            Debug.print("                       Hint: Array might be improperly formatted");
+            let buffer = Buffer.Buffer<Candid>(triemap.size());
 
-                            Prelude.unreachable();
-                        }
+            for (i in Itertools.range(0, triemap.size())){
+
+                switch(triemap.get(Nat.toText(i))) {
+                    case (?(#text(text))) {
+                        let candid = parseValue(text);
+                        buffer.add(candid);
                     };
-                },
-            );
+                    case (?(#triemap(map))) {
+                        let res = trieMapToCandid(map);
+                        let #ok(candid) = res else return Utils.send_error(res);
+                        buffer.add(candid);
+                    };
 
-            return #Array(array);
+                    case (_) Debug.trap("Array might be improperly formatted");
+                };
+            };
+
+            let arr = Buffer.toArray(buffer);
+
+            return #ok(#Array(arr));
         };
 
         // check if single value is a variant
         if (triemap.size() == 1) {
             let (variant_key, value) = switch (triemap.entries().next()) {
-                case (?(k, v))(k, v);
-                case (_) {
-                    Debug.print("Prelude.Unreachable() Error: trieMapToCandid() fn in UrlEncoded/FromText.mo");
-                    Debug.print("                       Hint: Variant might be improperly formatted");
-                    Prelude.unreachable();
-                }
+                case (?(k, v)) { (k, v) };
+                case (_)       { Debug.trap("Variant might be improperly formatted"); };
             };
 
             let isVariant = Text.startsWith(variant_key, #text "#");
@@ -221,41 +231,45 @@ module {
             if (isVariant) {
                 let key = U.stripStart(variant_key, #text "#");
 
-                let val = switch (value) {
-                    case (#text(text)) parseValue(text);
+                let value_res = switch (value) {
+                    case (#text(text)) #ok(parseValue(text));
                     case (#triemap(map)) trieMapToCandid(map);
                 };
 
-                return #Variant((key, val));
+                let #ok(val) = value_res else return Utils.send_error(value_res);
+
+                return #ok(#Variant((key, val)));
             };
         };
 
-        let records_iter = Iter.map<(Text, TextOrTrieMap), (Text, Candid)>(
-            triemap.entries(),
-            func((key, value) : (Text, TextOrTrieMap)) : (Text, Candid) {
-                switch (value) {
-                    case (#text(text)) {
-                        (key, parseValue(text));
-                    };
-                    case (#triemap(map)) {
-                        (key, trieMapToCandid(map));
-                    };
+        let buffer = Buffer.Buffer<(Text, Candid)>(triemap.size());
+
+        for ((key, field) in triemap.entries()){
+            switch (field){
+                case (#text(text)) {
+                    let candid = parseValue(text);
+                    buffer.add((key, candid));
                 };
-            },
-        );
+                case (#triemap(map)) {
+                    let res = trieMapToCandid(map);
+                    let #ok(candid) = res else return Utils.send_error(res);
+                    buffer.add((key, candid));
+                };
+            };
+        };
 
-        let records = Iter.toArray(records_iter);
+        let records = Buffer.toArray(buffer);
 
-        #Record(records);
+        #ok(#Record(records));
     };
 
     // Inserts a key value pair from UrlSearchParams into a nested TrieMap
-    func insert(map : NestedTrieMap, field : Text, fields_iter : Iter<Text>, value : Text) {
+    func insert(map : NestedTrieMap, field : Text, fields_iter : Iter<Text>, value : Text) : Result<(), Text> {
         let next_field = switch (fields_iter.next()) {
             case (?_field) _field;
             case (_) {
                 map.put(field, #text(value));
-                return;
+                return #ok();
             };
         };
 
@@ -263,7 +277,7 @@ module {
             case (?val) {
                 switch (val) {
                     case (#text(prevValue)) {
-                        Debug.trap("field name '" # field # "' cannot have multiple values: '" # prevValue # "' and '" # value # "'");
+                        return #err("field name '" # field # "' cannot have multiple values: '" # prevValue # "' and '" # value # "'");
                     };
                     case (#triemap(nestedTriemap)) nestedTriemap;
                 };
