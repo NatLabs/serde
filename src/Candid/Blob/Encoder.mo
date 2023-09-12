@@ -59,24 +59,16 @@ module {
     };
 
     type UpdatedTypeNode = {
-        var type_ : UpdatedType;
+        type_ : UpdatedType;
         height : Nat;
         parent_index : Nat;
-        var children : ?{
-            start : Nat;
-            n : Nat;
-        };
         tag : Tag;
     };
 
     type TypeNode = {
-        var type_ : Type;
+        type_ : Type;
         height : Nat;
         parent_index : Nat;
-        var children : ?{
-            start : Nat;
-            n : Nat;
-        };
         tag : Tag;
     };
 
@@ -84,26 +76,23 @@ module {
         let buffer = Buffer.Buffer<Arg>(candid_values.size());
 
         for (candid in candid_values.vals()) {
-            let updated_arg_type = toUpdatedArgType(candid, renaming_map);
+            let (updated_arg_type, arg_value) = toArgTypeAndValue(candid, renaming_map);
 
             let rows = Buffer.Buffer<[UpdatedTypeNode]>(8);
             let node : UpdatedTypeNode = {
-                var type_ = updated_arg_type;
+                type_ = updated_arg_type;
                 height = 0;
                 parent_index = 0;
-                var children = null;
                 tag = #name("");
             };
 
             rows.add([node]);
             order_types_by_height_bfs(rows);
+            
+            let res = merge_variants_and_array_types(rows);
+            let #ok(merged_type) = res else return Utils.send_error(res);
 
-            let merged_type = merge_variants_in_array_type(rows);
-
-            let value_res = toArgValue(candid, renaming_map);
-            let #ok(value) = value_res else return Utils.send_error(value_res);
-
-            buffer.add({ type_ = merged_type; value });
+            buffer.add({ type_ = merged_type; value = arg_value });
         };
 
         #ok(Buffer.toArray(buffer));
@@ -124,92 +113,92 @@ module {
 
     type UpdatedType = Type.PrimitiveType or UpdatedCompoundType;
 
-    func extract_top_level_type(type_ : UpdatedType) : (UpdatedType) {
-        switch (type_) {
-            case (#bool(_)) #bool;
+    func toArgTypeAndValue(candid: Candid, renaming_map : TrieMap<Text, Text>): (UpdatedType, Value){
+        let (arg_type, arg_value) : (UpdatedType, Value) = switch (candid) {
+            case (#Nat(n)) (#nat, #nat(n));
+            case (#Nat8(n)) (#nat8, #nat8(n));
+            case (#Nat16(n)) (#nat16, #nat16(n));
+            case (#Nat32(n)) (#nat32, #nat32(n));
+            case (#Nat64(n)) (#nat64, #nat64(n));
 
-            case (#principal(_)) #principal;
+            case (#Int(n)) (#int, #int(n));
+            case (#Int8(n)) (#int8, #int8(n));
+            case (#Int16(n)) (#int16, #int16(n));
+            case (#Int32(n)) (#int32, #int32(n));
+            case (#Int64(n)) (#int64, #int64(n));
 
-            case (#text(_)) #text;
+            case (#Float(n)) (#float64, #float64(n));
 
-            case (#null_) return #null_;
-            case (#empty) return #empty;
+            case (#Bool(n)) (#bool, #bool(n));
 
-            case (#opt(_)) #opt(#empty);
-            case (#vector(_)) #vector([]);
-            case (#record(_)) #record([]);
-            case (#variant(_)) #variant([]);
-            case (x) x;
-        };
-    };
+            case (#Principal(n)) (#principal, #principal(n));
 
-    func toUpdatedArgType(candid : Candid, renaming_map : TrieMap<Text, Text>) : UpdatedType {
-        var curr_height = 0;
+            case (#Text(n)) (#text, #text(n));
 
-        let arg_type : UpdatedType = switch (candid) {
-            case (#Nat(_)) #nat;
-            case (#Nat8(_)) #nat8;
-            case (#Nat16(_)) #nat16;
-            case (#Nat32(_)) #nat32;
-            case (#Nat64(_)) #nat64;
+            case (#Null) (#null_, #null_);
+            case (#Empty) (#empty, #empty);
 
-            case (#Int(_)) #int;
-            case (#Int8(_)) #int8;
-            case (#Int16(_)) #int16;
-            case (#Int32(_)) #int32;
-            case (#Int64(_)) #int64;
-
-            case (#Float(_)) #float64;
-
-            case (#Bool(_)) #bool;
-
-            case (#Principal(_)) #principal;
-
-            case (#Text(_)) #text;
-            case (#Blob(_)) #vector([#nat8]);
-
-            case (#Null) #null_;
-            case (#Empty) #empty;
-
-            case (#Option(optType)) {
-                let type_ = toUpdatedArgType(optType, renaming_map);
-                #opt(type_);
-            };
-            case (#Array(arr)) {
-                let vec_types = Array.map<Candid, UpdatedType>(
-                    arr,
-                    func(item : Candid) : UpdatedType = toUpdatedArgType(item, renaming_map),
+            case (#Blob(blob)) {
+                let bytes = Blob.toArray(blob);
+                let inner_values = Array.map(
+                    bytes,
+                    func(elem : Nat8) : Value {
+                        #nat8(elem);
+                    },
                 );
 
-                #vector(vec_types);
+                (#vector([#nat8]), #vector(inner_values));
+            };
+
+            case (#Option(optType)) {
+                let (inner_type, inner_value) = toArgTypeAndValue(optType, renaming_map);
+                (#opt(inner_type), #opt(inner_value));
+            };
+            case (#Array(arr)) {
+                let inner_types = Buffer.Buffer<UpdatedType>(arr.size());
+                let inner_values = Buffer.Buffer<Value>(arr.size());
+
+                for (item in arr.vals()) {
+                    let (inner_type, inner_val) = toArgTypeAndValue(item, renaming_map);
+                    inner_types.add(inner_type);
+                    inner_values.add(inner_val);
+                };
+
+                let types = Buffer.toArray(inner_types);
+                let values = Buffer.toArray(inner_values);
+
+                (#vector(types), #vector(values));
             };
 
             case (#Record(records)) {
-                let newRecords : Buffer<UpdatedKeyValuePair> = Buffer.Buffer(records.size());
+                let types_buffer = Buffer.Buffer<UpdatedKeyValuePair>(records.size());
+                let values_buffer = Buffer.Buffer<RecordFieldValue>(records.size());
 
-                for ((key, val) in records.vals()) {
-                    let renamed_key = get_renamed_key(renaming_map, key);
+                for ((record_key, record_val) in records.vals()) {
+                    let renamed_key = get_renamed_key(renaming_map, record_key);
+                    let (type_, value) = toArgTypeAndValue(record_val, renaming_map);
+                    let tag = #name(renamed_key);
 
-                    let type_ = toUpdatedArgType(val, renaming_map);
-
-                    newRecords.add({
-                        tag = #name(renamed_key);
-                        type_;
-                    });
+                    types_buffer.add({ tag; type_ });
+                    values_buffer.add({ tag; value });
                 };
 
-                #record(Buffer.toArray(newRecords));
+                let types = Buffer.toArray(types_buffer);
+                let values = Buffer.toArray(values_buffer);
+
+                (#record(types), #record(values));
             };
 
             case (#Variant((key, val))) {
                 let renamed_key = get_renamed_key(renaming_map, key);
-                let type_ = toUpdatedArgType(val, renaming_map);
-                #variant([{ tag = #name(renamed_key); type_ }]);
-            };
+                let (type_, value) = toArgTypeAndValue(val, renaming_map);
+                let tag = #name(renamed_key);
 
+                (#variant([{ tag; type_ }]), #variant({ tag; value }));
+            };
         };
 
-        arg_type;
+        (arg_type, arg_value);
     };
 
     func updated_type_to_arg_type(updated_type : UpdatedType, vec_index : ?Nat) : Type {
@@ -266,30 +255,27 @@ module {
         tag = node.tag;
     };
 
-    func merge_variants_in_array_type(rows : Buffer<[UpdatedTypeNode]>) : Type {
+    func merge_variants_and_array_types(rows : Buffer<[UpdatedTypeNode]>) : Result<Type, Text> {
         let buffer = Buffer.Buffer<TypeNode>(8);
         let total_rows = rows.size();
 
         func calc_height(parent : Nat, child : Nat) : Nat = parent + child;
 
-        let ?_bottom = rows.removeLast() else return Debug.trap("trying to pop bottom but rows is empty");
+        let ?_bottom = rows.removeLast() else return #err("trying to pop bottom but rows is empty");
 
         var bottom = Array.map(
             _bottom,
             func(node : UpdatedTypeNode) : TypeNode = {
-                var type_ = updated_type_to_arg_type(node.type_, null);
+                type_ = updated_type_to_arg_type(node.type_, null);
                 height = node.height;
                 parent_index = node.parent_index;
-                var children = node.children;
                 tag = node.tag;
             },
         );
 
-        var variants_exist = false;
-        
         while (rows.size() > 0) {
 
-            let ?above_bottom = rows.removeLast() else return Debug.trap("trying to pop above_bottom but rows is empty");
+            let ?above_bottom = rows.removeLast() else return #err("trying to pop above_bottom but rows is empty");
 
             var bottom_iter = Itertools.peekable(bottom.vals());
 
@@ -302,13 +288,12 @@ module {
 
                 switch (parent_node.type_) {
                     case (#opt(_)) {
-                        let ?child_node = tmp_bottom_iter.next() else return Debug.trap(" #opt error: no item in tmp_bottom_iter");
+                        let ?child_node = tmp_bottom_iter.next() else return #err(" #opt error: no item in tmp_bottom_iter");
 
                         let merged_node : TypeNode = {
-                            var type_ = #opt(child_node.type_);
+                            type_ = #opt(child_node.type_);
                             height = calc_height(parent_node.height, child_node.height);
                             parent_index;
-                            var children = null;
                             tag = parent_tag;
                         };
                         buffer.add(merged_node);
@@ -329,10 +314,9 @@ module {
                         };
 
                         let best_node : TypeNode = {
-                            var type_ = #vector(max.type_);
+                            type_ = #vector(max.type_);
                             height = calc_height(parent_node.height, max.height);
                             parent_index;
-                            var children = null;
                             tag = parent_tag;
                         };
 
@@ -348,22 +332,19 @@ module {
 
                         let composed_fn = Func.compose(to_record_field_type, get_max_height);
 
-                        let record_type = tmp_bottom_iter
-                            |> Iter.map(_, composed_fn)
-                            |> Iter.toArray(_);
+                        let record_type = Iter.toArray(
+                            Iter.map(tmp_bottom_iter, composed_fn)
+                        );
 
                         let merged_node : TypeNode = {
-                            var type_ = #record(record_type);
+                            type_ = #record(record_type);
                             height = calc_height(parent_node.height, height);
                             parent_index;
-                            var children = null;
                             tag = parent_tag;
                         };
                         buffer.add(merged_node);
                     };
                     case (#variant(_)) {
-                        variants_exist := true;
-
                         var height = 0;
 
                         func get_max_height(item : TypeNode) : TypeNode {
@@ -373,9 +354,9 @@ module {
 
                         let composed_fn = Func.compose(to_record_field_type, get_max_height);
 
-                        let variant_types = tmp_bottom_iter
-                        |> Iter.map(_, composed_fn)
-                        |> Iter.toArray(_);
+                        let variant_types = Iter.toArray(
+                            Iter.map(tmp_bottom_iter, composed_fn)
+                        );
 
                         for (variant_type in variant_types.vals()) {
                             variants.add(variant_type);
@@ -384,10 +365,9 @@ module {
                         variant_indexes.add(buffer.size());
 
                         let merged_node : TypeNode = {
-                            var type_ = #variant(variant_types);
+                            type_ = #variant(variant_types);
                             height = calc_height(parent_node.height, height);
                             parent_index;
-                            var children = null;
                             tag = parent_tag;
                         };
 
@@ -396,10 +376,9 @@ module {
                     };
                     case (_) {
                         let new_parent_node : TypeNode = {
-                            var type_ = updated_type_to_arg_type(parent_node.type_, null);
+                            type_ = updated_type_to_arg_type(parent_node.type_, null);
                             height = parent_node.height;
                             parent_index;
-                            var children = null;
                             tag = parent_tag;
                         };
 
@@ -414,10 +393,9 @@ module {
                 for (index in variant_indexes.vals()) {
                     let prev_node = buffer.get(index);
                     let new_node : TypeNode = {
-                        var type_ = full_variant_type;
+                        type_ = full_variant_type;
                         height = prev_node.height;
                         parent_index = prev_node.parent_index;
-                        var children = prev_node.children;
                         tag = prev_node.tag;
                     };
 
@@ -430,7 +408,7 @@ module {
         };
 
         let merged_type = bottom[0].type_;
-        merged_type;
+        #ok(merged_type);
     };
 
     func get_height_value(type_ : UpdatedType) : Nat {
@@ -455,33 +433,22 @@ module {
                     case (#opt(opt_val)) {
                         has_compound_type := true;
                         let child_node : UpdatedTypeNode = {
-                            var type_ = opt_val;
+                            type_ = opt_val;
                             height = get_height_value(opt_val);
                             parent_index = index;
-                            var children = null;
                             tag = #name("");
                         };
 
-                        parent_node.children := ?{
-                            start = buffer.size();
-                            n = 1;
-                        };
                         buffer.add(child_node);
                     };
                     case (#vector(vec_types)) {
                         has_compound_type := true;
 
-                        parent_node.children := ?{
-                            start = buffer.size();
-                            n = vec_types.size();
-                        };
-
                         for (vec_type in vec_types.vals()) {
                             let child_node : UpdatedTypeNode = {
-                                var type_ = vec_type;
+                                type_ = vec_type;
                                 height = get_height_value(vec_type);
                                 parent_index = index;
-                                var children = null;
                                 tag = #name("");
                             };
 
@@ -491,18 +458,12 @@ module {
                     };
                     case (#record(records)) {
 
-                        parent_node.children := ?{
-                            start = buffer.size();
-                            n = records.size();
-                        };
-
                         for ({ tag; type_ } in records.vals()) {
                             has_compound_type := true;
                             let child_node : UpdatedTypeNode = {
-                                var type_ = type_;
+                                type_ = type_;
                                 height = get_height_value(type_);
                                 parent_index = index;
-                                var children = null;
                                 tag;
                             };
                             buffer.add(child_node);
@@ -510,17 +471,13 @@ module {
                     };
                     case (#variant(variants)) {
                         has_compound_type := true;
-                        parent_node.children := ?{
-                            start = buffer.size();
-                            n = variants.size();
-                        };
+                        
                         for ({ tag; type_ } in variants.vals()) {
                             has_compound_type := true;
                             let child_node : UpdatedTypeNode = {
-                                var type_ = type_;
+                                type_ = type_;
                                 height = get_height_value(type_);
                                 parent_index = index;
-                                var children = null;
                                 tag;
                             };
                             buffer.add(child_node);
@@ -528,8 +485,6 @@ module {
                     };
                     case (_) {};
                 };
-
-                parent_node.type_ := extract_top_level_type(parent_node.type_);
             };
 
             if (has_compound_type) {
@@ -538,96 +493,6 @@ module {
                 return;
             };
         };
-    };
-
-    func toArgValue(candid : Candid, renaming_map : TrieMap<Text, Text>) : Result<Value, Text> {
-        let value : Value = switch (candid) {
-            case (#Nat(n)) #nat(n);
-            case (#Nat8(n)) #nat8(n);
-            case (#Nat16(n)) #nat16(n);
-            case (#Nat32(n)) #nat32(n);
-            case (#Nat64(n)) #nat64(n);
-
-            case (#Int(n)) #int(n);
-            case (#Int8(n)) #int8(n);
-            case (#Int16(n)) #int16(n);
-            case (#Int32(n)) #int32(n);
-            case (#Int64(n)) #int64(n);
-
-            case (#Float(n)) #float64(n);
-
-            case (#Bool(b)) #bool(b);
-
-            case (#Principal(p)) #principal(p);
-
-            case (#Text(n)) #text(n);
-
-            case (#Null) #null_;
-
-            case (#Option(optVal)) {
-                let res = toArgValue(optVal, renaming_map);
-                let #ok(val) = res else return Utils.send_error(res);
-                #opt(val);
-            };
-            case (#Array(arr)) {
-                let newArr = Buffer.Buffer<Value>(arr.size());
-
-                for (item in arr.vals()) {
-                    let res = toArgValue(item, renaming_map);
-                    let #ok(val) = res else return Utils.send_error(res);
-                    newArr.add(val);
-                };
-
-                #vector(Buffer.toArray(newArr));
-            };
-
-            case (#Blob(blob)) {
-                let array = Blob.toArray(blob);
-
-                let bytes = Array.map(
-                    array,
-                    func(elem : Nat8) : Value {
-                        #nat8(elem);
-                    },
-                );
-
-                #vector(bytes);
-            };
-
-            case (#Record(records)) {
-                let newRecords = Buffer.Buffer<RecordFieldValue>(records.size());
-
-                for ((record_key, record_val) in records.vals()) {
-                    let renamed_key = get_renamed_key(renaming_map, record_key);
-
-                    let res = toArgValue(record_val, renaming_map);
-                    let #ok(value) = res else return Utils.send_error(res);
-
-                    newRecords.add({
-                        tag = #name(renamed_key);
-                        value;
-                    });
-                };
-
-                #record(Buffer.toArray(newRecords));
-            };
-
-            case (#Variant((key, val))) {
-                let renamed_key = get_renamed_key(renaming_map, key);
-                let res = toArgValue(val, renaming_map);
-                let #ok(value) = res else return Utils.send_error(res);
-
-                #variant({
-                    tag = #name(renamed_key);
-                    value;
-                });
-            };
-
-            case (#Empty) #empty;
-
-        };
-
-        #ok(value);
     };
 
     func get_renamed_key(renaming_map : TrieMap<Text, Text>, key : Text) : Text {
