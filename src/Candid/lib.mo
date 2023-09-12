@@ -17,6 +17,7 @@ import Parser "Text/Parser";
 import ToText "Text/ToText";
 
 import T "Types";
+import Utils "../Utils";
 
 
 module {
@@ -34,5 +35,8 @@ module {
     };
 
     public let { toText } = ToText;
+
+    public let concatKeys = Utils.concatKeys;
+
 
 };
