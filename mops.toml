@@ -1,6 +1,6 @@
 [package]
 name = "serde"
-version = "1.1.0"
+version = "2.0.0"
 description = "A serialisation and deserialisation library for Motoko."
 repository = "https://github.com/NatLabs/serde"
 keywords = [ "json", "candid", "parser", "urlencoded", "serialization" ]
