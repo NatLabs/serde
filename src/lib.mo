@@ -6,6 +6,7 @@ import CandidTypes "Candid/Types";
 import UrlEncodedModule "UrlEncoded";
 import JsonModule "JSON";
 import CandidModule "Candid";
+import Utils "Utils";
 
 module {
 
@@ -17,9 +18,5 @@ module {
     public let JSON = JsonModule;
     public let URLEncoded = UrlEncodedModule;
 
-    public func concatKeys(keys : [[Text]]) : [Text] {
-        Iter.toArray(
-            Itertools.flattenArray(keys)
-        )
-    };
+    public let concatKeys = Utils.concatKeys;
 }

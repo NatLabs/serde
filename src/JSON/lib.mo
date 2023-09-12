@@ -5,6 +5,7 @@ import JSON "mo:json/JSON";
 import Candid "../Candid";
 import FromText "FromText";
 import ToText "ToText";
+import Utils "../Utils";
 
 module {
     public type JSON = JSON.JSON;
@@ -13,4 +14,5 @@ module {
 
     public let { toText; fromCandid } = ToText;
 
+    public let concatKeys = Utils.concatKeys;
 };
