@@ -332,9 +332,9 @@ module {
 
                         let composed_fn = Func.compose(to_record_field_type, get_max_height);
 
-                        let record_type = tmp_bottom_iter
-                            |> Iter.map(_, composed_fn)
-                            |> Iter.toArray(_);
+                        let record_type = Iter.toArray(
+                            Iter.map(tmp_bottom_iter, composed_fn)
+                        );
 
                         let merged_node : TypeNode = {
                             type_ = #record(record_type);
@@ -354,9 +354,9 @@ module {
 
                         let composed_fn = Func.compose(to_record_field_type, get_max_height);
 
-                        let variant_types = tmp_bottom_iter
-                        |> Iter.map(_, composed_fn)
-                        |> Iter.toArray(_);
+                        let variant_types = Iter.toArray(
+                            Iter.map(tmp_bottom_iter, composed_fn)
+                        );
 
                         for (variant_type in variant_types.vals()) {
                             variants.add(variant_type);
