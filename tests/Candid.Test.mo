@@ -7,6 +7,7 @@ import Principal "mo:base/Principal";
 
 import ActorSpec "./utils/ActorSpec";
 
+import Serde "../src";
 import Candid "../src/Candid";
 import Encoder "../src/Candid/Blob/Encoder";
 
@@ -41,16 +42,22 @@ let success = run([
                                 #admin : ();
                             };
 
+                            let PermissionKeys = ["read", "write", "read_all", "write_all", "admin"];
+
                             type User = {
                                 name : Text;
                                 age : Nat;
                                 permission : Permission;
                             };
 
+                            let UserKeys = ["name", "age", "permission"];
+
                             type Record = {
                                 group : Text;
                                 users : ?[User];
                             };
+
+                            let RecordKeys = ["group", "users"];
 
                             let admin_record : Record = {
                                 group = "admins";
@@ -106,7 +113,59 @@ let success = run([
                             };
 
                             let records : [Record] = [null_record, empty_record, admin_record, user_record, base_record];
-                            true
+                            let blob = to_candid(records);
+                            let #ok(candid) = Candid.decode(blob, Serde.concatKeys([PermissionKeys, UserKeys, RecordKeys]), null);
+
+                            candid == [#Array([
+                                #Record([
+                                    ("group", #Text("null")),
+                                    ("users", #Option(#Null)),
+                                ]),
+                                #Record([
+                                    ("group", #Text("empty")),
+                                    ("users", #Option(#Array([]))),
+                                ]),
+                                #Record([
+                                    ("group", #Text("admins")),
+                                    ("users", #Option(#Array([
+                                        #Record([
+                                            ("age", #Nat(32)),
+                                            ("name", #Text("John")),
+                                            ("permission", #Variant("admin", #Null)),
+                                        ]),
+                                    ]))),
+                                ]),
+                                #Record([
+                                    ("group", #Text("users")),
+                                    ("users", #Option(#Array([
+                                        #Record([
+                                            ("age", #Nat(28)),
+                                            ("name", #Text("Ali")),
+                                            ("permission", #Variant("read_all", #Null)),
+                                        ]),
+                                        #Record([
+                                            ("age", #Nat(40)),
+                                            ("name", #Text("James")),
+                                            ("permission", #Variant("write_all", #Null)),
+                                        ]),
+                                    ]))),
+                                ]),
+                                #Record([
+                                    ("group", #Text("base")),
+                                    ("users", #Option(#Array([
+                                        #Record([
+                                            ("age", #Nat(32)),
+                                            ("name", #Text("Henry")),
+                                            ("permission", #Variant("read", #Array([#Text("posts"), #Text("comments")]))),
+                                        ]),
+                                        #Record([
+                                            ("age", #Nat(32)),
+                                            ("name", #Text("Steven")),
+                                            ("permission", #Variant("write", #Array([#Text("posts"), #Text("comments")]))),
+                                        ]),
+                                    ]))),
+                                ]),
+                            ])]
                         },
                     ),
                     it(

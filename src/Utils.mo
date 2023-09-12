@@ -6,13 +6,19 @@ import Iter "mo:base/Iter";
 import Result "mo:base/Result";
 
 import Prelude "mo:base/Prelude";
-import itertools "mo:itertools/Iter";
+import Itertools "mo:itertools/Iter";
 
 module {
 
     type Iter<A> = Iter.Iter<A>;
     type Result<A, B> = Result.Result<A, B>;
 
+    public func concatKeys(keys : [[Text]]) : [Text] {
+        Iter.toArray(
+            Itertools.flattenArray(keys)
+        )
+    };
+    
     public func sized_iter_to_array<A>(iter: Iter<A>, size: Nat): [A] {
         Array.tabulate<A>(
             size,
@@ -33,9 +39,9 @@ module {
     };
 
     public func subText(text : Text, start : Nat, end : Nat) : Text {
-        itertools.toText(
-            itertools.skip(
-                itertools.take(text.chars(), end),
+        Itertools.toText(
+            Itertools.skip(
+                Itertools.take(text.chars(), end),
                 start,
             ),
         );
