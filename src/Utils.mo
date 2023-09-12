@@ -1,6 +1,8 @@
+import Array "mo:base/Array";
 import Order "mo:base/Order";
 import Float "mo:base/Float";
 import Text "mo:base/Text";
+import Iter "mo:base/Iter";
 import Result "mo:base/Result";
 
 import Prelude "mo:base/Prelude";
@@ -8,7 +10,20 @@ import itertools "mo:itertools/Iter";
 
 module {
 
+    type Iter<A> = Iter.Iter<A>;
     type Result<A, B> = Result.Result<A, B>;
+
+    public func sized_iter_to_array<A>(iter: Iter<A>, size: Nat): [A] {
+        Array.tabulate<A>(
+            size,
+            func (i: Nat){
+                switch(iter.next()){
+                    case (?x) x;
+                    case (_) Prelude.unreachable();
+                };
+            }
+        );
+    };
 
     public func send_error<OldOk, NewOk, Error>(res: Result<OldOk, Error>): Result<NewOk, Error>{
         switch (res) {

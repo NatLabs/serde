@@ -6,6 +6,12 @@
             "args": ""
         }
     },
+    "canisters": {
+        "benchmarks": {
+            "type": "motoko",
+            "main": "benchmarks/serde.bench.mo"
+        }
+    },
     "networks": {
         "local": {
             "bind": "127.0.0.1:8000",

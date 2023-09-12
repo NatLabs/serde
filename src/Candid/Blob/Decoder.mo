@@ -266,10 +266,7 @@ module {
 
             case (x) {
                 return #err(
-                    "
-                    Serde Decoding Error from fromArg() fn in Candid/Blob/Decoder.mo
-                    Error Log: Could not match '" # debug_show (x) # "' type to any case
-                    "
+                    "\nSerde Decoding Error from fromArg() fn in Candid/Blob/Decoder.mo\n\tError Log: Could not match '" # debug_show (x) # "' type to any case"
                 );
             };
         };
