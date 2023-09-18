@@ -10,7 +10,7 @@
         id: Nat;
     };
 
-    let blob = serdeCandid.fromText("(record({ name = \"bar\"; id = 112 }))", null);
+    let #ok(blob) = Candid.fromText("(record({ name = \"bar\"; id = 112 }))", null);
     let user : ?User = from_candid(blob);
 
     assert user == ?{ name = "bar"; id = 112 };
@@ -32,7 +32,7 @@ This implementation supports URL query strings and URL-encoded pairs, including 
     
     let payload = "users[0][id]=123&users[0][name]=John&users[1][id]=456&users[1][name]=Jane";
 
-    let blob = URLEncoded.fromText(payload, null);
+    let #ok(blob) = URLEncoded.fromText(payload, null);
     let res : ?{ users: [User]} = from_candid(blob);
 
     assert res == ?{ users = [

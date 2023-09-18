@@ -735,6 +735,24 @@ let success = run([
                     ),
                 ],
             ),
+            it("encodes and decodes hashed keys", do {
+                type User = {
+                    name : Text;
+                    age : Nat;
+                };
+
+                let motoko = { name = "candid"; age = 32; };
+
+                let blob = to_candid (motoko);
+                let #ok(candid) = Candid.decode(blob, [], null); // decode without keys
+
+                // [#Record([("1_224_700_491", #Text("candid")), ("4_846_783", #Nat(32))])]
+
+                let #ok(blob_2) = Candid.encode(candid, null);
+                let motoko_2 : ?User = from_candid (blob_2); 
+
+                motoko_2 == ?motoko;
+            }),
 
             it(
                 "print out args",
