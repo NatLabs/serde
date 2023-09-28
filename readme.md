@@ -1,145 +1,165 @@
-# serde
+# `serde` for Motoko
 
-A serialisation and deserialisation library for Motoko.
+An efficient serialization and deserialization library for Motoko.
 
-[Motoko Playground Demo](https://m7sm4-2iaaa-aaaab-qabra-cai.raw.ic0.app/?tag=3196250840)
+<!-- 👉 [Demo on Motoko Playground](https://m7sm4-2iaaa-aaaab-qabra-cai.raw.ic0.app/?tag=3196250840) -->
 
-## Installation
-- Install [mops](https://j4mwm-bqaaa-aaaam-qajbq-cai.ic0.app/#/docs/install)
-- Run `mops install serde`, in your project directory
+## Getting Started
 
-## Usage
-#### Import statement 
+### Installation
+
+1. Install [`mops`](https://j4mwm-bqaaa-aaaam-qajbq-cai.ic0.app/#/docs/install).
+2. Inside your project directory, run: 
+```bash
+mops install serde
+```
+
+### Usage
+
+To start, import the necessary modules:
 ```motoko
-import { JSON; Candid; UrlEncoded } "mo:serde";
+import { JSON; Candid; UrlEncoded } from "mo:serde";
 ```
 
-### JSON
-This is an example of using the serde library using JSON as the data format, since most applications will JSON data for communicating with http clients and services. The API for each module is the same, so the same code can be used for converting between the other modules (Candid and URL-Encoded Pairs).
+#### JSON
+> The API for all serde module is the same, so the following code can be used for converting data between the other modules (Candid and URL-Encoded Pairs).
 
-- Converting a specific data type, for example `User`:
+**Example: JSON to Motoko**
 
-#### JSON to Motoko
-- **Specifying the data type**
-The most important part of using the serde library is specifying the data type because this tells the global `from_candid` and `to_candid` functions how to properly convert the data.
+1. **Defining Data Type**: This critical step informs the conversion functions (`from_candid`` and `to_candid`) about how to handle the data.
 
-For this example, we will be converting an array of users from JSON to Motoko and vice versa. Here is an example of the json data we will be converting:
-```json
-[
-    {
-        "name": "John",
-        "id": 123
-    },
-    {
-        "name": "Jane",
-        "id": 456,
-        "email": "jane@gmail.com"
-    }
-]
-```
-  You can observe that the `email` field is optional, so we will need to specify that in the Motoko type definition.
-
-  ```motoko
-      type User = {
-          name: Text;
-          id: Nat;
-          email: ?Text;
-      };
-  ```
-
-  - **Converting to Motoko**
-    - The first step is to generate a candid blob from the json text using `JSON.fromText`. This function tries to determine the datatypes best type by traversing the data tree and choosing the highest level type that can be used to represent the data. It returns a `Result<Blob, Text>` type where #ok(Blob) is returned if it succeeds and #err(Text) is returned if it fails. 
-    - The `Blob` type is a candid blob that can be converted to Motoko using the `from_candid` function.
-    - Now that we have defined our type, we specify the type when converting with the `from_candid` function. This function tries to convert the candid blob to the type specified by the user. If the conversion fails, it will return a `null` value and if it is succeeds it will return the converted data wrapped in an `Option` type. 
-
-  ```motoko
-        let jsonText = "[{\"name\": \"John\", \"id\": 123}, {\"name\": \"Jane\", \"id\": 456, \"email\": \"jane@gmail.com\"}]";
-
-        let #ok(blob) = JSON.fromText(jsonText, null);
-        let users : ?[User] = from_candid(blob);
-
-        assert users == ?[
-            {
-                name = "John";
-                id = 123;
-                email = null;
-            },
-            {
-                name = "Jane";
-                id = 456;
-                email = ?"jane@gmail.com";
-            },
-        ];
-
-  ```
-
-#### Motoko to JSON
-- **data type** -> We will be using the same `User` type from the previous example.
-- **Adding type record keys**
-  - For all the unique record keys in your data type, you will need to add them to a list of record keys. This will allow the json module to properly convert the field names to their correct text format as the `to_candid()` function return their hash value instead of their original name.
-  ```motoko
-      let UserKeys = ["name", "id", "email"];
-  ```
-- **Converting to JSON**
-  ```motoko
-
-      let users : [User] = [
-          {
-              name = "John";
-              id = 123;
-              email = null;
-          },
-          {
-              name = "Jane";
-              id = 456;
-              email = ?"jane@gmail.com";
-          },
-      ];
-
-      let blob = to_candid(users);
-      let json = JSON.toText(blob, UserKeys, null);
-
-      assert json == "[{\"name\": \"John\",\"id\": 123},{\"name\": \"Jane\",\"id\":456,\"email\":\"jane@gmail.com"}]";
+   Consider the following JSON data:
+   ```json
+   [
+       {
+           "name": "John",
+           "id": 123
+       },
+       {
+           "name": "Jane",
+           "id": 456,
+           "email": "jane@gmail.com"
+       }
+   ]
    ```
 
-#### Renaming field keys (Useful for fields with reserved keywords in Motoko )
-```motoko
-    import Serde "mo:serde";
+   The optional `email` field translates to:
+   
+   ```motoko
+   type User = {
+       name: Text;
+       id: Nat;
+       email: ?Text;
+   };
+   ```
 
-    // type JsonItemSchemaWithReservedKeys = {
+2. **Conversion**:
+   a. Parse JSON text into a candid blob using `JSON.fromText`.
+   b. Convert the blob to a Motoko data type with `from_candid`.
+
+   ```motoko
+   let jsonText = "[{\"name\": \"John\", \"id\": 123}, {\"name\": \"Jane\", \"id\": 456, \"email\": \"jane@gmail.com\"}]";
+
+   let #ok(blob) = JSON.fromText(jsonText, null); // you probably want to handle the error case here :)
+   let users : ?[User] = from_candid(blob);
+
+   assert users == ?[
+       {
+           name = "John";
+           id = 123;
+           email = null;
+       },
+       {
+           name = "Jane";
+           id = 456;
+           email = ?"jane@gmail.com";
+       },
+   ];
+   ```
+
+**Example: Motoko to JSON**
+
+1. **Record Keys**: Collect all unique record keys from your data type into an array. This helps the module convert the record keys correctly instead of returning its hash.
+   
+   ```motoko
+   let UserKeys = ["name", "id", "email"];
+   ```
+
+2. **Conversion**:
+   
+   ```motoko
+   let users: [User] = [
+       {
+           name = "John";
+           id = 123;
+           email = null;
+       },
+       {
+           name = "Jane";
+           id = 456;
+           email = ?"jane@gmail.com";
+       },
+   ];
+
+   let blob = to_candid(users);
+   let json_result = JSON.toText(blob, UserKeys, null);
+
+   assert json_result == #ok(
+        "[{\"name\": \"John\",\"id\": 123},{\"name\": \"Jane\",\"id\":456,\"email\":\"jane@gmail.com\"}]"
+    );
+   ```
+
+**Example: Renaming Fields**
+
+- Useful way to rename fields with reserved keywords in Motoko.
+
+```motoko
+import Serde from "mo:serde";
+
+    // type JsonSchemaWithReservedKeys = {
     //     type: Text; // reserved
     //     label: Text;  // reserved
     //     id: Nat;
     // };
 
-    type Item = {
-        item_type: Text;
-        item_label: Text;
-        id: Nat
-    };
+type Item = {
+    item_type: Text;
+    item_label: Text;
+    id: Nat
+};
 
-    let jsonText = "{\"type\": \"bar\", \"label\": \"foo\", \"id\": 112}";
-    let options : Serde.Options = { 
-        renameKeys = [("type", "item_type"), ("label", "item_label")] 
-    };
+let jsonText = "{\"type\": \"bar\", \"label\": \"foo\", \"id\": 112}";
+let options: Serde.Options = { 
+    renameKeys = [("type", "item_type"), ("label", "item_label")] 
+};
 
-    let blob = Serde.JSON.fromText(jsonText, ?options);
-    let renamedKeys : ?Item = from_candid(blob);
+let #ok(blob) = Serde.JSON.fromText(jsonText, ?options);
+let renamedKeys: ?Item = from_candid(blob);
 
-    assert renamedKeys == ?{ item_type = "bar"; item_label = "foo"; id = 112 };
+assert renamedKeys == ?{ item_type = "bar"; item_label = "foo"; id = 112 };
 ```
-For more usage examples see [usage.md](https://github.com/NatLabs/serde/blob/main/usage.md):
+
+Checkout the [usage guide](https://github.com/NatLabs/serde/blob/main/usage.md) for additional examples:
 - [Candid Text](https://github.com/NatLabs/serde/blob/main/usage.md#candid-text)
 - [URL-Encoded Pairs](https://github.com/NatLabs/serde/blob/main/usage.md#url-encoded-pairs)
 
 ## Limitations
-- Requires that the user provides a list of record keys and variant names when converting from Motoko. This is because the candid format used for serializing Motoko stores record keys as their hash, making it impossible to retrieve the original key names.
-- Does not have specific syntax to support the conversion between `Blob`, `Principal`, and Bounded `Nat`/`Int` types.
 
+- Users must provide a list of record keys and variant names during conversions from Motoko to other data formats due to constraints in the candid format.
+- Lack of specific syntax for conversion between `Blob`, `Principal`, and bounded `Nat`/`Int` types.
 
-## Tests
-- Install [mops](https://j4mwm-bqaaa-aaaam-qajbq-cai.ic0.app/#/docs/install)
-- Install [mocv](https://github.com/ZenVoich/mocv)
-- Install [wasmtime](https://github.com/bytecodealliance/wasmtime/blob/main/README.md#wasmtime)
+## Running Tests
 
-- Run `mops test` in the project directory
+1. Install dependencies:
+   - [mops](https://j4mwm-bqaaa-aaaam-qajbq-cai.ic0.app/#/docs/install)
+   - [mocv](https://github.com/ZenVoich/mocv)
+   - [wasmtime](https://github.com/bytecodealliance/wasmtime/blob/main/README.md#wasmtime)
+
+2. Inside the project directory, run:
+```bash
+mops test
+```
+
+---
+
+Happy coding with `serde`! 🚀
