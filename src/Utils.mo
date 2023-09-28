@@ -1,4 +1,5 @@
 import Array "mo:base/Array";
+import Char "mo:base/Char";
 import Order "mo:base/Order";
 import Float "mo:base/Float";
 import Text "mo:base/Text";
@@ -6,12 +7,23 @@ import Iter "mo:base/Iter";
 import Result "mo:base/Result";
 
 import Prelude "mo:base/Prelude";
+import Nat32 "mo:base/Nat32";
 import Itertools "mo:itertools/Iter";
 
 module {
 
     type Iter<A> = Iter.Iter<A>;
     type Result<A, B> = Result.Result<A, B>;
+
+    public func reverse_order<A>(fn: (A, A) ->  Order.Order): (A, A) ->  Order.Order{
+        func (a: A, b: A): Order.Order {
+            switch (fn(a, b)) {
+                case (#less)    #greater;
+                case (#equal)   #equal;
+                case (#greater) #less;
+            };
+        };
+    };
 
     public func concatKeys(keys : [[Text]]) : [Text] {
         Iter.toArray(
@@ -60,5 +72,31 @@ module {
 
     public func log2(n : Float) : Float {
         Float.log(n) / Float.log(2);
+    };
+
+    public func isHash(key: Text): Bool {
+        Itertools.all(
+            key.chars(),
+            func(c: Char): Bool {
+                c == '_' or Char.isDigit(c);
+            },
+        )
+    };
+
+    public func text_to_nat32(text : Text) : Nat32 {
+        var n : Nat32 = 0;
+
+        Itertools.fold(
+            text.chars(),
+            0 : Nat32,
+            func (acc : Nat32, c : Char) : Nat32 {
+                if( c == '_') {
+                    acc
+                } else {
+                    acc * 10 + Char.toNat32(c) - Char.toNat32('0');
+                };
+            },
+        );
+
     };
 };

@@ -23,6 +23,7 @@ import TrieMap "mo:base/TrieMap";
 import Utils "../../Utils";
 import Order "mo:base/Order";
 import Func "mo:base/Func";
+import Char "mo:base/Char";
 
 module {
     type Arg = Arg.Arg;
@@ -58,8 +59,8 @@ module {
         encode([candid], options);
     };
 
-    type UpdatedTypeNode = {
-        type_ : UpdatedType;
+    type InternalTypeNode = {
+        type_ : InternalType;
         height : Nat;
         parent_index : Nat;
         tag : Tag;
@@ -76,11 +77,11 @@ module {
         let buffer = Buffer.Buffer<Arg>(candid_values.size());
 
         for (candid in candid_values.vals()) {
-            let (updated_arg_type, arg_value) = toArgTypeAndValue(candid, renaming_map);
+            let (internal_arg_type, arg_value) = toArgTypeAndValue(candid, renaming_map);
 
-            let rows = Buffer.Buffer<[UpdatedTypeNode]>(8);
-            let node : UpdatedTypeNode = {
-                type_ = updated_arg_type;
+            let rows = Buffer.Buffer<[InternalTypeNode]>(8);
+            let node : InternalTypeNode = {
+                type_ = internal_arg_type;
                 height = 0;
                 parent_index = 0;
                 tag = #name("");
@@ -88,7 +89,7 @@ module {
 
             rows.add([node]);
             order_types_by_height_bfs(rows);
-            
+
             let res = merge_variants_and_array_types(rows);
             let #ok(merged_type) = res else return Utils.send_error(res);
 
@@ -98,45 +99,45 @@ module {
         #ok(Buffer.toArray(buffer));
     };
 
-    type UpdatedKeyValuePair = { tag : Tag; type_ : UpdatedType };
+    type InternalKeyValuePair = { tag : Tag; type_ : InternalType };
 
-    type UpdatedCompoundType = {
-        #opt : UpdatedType;
-        #vector : [UpdatedType];
-        #record : [UpdatedKeyValuePair];
-        #variant : [UpdatedKeyValuePair];
+    type InternalCompoundType = {
+        #opt : InternalType;
+        #vector : [InternalType];
+        #record : [InternalKeyValuePair];
+        #variant : [InternalKeyValuePair];
         // #func_ : Type.FuncType;
         // #service : Type.ServiceType;
-        // #recursiveType : { id : Text; type_ : UpdatedType };
+        // #recursiveType : { id : Text; type_ : InternalType };
         // #recursiveReference : Text;
     };
 
-    type UpdatedType = Type.PrimitiveType or UpdatedCompoundType;
+    type InternalType = Type.PrimitiveType or InternalCompoundType;
 
-    func toArgTypeAndValue(candid: Candid, renaming_map : TrieMap<Text, Text>): (UpdatedType, Value){
-        let (arg_type, arg_value) : (UpdatedType, Value) = switch (candid) {
-            case (#Nat(n)) (#nat, #nat(n));
-            case (#Nat8(n)) (#nat8, #nat8(n));
-            case (#Nat16(n)) (#nat16, #nat16(n));
-            case (#Nat32(n)) (#nat32, #nat32(n));
-            case (#Nat64(n)) (#nat64, #nat64(n));
+    func toArgTypeAndValue(candid : Candid, renaming_map : TrieMap<Text, Text>) : (InternalType, Value) {
+        let (arg_type, arg_value) : (InternalType, Value) = switch (candid) {
+            case (#Nat(n))(#nat, #nat(n));
+            case (#Nat8(n))(#nat8, #nat8(n));
+            case (#Nat16(n))(#nat16, #nat16(n));
+            case (#Nat32(n))(#nat32, #nat32(n));
+            case (#Nat64(n))(#nat64, #nat64(n));
 
-            case (#Int(n)) (#int, #int(n));
-            case (#Int8(n)) (#int8, #int8(n));
-            case (#Int16(n)) (#int16, #int16(n));
-            case (#Int32(n)) (#int32, #int32(n));
-            case (#Int64(n)) (#int64, #int64(n));
+            case (#Int(n))(#int, #int(n));
+            case (#Int8(n))(#int8, #int8(n));
+            case (#Int16(n))(#int16, #int16(n));
+            case (#Int32(n))(#int32, #int32(n));
+            case (#Int64(n))(#int64, #int64(n));
 
-            case (#Float(n)) (#float64, #float64(n));
+            case (#Float(n))(#float64, #float64(n));
 
-            case (#Bool(n)) (#bool, #bool(n));
+            case (#Bool(n))(#bool, #bool(n));
 
-            case (#Principal(n)) (#principal, #principal(n));
+            case (#Principal(n))(#principal, #principal(n));
 
-            case (#Text(n)) (#text, #text(n));
+            case (#Text(n))(#text, #text(n));
 
-            case (#Null) (#null_, #null_);
-            case (#Empty) (#empty, #empty);
+            case (#Null)(#null_, #null_);
+            case (#Empty)(#empty, #empty);
 
             case (#Blob(blob)) {
                 let bytes = Blob.toArray(blob);
@@ -155,7 +156,7 @@ module {
                 (#opt(inner_type), #opt(inner_value));
             };
             case (#Array(arr)) {
-                let inner_types = Buffer.Buffer<UpdatedType>(arr.size());
+                let inner_types = Buffer.Buffer<InternalType>(arr.size());
                 let inner_values = Buffer.Buffer<Value>(arr.size());
 
                 for (item in arr.vals()) {
@@ -171,13 +172,14 @@ module {
             };
 
             case (#Record(records)) {
-                let types_buffer = Buffer.Buffer<UpdatedKeyValuePair>(records.size());
+                let types_buffer = Buffer.Buffer<InternalKeyValuePair>(records.size());
                 let values_buffer = Buffer.Buffer<RecordFieldValue>(records.size());
 
                 for ((record_key, record_val) in records.vals()) {
-                    let renamed_key = get_renamed_key(renaming_map, record_key);
                     let (type_, value) = toArgTypeAndValue(record_val, renaming_map);
-                    let tag = #name(renamed_key);
+
+                    let renamed_key = get_renamed_key(renaming_map, record_key);
+                    let tag = generate_key_tag(renamed_key);
 
                     types_buffer.add({ tag; type_ });
                     values_buffer.add({ tag; value });
@@ -190,9 +192,10 @@ module {
             };
 
             case (#Variant((key, val))) {
-                let renamed_key = get_renamed_key(renaming_map, key);
                 let (type_, value) = toArgTypeAndValue(val, renaming_map);
-                let tag = #name(renamed_key);
+
+                let renamed_key = get_renamed_key(renaming_map, key);
+                let tag = generate_key_tag(renamed_key);
 
                 (#variant([{ tag; type_ }]), #variant({ tag; value }));
             };
@@ -201,16 +204,25 @@ module {
         (arg_type, arg_value);
     };
 
-    func updated_type_to_arg_type(updated_type : UpdatedType, vec_index : ?Nat) : Type {
-        switch (updated_type, vec_index) {
-            case (#vector(vec_types), ?vec_index) #vector(updated_type_to_arg_type(vec_types[vec_index], null));
-            case (#vector(vec_types), _) #vector(updated_type_to_arg_type(vec_types[0], null));
-            case (#opt(opt_type), _) #opt(updated_type_to_arg_type(opt_type, null));
+    func generate_key_tag(key : Text) : Tag {
+        if (Utils.isHash(key)) {
+            let n = Utils.text_to_nat32(key);
+            #hash(n);
+        } else {
+            #name(key);
+        };
+    };
+
+    func internal_type_to_arg_type(internal_type : InternalType, vec_index : ?Nat) : Type {
+        switch (internal_type, vec_index) {
+            case (#vector(vec_types), ?vec_index) #vector(internal_type_to_arg_type(vec_types[vec_index], null));
+            case (#vector(vec_types), _) #vector(internal_type_to_arg_type(vec_types[0], null));
+            case (#opt(opt_type), _) #opt(internal_type_to_arg_type(opt_type, null));
             case (#record(record_types), _) {
-                let new_record_types = Array.map<UpdatedKeyValuePair, RecordFieldType>(
+                let new_record_types = Array.map<InternalKeyValuePair, RecordFieldType>(
                     record_types,
-                    func({ type_; tag } : UpdatedKeyValuePair) : RecordFieldType = {
-                        type_ = updated_type_to_arg_type(type_, null);
+                    func({ type_; tag } : InternalKeyValuePair) : RecordFieldType = {
+                        type_ = internal_type_to_arg_type(type_, null);
                         tag;
                     },
                 );
@@ -218,10 +230,10 @@ module {
                 #record(new_record_types);
             };
             case (#variant(variant_types), _) {
-                let new_variant_types = Array.map<UpdatedKeyValuePair, RecordFieldType>(
+                let new_variant_types = Array.map<InternalKeyValuePair, RecordFieldType>(
                     variant_types,
-                    func({ type_; tag } : UpdatedKeyValuePair) : RecordFieldType = {
-                        type_ = updated_type_to_arg_type(type_, null);
+                    func({ type_; tag } : InternalKeyValuePair) : RecordFieldType = {
+                        type_ = internal_type_to_arg_type(type_, null);
                         tag;
                     },
                 );
@@ -255,7 +267,7 @@ module {
         tag = node.tag;
     };
 
-    func merge_variants_and_array_types(rows : Buffer<[UpdatedTypeNode]>) : Result<Type, Text> {
+    func merge_variants_and_array_types(rows : Buffer<[InternalTypeNode]>) : Result<Type, Text> {
         let buffer = Buffer.Buffer<TypeNode>(8);
         let total_rows = rows.size();
 
@@ -265,8 +277,8 @@ module {
 
         var bottom = Array.map(
             _bottom,
-            func(node : UpdatedTypeNode) : TypeNode = {
-                type_ = updated_type_to_arg_type(node.type_, null);
+            func(node : InternalTypeNode) : TypeNode = {
+                type_ = internal_type_to_arg_type(node.type_, null);
                 height = node.height;
                 parent_index = node.parent_index;
                 tag = node.tag;
@@ -376,7 +388,7 @@ module {
                     };
                     case (_) {
                         let new_parent_node : TypeNode = {
-                            type_ = updated_type_to_arg_type(parent_node.type_, null);
+                            type_ = internal_type_to_arg_type(parent_node.type_, null);
                             height = parent_node.height;
                             parent_index;
                             tag = parent_tag;
@@ -411,19 +423,19 @@ module {
         #ok(merged_type);
     };
 
-    func get_height_value(type_ : UpdatedType) : Nat {
+    func get_height_value(type_ : InternalType) : Nat {
         switch (type_) {
             case (#empty or #null_) 0;
             case (_) 1;
         };
     };
 
-    func order_types_by_height_bfs(rows : Buffer<[UpdatedTypeNode]>) {
-        var merged_type : ?UpdatedType = null;
+    func order_types_by_height_bfs(rows : Buffer<[InternalTypeNode]>) {
+        var merged_type : ?InternalType = null;
 
         label while_loop while (rows.size() > 0) {
             let candid_values = Buffer.last(rows) else return Prelude.unreachable();
-            let buffer = Buffer.Buffer<UpdatedTypeNode>(8);
+            let buffer = Buffer.Buffer<InternalTypeNode>(8);
 
             var has_compound_type = false;
 
@@ -432,7 +444,7 @@ module {
                 switch (parent_node.type_) {
                     case (#opt(opt_val)) {
                         has_compound_type := true;
-                        let child_node : UpdatedTypeNode = {
+                        let child_node : InternalTypeNode = {
                             type_ = opt_val;
                             height = get_height_value(opt_val);
                             parent_index = index;
@@ -445,7 +457,7 @@ module {
                         has_compound_type := true;
 
                         for (vec_type in vec_types.vals()) {
-                            let child_node : UpdatedTypeNode = {
+                            let child_node : InternalTypeNode = {
                                 type_ = vec_type;
                                 height = get_height_value(vec_type);
                                 parent_index = index;
@@ -460,7 +472,7 @@ module {
 
                         for ({ tag; type_ } in records.vals()) {
                             has_compound_type := true;
-                            let child_node : UpdatedTypeNode = {
+                            let child_node : InternalTypeNode = {
                                 type_ = type_;
                                 height = get_height_value(type_);
                                 parent_index = index;
@@ -471,10 +483,10 @@ module {
                     };
                     case (#variant(variants)) {
                         has_compound_type := true;
-                        
+
                         for ({ tag; type_ } in variants.vals()) {
                             has_compound_type := true;
-                            let child_node : UpdatedTypeNode = {
+                            let child_node : InternalTypeNode = {
                                 type_ = type_;
                                 height = get_height_value(type_);
                                 parent_index = index;

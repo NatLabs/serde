@@ -49,15 +49,22 @@ module {
             toKeyValuePairs(pairs, key, value);
         };
 
-        let url_encoding = Text.join(
-            "&",
-            Iter.map(
-                pairs.entries(),
-                func((key, value) : (Text, Text)) : Text {
-                    key # "=" # value;
-                },
-            ),
+        var url_encoding = "";
+
+        let entries = Iter.map(
+            pairs.entries(),
+            func((key, value) : (Text, Text)) : Text {
+                key # "=" # value;
+            },
         );
+
+        for (t in entries){
+            url_encoding := if (url_encoding == "") {
+                t ;
+            } else {
+                t # "&" # url_encoding;
+            };
+        };
 
         #ok(url_encoding);
     };
