@@ -15,6 +15,16 @@ module {
     type Iter<A> = Iter.Iter<A>;
     type Result<A, B> = Result.Result<A, B>;
 
+    public func reverse_order<A>(fn: (A, A) ->  Order.Order): (A, A) ->  Order.Order{
+        func (a: A, b: A): Order.Order {
+            switch (fn(a, b)) {
+                case (#less)    #greater;
+                case (#equal)   #equal;
+                case (#greater) #less;
+            };
+        };
+    };
+
     public func concatKeys(keys : [[Text]]) : [Text] {
         Iter.toArray(
             Itertools.flattenArray(keys)
