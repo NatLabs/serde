@@ -29,7 +29,7 @@ jobs:
                 npm --yes -g i mocv
 
             - name: Select mocv version
-              run: mocv use 0.9.4
+              run: mocv use 0.10.0
 
             - name: install mops
               run: |
