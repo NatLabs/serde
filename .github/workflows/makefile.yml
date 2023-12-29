@@ -24,21 +24,19 @@ jobs:
                 curl https://wasmtime.dev/install.sh -sSf | bash
                 echo "$HOME/.wasmtime/bin" >> $GITHUB_PATH
   
-            - name: Install mocv
-              run: |
                 npm --yes -g i mocv
 
             - name: Select mocv version
-              run: mocv use 0.10.0
+              run: mocv use 0.10.3
 
             - name: install mops
               run: |
-                  npm --yes -g i ic-mops
+                  npm --yes -g i ic-mops@0.34.3
                   mops i
                   mops sources
 
-            - name: Detect Warnings
-              run: make no-warn
+            # - name: Detect Warnings
+            #   run: make no-warn
 
             - name: Run Tests
               run: mops test

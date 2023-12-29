@@ -30,13 +30,96 @@ actor {
 
     public query func cycles() : async Nat { Cycles.balance()};
 
-    public query func deserialize(n: Nat) : async (Nat64, Nat, Nat, Nat) {
+    type Benchmark = {
+        calls: Nat64;
+        heap: Nat;
+        memory: Nat;
+        cycles: Nat;
+    };
+
+    func benchmark(fn: () -> ()): Benchmark {
         let init_cycles = Cycles.balance();
 
         let init_heap = Prim.rts_heap_size();
         let init_memory = Prim.rts_memory_size();
 
-        let calls = IC.countInstructions(
+        let calls = IC.countInstructions(fn);
+        
+        {
+            calls;
+            heap = Prim.rts_heap_size() - init_heap;
+            memory = Prim.rts_memory_size() - init_memory;
+            cycles = init_cycles - Cycles.balance();
+        }
+    };
+
+    public query func serialize(n: Nat): async Benchmark {
+        benchmark(
+            func(){
+                let admin_record : Record = {
+                    group = "admins";
+                    users = ?[{
+                        name = "John";
+                        age = 32;
+                        permission = #admin;
+                    }];
+                };
+
+                let user_record : Record = {
+                    group = "users";
+                    users = ?[{
+                        name = "Ali";
+                        age = 28;
+                        permission = #read_all;
+                    }, {
+                        name = "James";
+                        age = 40;
+                        permission = #write_all;
+                    }];
+                };
+
+                let empty_record : Record = {
+                    group = "empty";
+                    users = ?[];
+                };
+
+                let null_record : Record = {
+                    group = "null";
+                    users = null;
+                };
+
+                let base_record : Record = {
+                    group = "base";
+                    users = ?[{
+                        name = "Henry";
+                        age = 32;
+                        permission = #read(["posts", "comments"]);
+                    }, {
+                        name = "Steven";
+                        age = 32;
+                        permission = #write(["posts", "comments"]);
+                    }];
+                };
+
+                let records : [Record] = [
+                    null_record,
+                    empty_record,
+                    admin_record,
+                    user_record,
+                    base_record,
+                ];
+
+                for (_ in Iter.range(1, n)){
+                    let blob = to_candid (records);
+                    let #ok(candid) = Candid.decode(blob, [], null);
+                    Debug.print(debug_show (candid));
+                };
+            }
+        )
+    };
+
+    public query func deserialize(n: Nat) : async Benchmark {
+        benchmark(
             func() {
 
                 let admin_record_candid : Candid = #Record([
@@ -79,8 +162,6 @@ actor {
                 };
             }
         );
-
-        (calls, Prim.rts_heap_size() - init_heap, Prim.rts_memory_size() - init_memory, init_cycles - Cycles.balance())
     };
 
 };

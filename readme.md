@@ -2,11 +2,30 @@
 
 An efficient serialization and deserialization library for Motoko.
 
-<!-- 👉 [Demo on Motoko Playground](https://m7sm4-2iaaa-aaaab-qabra-cai.raw.ic0.app/?tag=3196250840) -->
+The library contains four modules:
+- **Candid**
+    - `fromText()` - Converts [Candid text](https://internetcomputer.org/docs/current/tutorials/developer-journey/level-2/2.4-intro-candid/#candid-textual-values) to its serialized form.
+    - `toText()` - Converts serialized candid to its [textual representation](https://internetcomputer.org/docs/current/tutorials/developer-journey/level-2/2.4-intro-candid/#candid-textual-values).
+    - `encode()` - Converts the [Candid variant](./src/Candid/Types.mo#L6) to a blob.
+    - `decode()` - Converts a blob to the [Candid variant](./src/Candid/Types.mo#L6).
+
+- **CBOR**
+    - `encode()` - Converts serialized candid to CBOR.
+    - `decode()` - Converts CBOR to a serialized candid.
+
+- **JSON**
+    - `fromText()` - Converts JSON text to serialized candid.
+    - `toText()` - Converts serialized candid to JSON text.
+
+- **URL-Encoded Pairs**
+    - `fromText()` - Converts URL-encoded text to serialized candid.
+    - `toText()` - Converts serialized candid to URL-encoded text.
+  
 
 ## Getting Started
 
-### Installation
+### Installation 
+[![mops](https://oknww-riaaa-aaaam-qaf6a-cai.raw.ic0.app/badge/mops/serde)](https://mops.one/serde)
 
 1. Install [`mops`](https://j4mwm-bqaaa-aaaam-qajbq-cai.ic0.app/#/docs/install).
 2. Inside your project directory, run: 
@@ -18,15 +37,15 @@ mops install serde
 
 To start, import the necessary modules:
 ```motoko
-import { JSON; Candid; UrlEncoded } from "mo:serde";
+import { JSON; Candid; CBOR; UrlEncoded } from "mo:serde";
 ```
 
 #### JSON
-> The API for all serde module is the same, so the following code can be used for converting data between the other modules (Candid and URL-Encoded Pairs).
+> The following code can be used for converting data between the other modules (Candid and URL-Encoded Pairs).
 
 **Example: JSON to Motoko**
 
-1. **Defining Data Type**: This critical step informs the conversion functions (`from_candid`` and `to_candid`) about how to handle the data.
+1. **Defining Data Type**: This critical step informs the conversion functions (`from_candid` and `to_candid`) about how to handle the data.
 
    Consider the following JSON data:
    ```json
