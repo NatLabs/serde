@@ -24,8 +24,10 @@ module {
     type Result<A, B> = Result.Result<A, B>;
     type CBOR = CBOR_Value.Value;
 
+    public type Options = CandidTypes.Options;
+    
     /// Converts serialized Candid blob to CBOR blob
-    public func encode(blob : Blob, keys : [Text], options: ?CandidTypes.Options) : Result<Blob, Text> {
+    public func encode(blob : Blob, keys : [Text], options: ?Options) : Result<Blob, Text> {
         let decoded_res = Candid.decode(blob, keys, options);
         let #ok(candid) = decoded_res else return Utils.send_error(decoded_res);
 
@@ -39,7 +41,9 @@ module {
         let res = transpile_candid_to_cbor(candid);
         let #ok(transpiled_cbor) = res else return Utils.send_error(res);
 
-        switch(CBOR_Encoder.encode(transpiled_cbor)){
+        let cbor_with_self_describe_tag = #majorType6({ tag = 55799 : Nat64; value = transpiled_cbor; });
+
+        switch(CBOR_Encoder.encode(cbor_with_self_describe_tag)){
             case(#ok(encoded_cbor)){ #ok (Blob.fromArray(encoded_cbor))};
             case(#err(#invalidValue(errMsg))){ #err("Invalid value error while encoding CBOR: " # errMsg) };
         };
@@ -109,13 +113,10 @@ module {
             };
         };
 
-        // add self-describe tag
-        let tagged_cbor = #majorType6({ tag = 55799 : Nat64; value = transpiled_cbor; });
-
-        #ok(tagged_cbor);
+        #ok(transpiled_cbor);
     };
 
-    public func decode(blob: Blob, options: ?CandidTypes.Options): Result<Blob, Text> {
+    public func decode(blob: Blob, options: ?Options): Result<Blob, Text> {
         let candid_res = toCandid(blob);
         let #ok(candid) = candid_res else return Utils.send_error(candid_res);
         Candid.encodeOne(candid, options);
@@ -125,7 +126,10 @@ module {
         let cbor_res = CBOR_Decoder.decode(blob);
         
         let candid_res = switch (cbor_res) {
-            case (#ok(cbor)) transpile_cbor_to_candid(cbor);
+            case (#ok(cbor)) {
+                let #majorType6({ tag = 55799; value }) = cbor else return transpile_cbor_to_candid(cbor);
+                transpile_cbor_to_candid(value);
+            };
             case (#err(cbor_error)) {
                 switch(cbor_error){
                     case (#unexpectedBreak){ return #err("Error decoding CBOR: Unexpected break") };
@@ -176,13 +180,7 @@ module {
                 return #err("Error decoding CBOR: #_break is not supported");
             };
             case (#majorType6(tagged_cbor)) {
-                if (tagged_cbor.tag == 55799){
-                    let transpiled_candid_res = transpile_cbor_to_candid(tagged_cbor.value);
-                    let #ok(transpiled_candid) = transpiled_candid_res else return Utils.send_error(transpiled_candid_res);
-                    transpiled_candid
-                } else {
-                    return #err("Error decoding CBOR: Tagged values are not supported");
-                };
+                return #err("Error decoding CBOR: Tagged values are not supported");
             };
         };
 

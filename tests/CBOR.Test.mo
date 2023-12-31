@@ -1,4 +1,6 @@
 // @testmode wasi
+import Array "mo:base/Array";
+import Blob "mo:base/Blob";
 import Debug "mo:base/Debug";
 import Iter "mo:base/Iter";
 import { test; suite } "mo:test";
@@ -45,6 +47,7 @@ suite(
             assert opt_text2 == opt_text;
 
         });
+
         test(
             "primitives",
             func() {
@@ -82,6 +85,23 @@ suite(
                 let #ok(list_cbor) = CBOR.encode(list_candid, [], null);
                 let #ok(record_cbor) = CBOR.encode(record_candid, ["a", "b"], null);
 
+                let self_describe_tag : Blob = "\D9\D9\F7";
+
+                func blob_concat(b1: Blob, b2: Blob): Blob = Blob.fromArray(Array.append(Blob.toArray(b1), Blob.toArray(b2)));
+                func sdt(blob: Blob): Blob = blob_concat(self_describe_tag, blob);
+
+                // cbor encodings from https://cbor.me/
+                assert nat_cbor == sdt("\18\7B");
+                assert int_cbor == sdt("\38\7A");
+                assert float_cbor == sdt("\FB\40\5E\DD\2F\1A\9F\BE\77");
+                assert bool_cbor == sdt("\F5");
+                assert text_cbor == sdt("\65\68\65\6C\6C\6F");
+                assert blob_cbor == sdt("\43\01\02\03");
+                assert null_cbor == sdt("\F6");
+                // assert empty_cbor == sdt("\F7"); // mapped to undefined
+                assert list_cbor == sdt("\83\01\02\03");
+                assert record_cbor == sdt("\A2\61\61\01\61\62\02");
+
                 let #ok(nat_candid2) = CBOR.decode(nat_cbor, null);
                 let #ok(int_candid2) = CBOR.decode(int_cbor, null);
                 let #ok(float_candid2) = CBOR.decode(float_cbor, null);
@@ -106,5 +126,7 @@ suite(
 
             },
         );
+
+        
     },
 );
