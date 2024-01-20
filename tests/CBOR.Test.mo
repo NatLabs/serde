@@ -3,6 +3,9 @@ import Array "mo:base/Array";
 import Blob "mo:base/Blob";
 import Debug "mo:base/Debug";
 import Iter "mo:base/Iter";
+import Principal "mo:base/Principal";
+import Text "mo:base/Text";
+
 import { test; suite } "mo:test";
 
 import { CBOR } "../src";
@@ -62,6 +65,7 @@ suite(
                 let empty = ();
                 let list: [Nat] = [1, 2, 3];
                 let record = { a = 1; b = 2; };
+                let principal = Principal.fromText("bkyz2-fmaaa-aaaaa-qaaaq-cai");
 
                 let nat_candid = to_candid(nat);
                 let int_candid = to_candid(int);
@@ -73,6 +77,7 @@ suite(
                 let empty_candid = to_candid(empty);
                 let list_candid = to_candid(list);
                 let record_candid = to_candid(record);
+                let principal_candid = to_candid(principal);
 
                 let #ok(nat_cbor) = CBOR.encode(nat_candid, [], null);
                 let #ok(int_cbor) = CBOR.encode(int_candid, [], null);
@@ -84,11 +89,13 @@ suite(
                 let #ok(empty_cbor) = CBOR.encode(empty_candid, [], null);
                 let #ok(list_cbor) = CBOR.encode(list_candid, [], null);
                 let #ok(record_cbor) = CBOR.encode(record_candid, ["a", "b"], null);
+                let #ok(principal_cbor) = CBOR.encode(principal_candid, [], null);
 
                 let self_describe_tag : Blob = "\D9\D9\F7";
 
                 func blob_concat(b1: Blob, b2: Blob): Blob = Blob.fromArray(Array.append(Blob.toArray(b1), Blob.toArray(b2)));
                 func sdt(blob: Blob): Blob = blob_concat(self_describe_tag, blob);
+                func strip(text: Text, to_strip: Text): Text = Text.replace(text, #text(to_strip), "");
 
                 // cbor encodings from https://cbor.me/
                 assert nat_cbor == sdt("\18\7B");
@@ -101,6 +108,7 @@ suite(
                 // assert empty_cbor == sdt("\F7"); // mapped to undefined
                 assert list_cbor == sdt("\83\01\02\03");
                 assert record_cbor == sdt("\A2\61\61\01\61\62\02");
+                assert strip(debug_show(principal_cbor), "\"") == strip((debug_show ("\D9\D9\F7\4A": Blob) # debug_show(Principal.toBlob(principal))), "\"");
 
                 let #ok(nat_candid2) = CBOR.decode(nat_cbor, null);
                 let #ok(int_candid2) = CBOR.decode(int_cbor, null);
@@ -112,6 +120,7 @@ suite(
                 let #ok(empty_candid2) = CBOR.decode(empty_cbor, null);
                 let #ok(list_candid2) = CBOR.decode(list_cbor, null);
                 let #ok(record_candid2) = CBOR.decode(record_cbor, null);
+                let #ok(principal_candid2) = CBOR.decode(principal_cbor, null);
 
                 assert nat_candid == nat_candid2;
                 assert int_candid == int_candid2;
@@ -123,6 +132,31 @@ suite(
                 assert empty_candid == empty_candid2;
                 assert list_candid == list_candid2;
                 assert record_candid == record_candid2;
+                // assert principal_candid == principal_candid2;
+
+                let ?nat2 : ?Nat = from_candid(nat_candid2);
+                let ?int2 : ?Int = from_candid(int_candid2);
+                let ?float2 : ?Float = from_candid(float_candid2);
+                let ?bool2 : ?Bool = from_candid(bool_candid2);
+                let ?text2 : ?Text = from_candid(text_candid2);
+                let ?blob2 : ?Blob = from_candid(blob_candid2);
+                let ?null2 : ?Null = from_candid(null_candid2);
+                let ?empty2 : ?() = from_candid(empty_candid2);
+                let ?list2 : ?[Nat] = from_candid(list_candid2);
+                let ?record2 : ?{a: Nat; b: Nat;} = from_candid(record_candid2);
+                let ?principal_as_blob : ?Blob = from_candid(principal_candid2);
+
+                assert nat2 == nat;
+                assert int2 == int;
+                assert float2 == float;
+                assert bool2 == bool;
+                assert text2 == text;
+                assert blob2 == blob;
+                assert null2 == _null;
+                assert empty2 == empty;
+                assert list2 == list;
+                assert record2 == record;
+                assert principal_as_blob == Principal.toBlob(principal);
 
             },
         );

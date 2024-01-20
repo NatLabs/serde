@@ -1,6 +1,23 @@
 
 ## Usage Examples
 
+### CBOR 
+
+```mokoto
+    import { CBOR } "mo:serde";
+
+    type User = {
+        name: Text;
+        id: Nat;
+    };
+
+    let user : User = { name = "bar"; id = 112 };
+
+    let candid = to_candid (user);
+    let cbor_res = CBOR.encode(candid, ["name", "id"], null);
+    let #ok(cbor) = cbor_res;
+```
+
 ### Candid Text
 ```motoko
     import { Candid } "mo:serde";
