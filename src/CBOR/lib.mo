@@ -6,6 +6,7 @@ import Int32 "mo:base/Int32";
 import Int64 "mo:base/Int64";
 import Nat64 "mo:base/Nat64";
 import Result "mo:base/Result";
+import Principal "mo:base/Principal";
 
 import CBOR_Value "mo:cbor/Value";
 import CBOR_Encoder "mo:cbor/Encoder";
@@ -103,13 +104,11 @@ module {
                 let #ok(cbor_val) = res else return Utils.send_error(res);
                 cbor_val
             };
-            
+
+            case (#Principal(p)) #majorType2(Blob.toArray(Principal.toBlob(p)));
+
             case (#Variant(_)) {
                 return #err("#Variant(_) is not supported in this implementation of CBOR");
-            };
-
-            case (#Principal(_)){
-                return #err("#Principal(_) is not supported in this implementation of CBOR");
             };
         };
 
