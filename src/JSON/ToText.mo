@@ -59,7 +59,7 @@ module {
             case (#Nat32(n)) #Number(NatX.from32ToNat(n));
             case (#Nat64(n)) #Number(NatX.from64ToNat(n));
 
-            case (#Float(n)) #Number(Float.toInt(n));
+            case (#Float(n)) #Float(n);
 
             case (#Option(val)) {
                 let res = switch (val) {

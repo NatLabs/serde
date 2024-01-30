@@ -50,6 +50,7 @@ module {
 
                 #Nat(Int.abs(n));
             };
+            case (#Float(n)) #Float(n);
             case (#String(n)) #Text(n);
             case (#Array(arr)) {
                 let newArr = Array.map(
