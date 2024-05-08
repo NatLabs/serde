@@ -3,6 +3,10 @@ import Blob "mo:base/Blob";
 import Buffer "mo:base/Buffer";
 import Debug "mo:base/Debug";
 import Result "mo:base/Result";
+import Nat64 "mo:base/Nat64";
+import Nat8 "mo:base/Nat8";
+import Nat16 "mo:base/Nat16";
+import Int64 "mo:base/Int64";
 import Nat "mo:base/Nat";
 import Iter "mo:base/Iter";
 import Prelude "mo:base/Prelude";
@@ -16,6 +20,7 @@ import Type "mo:candid/Type";
 import Tag "mo:candid/Tag";
 import Itertools "mo:itertools/Iter";
 import PeekableIter "mo:itertools/PeekableIter";
+import Map "mo:map/Map";
 
 import T "../Types";
 import U "../../Utils";
@@ -24,6 +29,7 @@ import Utils "../../Utils";
 import Order "mo:base/Order";
 import Func "mo:base/Func";
 import Char "mo:base/Char";
+import Int16 "mo:base/Int16";
 
 module {
     type Arg = Arg.Arg;
@@ -38,10 +44,13 @@ module {
 
     type Candid = T.Candid;
     type KeyValuePair = T.KeyValuePair;
+    let { n32hash; thash } = Map;
 
     public func encode(candid_values : [Candid], options : ?T.Options) : Result<Blob, Text> {
+        Debug.print("candid_values: " # debug_show candid_values);
         let renaming_map = TrieMap.TrieMap<Text, Text>(Text.equal, Text.hash);
 
+        Debug.print("init renaming_map: ");
         ignore do ? {
             let renameKeys = options!.renameKeys;
             for ((k, v) in renameKeys.vals()) {
@@ -49,14 +58,279 @@ module {
             };
         };
 
-        let res = toArgs(candid_values, renaming_map);
-        let #ok(args) = res else return Utils.send_error(res);
+        Debug.print("filling renaming map");
 
+        let res = toArgs(candid_values, renaming_map);
+        Debug.print("converted to arge");
+
+        let #ok(args) = res else return Utils.send_error(res);
+        Debug.print("extract args from results");
+
+        Debug.print(debug_show args);
         #ok(Encoder.encode(args));
     };
 
     public func encodeOne(candid : Candid, options : ?T.Options) : Result<Blob, Text> {
         encode([candid], options);
+    };
+
+    type CandidTypes = Candid.CandidTypes;
+
+    func div_ceil(n : Nat, d : Nat) : Nat {
+        (n + d - 1) / d;
+    };
+
+    // https://en.wikipedia.org/wiki/LEB128
+    func unsigned_leb128(buffer : Buffer<Nat8>, n : Nat) {
+        var n64 : Nat64 = Nat64.fromNat(n);
+        let bit_length = Nat64.toNat(64 - Nat64.bitcountLeadingZero(n64));
+        let n7bits = div_ceil(bit_length, 7);
+
+        var i = 0;
+        while (i < n7bits) {
+            var byte = n64 & 0x7F |> Nat64.toNat(_) |> Nat8.fromNat(_);
+            n64 := n64 >> 7;
+
+            byte := if (i == bits_of_7 - 1) (byte) else (byte | 0x80);
+            buffer.add(byte);
+            i += 1;
+        };
+    };
+
+    func signed_leb128(buffer : Buffer<Nat8>, num : Int) {
+        var i64 = if (num < 0) Int64.fromInt(-num) else return unsigned_leb128(buffer, Int.abs(num));
+
+        let bit_length = Int64.toInt(64 - Int64.bitcountLeadingZero(i64)) |> Int.abs(_);
+        let n7bits = div_ceil(bit_length, 7);
+
+        // potentially replace with Int64.toNat64()
+        let expected_bytes = (n7bits * 7);
+        i64 := i64 ^ (0x7FFF_FFFF_FFFF_FFFF >> Int64.fromInt(63 - expected_bytes)); // flip all bits
+        i64 += 1;
+
+        var n64 = Int64.toInt(i64) |> Int.abs(_) |> Nat64.fromNat(_);
+
+        var i = 0;
+
+        while (i < n7bits) {
+            var byte = n64 & 0x7F |> Nat64.toNat(_) |> Nat8.fromNat(_);
+            n64 := n64 >> 7;
+
+            byte := if (i == n7bits - 1) (byte) else (byte | 0x80);
+            buffer.add(byte);
+            i += 1;
+        };
+    };
+
+    public func one_shot_encode(candid_types : [CandidTypes], candid_values : [Candid], type_buffer : Buffer<Nat8>, value_buffer : Buffer<Nat8>, renaming_map : TrieMap<Text, Text>) {
+        assert candid_values.size() == candid_types.size();
+
+        // include size of candid values
+        unsigned_leb128(type_buffer, candid_values.size());
+
+        let unique_map = Map.new<Hash, Nat>();
+        let recursive_map = Map.new<Text, Text>();
+        let primitive_type_buffer = Buffer.Buffer<Nat8>(candid_values.size() * 8);
+
+        func encode(
+            candid_type : CandidTypes,
+            candid_value : Candid,
+            type_buffer : Buffer<Nat8>,
+            primitive_type_buffer : Buffer<Nat8>,
+            value_buffer : Buffer<Nat8>,
+            renaming_map : TrieMap<Text, Text>,
+            unique_map : Map<Hash, Nat>,
+            recursive_map : Map<Text, Text>,
+        ) : ?Hash {
+            switch (candid_type, candid_value) {
+                case (#Nat, #Nat(n)) {
+                    primitive_type_buffer.add(T.TypeCode.Nat);
+                    unsigned_leb128(value_buffer, n);
+                    null;
+                };
+                case (#Nat8, #Nat8(n)) {
+                    primitive_type_buffer.add(T.TypeCode.Nat8);
+                    value_buffer.add(n);
+                    null;
+                };
+                case (#Nat16, #Nat16(n)) {
+                    primitive_type_buffer.add(T.TypeCode.Nat16);
+                    value_buffer.add((n & 0xFF) |> Nat16.toNat8(_));
+                    value_buffer.add((n >> 8) |> Nat16.toNat8(_));
+                    null;
+                };
+                case (#Nat32, #Nat32(n)) {
+                    primitive_type_buffer.add(T.TypeCode.Nat32);
+                    value_buffer.add((n & 0xFF) |> Nat32.toNat16(_) |> Nat16.toNat8(_));
+                    value_buffer.add(((n >> 8) & 0xFF) |> Nat32.toNat16(_) |> Nat16.toNat8(_));
+                    value_buffer.add(((n >> 16) & 0xFF) |> Nat32.toNat16(_) |> Nat16.toNat8(_));
+                    value_buffer.add((n >> 24) |> Nat32.toNat16(_) |> Nat16.toNat8(_));
+                    null;
+                };
+                case (#Nat64, #Nat64(n)) {
+                    primitive_type_buffer.add(T.TypeCode.Nat64);
+                    value_buffer.add((n & 0xFF) |> Nat64.toNat(_) |> Nat8.fromNat(_));
+                    value_buffer.add(((n >> 8) & 0xFF) |> Nat64.toNat(_) |> Nat8.fromNat(_));
+                    value_buffer.add(((n >> 16) & 0xFF) |> Nat64.toNat(_) |> Nat8.fromNat(_));
+                    value_buffer.add(((n >> 24) & 0xFF) |> Nat64.toNat(_) |> Nat8.fromNat(_));
+                    value_buffer.add(((n >> 32) & 0xFF) |> Nat64.toNat(_) |> Nat8.fromNat(_));
+                    value_buffer.add(((n >> 40) & 0xFF) |> Nat64.toNat(_) |> Nat8.fromNat(_));
+                    value_buffer.add(((n >> 48) & 0xFF) |> Nat64.toNat(_) |> Nat8.fromNat(_));
+                    value_buffer.add((n >> 56) |> Nat64.toNat(_) |> Nat8.fromNat(_));
+                    null;
+                };
+                case (#Int, #Int(n)) {
+                    primitive_type_buffer.add(T.TypeCode.Int);
+                    signed_leb128(value_buffer, n);
+                    null;
+                };
+                case (#Int8, #Int8(i8)) {
+                    primitive_type_buffer.add(T.TypeCode.Int8);
+                    value_buffer.add(Int8.toNat8(i8));
+                    null;
+                };
+                case (#Int16, #Int16(i16)) {
+                    primitive_type_buffer.add(T.TypeCode.Int16);
+                    let n16 = Int16.toNat16(i16);
+                    value_buffer.add((n16 & 0xFF) |> Nat16.toNat8(_));
+                    value_buffer.add((n16 >> 8) |> Nat16.toNat8(_));
+                    null;
+                };
+                case (#Int32, #Int32(i32)) {
+                    primitive_type_buffer.add(T.TypeCode.Int32);
+                    let n = Int32.toNat32(i32);
+
+                    value_buffer.add((n & 0xFF) |> Nat32.toNat16(_) |> Nat16.toNat8(_));
+                    value_buffer.add(((n >> 8) & 0xFF) |> Nat32.toNat16(_) |> Nat16.toNat8(_));
+                    value_buffer.add(((n >> 16) & 0xFF) |> Nat32.toNat16(_) |> Nat16.toNat8(_));
+                    value_buffer.add((n >> 24) |> Nat32.toNat16(_) |> Nat16.toNat8(_));
+                    null;
+                };
+                case (#Int64, #Int64(i64)) {
+                    primitive_type_buffer.add(T.TypeCode.Int64);
+                    let n = Int64.toNat64(i64);
+
+                    value_buffer.add((n & 0xFF) |> Nat64.toNat(_) |> Nat8.fromNat(_));
+                    value_buffer.add(((n >> 8) & 0xFF) |> Nat64.toNat(_) |> Nat8.fromNat(_));
+                    value_buffer.add(((n >> 16) & 0xFF) |> Nat64.toNat(_) |> Nat8.fromNat(_));
+                    value_buffer.add(((n >> 24) & 0xFF) |> Nat64.toNat(_) |> Nat8.fromNat(_));
+                    value_buffer.add(((n >> 32) & 0xFF) |> Nat64.toNat(_) |> Nat8.fromNat(_));
+                    value_buffer.add(((n >> 40) & 0xFF) |> Nat64.toNat(_) |> Nat8.fromNat(_));
+                    value_buffer.add(((n >> 48) & 0xFF) |> Nat64.toNat(_) |> Nat8.fromNat(_));
+                    value_buffer.add((n >> 56) |> Nat64.toNat(_) |> Nat8.fromNat(_));
+                    null;
+                };
+                case (#Float, #Float(f64)) {
+                    Debug.trap("Float not implemented");
+                    // primitive_type_buffer.add(T.TypeCode.Float);
+                    // let bytes = Float.toBytes(f64);
+                    // for (byte in bytes.vals()){
+                    //     value_buffer.add(byte);
+                    // };
+                };
+                case (#Bool, #Bool(b)) {
+                    primitive_type_buffer.add(T.TypeCode.Bool);
+                    value_buffer.add(if (b) (1) else (0));
+                };
+                case (#Null, #Null) {
+                    primitive_type_buffer.add(T.TypeCode.Null);
+                };
+                case (#Empty, #Empty) {
+                    primitive_type_buffer.add(T.TypeCode.Empty);
+                };
+                case (#Text, #Text(t)) {
+                    primitive_type_buffer.add(T.TypeCode.Text);
+
+                    let utf8_bytes = Blob.toArray(Text.encodeUtf8(t));
+                    unsigned_leb128(value_buffer, utf8_bytes.size());
+
+                    var i = 0;
+                    while (i < utf8_bytes.size()) {
+                        value_buffer.add(utf8_bytes[i]);
+                        i += 1;
+                    };
+
+                };
+                case (#Principal, #Principal(p)) {
+                    primitive_type_buffer.add(T.TypeCode.Principal);
+
+                    value_buffer.add(0x01); // indicate transparency state
+                    let bytes = Blob.toArray(Principal.toBlob(p));
+                    unsigned_leb128(value_buffer, bytes.size());
+
+                    var i = 0;
+                    while (i < bytes.size()) {
+                        value_buffer.add(bytes[i]);
+                        i += 1;
+                    };
+                };
+
+                // ----------------- Compound Types ----------------- //
+
+                case (#Option(opt_type), #Option(opt_value)) {
+                    primitive_type_buffer.add(T.TypeCode.Option);
+                    var checkpoint = value_buffer.size();
+
+                    let hash = switch (opt_type, opt_value) {
+                        case (_, #Null) {
+                            value_buffer.add(0); // no value
+                            let hash = hash_type(opt_type);
+                        };
+                        case (_, _) {
+                            value_buffer.add(1); // has value
+                            let hash = encode(
+                                opt_type,
+                                opt_value,
+                                type_buffer,
+                                primitive_type_buffer,
+                                value_buffer,
+                                renaming_map,
+                                unique_map,
+                                recursive_map,
+                            );
+                        };
+                    };
+
+                    if (hash == null) return null;
+
+                    let ?offset = Map.get(unique_map, n32hash, hash) else return null;
+
+                    unsigned_leb128(value_buffer, offset);
+                    null;
+
+                };
+
+                case (#Array(arr_type), #Array(arr_values)) {
+                    primitive_type_buffer.add(T.TypeCode.Array);
+                    let code = get_type_code_or_ref(arr_type, type_buffer, unique_map, recursive_map);
+
+                    unsigned_leb128(value_buffer, arr_values.size());
+
+                    var i = 0;
+                    while (i < arr_values.size()) {
+                        let hash = encode(
+                            arr_type,
+                            arr_values[i],
+                            type_buffer,
+                            primitive_type_buffer,
+                            value_buffer,
+                            renaming_map,
+                            unique_map,
+                            recursive_map,
+                        );
+                        // if (hash == null) return null;
+                        // unsigned_leb128(value_buffer, hash);
+                        i += 1;
+                    };
+
+                };
+
+                case (#Record(field_types), #Record(field_values)){
+
+                };
+            };
+        };
+
     };
 
     type InternalTypeNode = {
@@ -76,24 +350,33 @@ module {
     public func toArgs(candid_values : [Candid], renaming_map : TrieMap<Text, Text>) : Result<[Arg], Text> {
         let buffer = Buffer.Buffer<Arg>(candid_values.size());
 
+        Debug.print("convert ... ");
         for (candid in candid_values.vals()) {
             let (internal_arg_type, arg_value) = toArgTypeAndValue(candid, renaming_map);
 
+            Debug.print("get internal arg type and value");
+
             let rows = Buffer.Buffer<[InternalTypeNode]>(8);
+
             let node : InternalTypeNode = {
                 type_ = internal_arg_type;
                 height = 0;
                 parent_index = 0;
                 tag = #name("");
             };
+            Debug.print("init node");
 
             rows.add([node]);
+
             order_types_by_height_bfs(rows);
+            Debug.print("order types by height");
 
             let res = merge_variants_and_array_types(rows);
+            Debug.print("merge variants and array types");
             let #ok(merged_type) = res else return Utils.send_error(res);
 
             buffer.add({ type_ = merged_type; value = arg_value });
+            Debug.print("add to buffer");
         };
 
         #ok(Buffer.toArray(buffer));
@@ -116,28 +399,28 @@ module {
 
     func toArgTypeAndValue(candid : Candid, renaming_map : TrieMap<Text, Text>) : (InternalType, Value) {
         let (arg_type, arg_value) : (InternalType, Value) = switch (candid) {
-            case (#Nat(n))(#nat, #nat(n));
-            case (#Nat8(n))(#nat8, #nat8(n));
-            case (#Nat16(n))(#nat16, #nat16(n));
-            case (#Nat32(n))(#nat32, #nat32(n));
-            case (#Nat64(n))(#nat64, #nat64(n));
+            case (#Nat(n)) (#nat, #nat(n));
+            case (#Nat8(n)) (#nat8, #nat8(n));
+            case (#Nat16(n)) (#nat16, #nat16(n));
+            case (#Nat32(n)) (#nat32, #nat32(n));
+            case (#Nat64(n)) (#nat64, #nat64(n));
 
-            case (#Int(n))(#int, #int(n));
-            case (#Int8(n))(#int8, #int8(n));
-            case (#Int16(n))(#int16, #int16(n));
-            case (#Int32(n))(#int32, #int32(n));
-            case (#Int64(n))(#int64, #int64(n));
+            case (#Int(n)) (#int, #int(n));
+            case (#Int8(n)) (#int8, #int8(n));
+            case (#Int16(n)) (#int16, #int16(n));
+            case (#Int32(n)) (#int32, #int32(n));
+            case (#Int64(n)) (#int64, #int64(n));
 
-            case (#Float(n))(#float64, #float64(n));
+            case (#Float(n)) (#float64, #float64(n));
 
-            case (#Bool(n))(#bool, #bool(n));
+            case (#Bool(n)) (#bool, #bool(n));
 
-            case (#Principal(n))(#principal, #principal(n));
+            case (#Principal(n)) (#principal, #principal(n));
 
-            case (#Text(n))(#text, #text(n));
+            case (#Text(n)) (#text, #text(n));
 
-            case (#Null)(#null_, #null_);
-            case (#Empty)(#empty, #empty);
+            case (#Null) (#null_, #null_);
+            case (#Empty) (#empty, #empty);
 
             case (#Blob(blob)) {
                 let bytes = Blob.toArray(blob);
