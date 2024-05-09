@@ -11,5 +11,6 @@ module {
     public let { toText; fromCandid } = ToText;
 
     public let concatKeys = Utils.concatKeys;
+    public let defaultOptions = Candid.defaultOptions;
 
 };

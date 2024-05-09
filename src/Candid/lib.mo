@@ -1,14 +1,6 @@
-import Array "mo:base/Array";
-import Debug "mo:base/Debug";
-import Text "mo:base/Text";
-import Order "mo:base/Order";
-
 /// A representation of the Candid format with variants for all possible types.
 
-import Result "mo:base/Result";
-import Prelude "mo:base/Prelude";
-
-import Itertools "mo:itertools/Iter";
+import Text "mo:base/Text";
 
 
 import Encoder "Blob/Encoder";
@@ -23,6 +15,8 @@ import Utils "../Utils";
 module {
     /// A representation of the Candid format with variants for all possible types.
     public type Candid = T.Candid;
+    public type Options = T.Options;
+    public let defaultOptions = T.defaultOptions;
     
     /// Converts a motoko value to a [Candid](#Candid) value
     public let { encode; encodeOne } = Encoder;

@@ -9,6 +9,7 @@ import Utils "../Utils";
 
 module {
     public type JSON = JSON.JSON;
+    public let defaultOptions = Candid.defaultOptions;
 
     public let { fromText; toCandid } = FromText;
 

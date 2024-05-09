@@ -4,6 +4,7 @@ import Int8 "mo:base/Int8";
 import Int16 "mo:base/Int16";
 import Int32 "mo:base/Int32";
 import Int64 "mo:base/Int64";
+import Option "mo:base/Option";
 import Nat64 "mo:base/Nat64";
 import Result "mo:base/Result";
 import Principal "mo:base/Principal";
@@ -12,7 +13,6 @@ import CBOR_Value "mo:cbor/Value";
 import CBOR_Encoder "mo:cbor/Encoder";
 import CBOR_Decoder "mo:cbor/Decoder";
 import NatX "mo:xtended-numbers/NatX";
-import IntX "mo:xtended-numbers/IntX";
 import FloatX "mo:xtended-numbers/FloatX";
 
 import Candid "../Candid";
@@ -32,14 +32,14 @@ module {
         let decoded_res = Candid.decode(blob, keys, options);
         let #ok(candid) = decoded_res else return Utils.send_error(decoded_res);
 
-        let json_res = fromCandid(candid[0]);
+        let json_res = fromCandid(candid[0], Option.get(options, CandidTypes.defaultOptions));
         let #ok(json) = json_res else return Utils.send_error(json_res);
         #ok(json);
     };
 
     /// Convert a Candid value to CBOR blob
-    public func fromCandid(candid : Candid) : Result<Blob, Text> {
-        let res = transpile_candid_to_cbor(candid);
+    public func fromCandid(candid : Candid, options: CandidTypes.Options) : Result<Blob, Text> {
+        let res = transpile_candid_to_cbor(candid, options);
         let #ok(transpiled_cbor) = res else return Utils.send_error(res);
 
         let cbor_with_self_describe_tag = #majorType6({ tag = 55799 : Nat64; value = transpiled_cbor; });
@@ -50,7 +50,7 @@ module {
         };
     };
 
-    func transpile_candid_to_cbor(candid : Candid) : Result<CBOR, Text> {
+    func transpile_candid_to_cbor(candid : Candid, options: CandidTypes.Options) : Result<CBOR, Text> {
         let transpiled_cbor : CBOR = switch(candid){
             case (#Empty) #majorType7(#_undefined);
             case (#Null) #majorType7(#_null);
@@ -75,18 +75,18 @@ module {
                 let buffer = Buffer.Buffer<CBOR>(arr.size());
 
                 for (item in arr.vals()){
-                    let res = transpile_candid_to_cbor(item);
+                    let res = transpile_candid_to_cbor(item, options);
                     let #ok(cbor_val) = res else return Utils.send_error(res);
                     buffer.add(cbor_val);
                 };
 
                 #majorType4(Buffer.toArray(buffer));
             };
-            case (#Record(records)) {
+            case (#Record(records) or #Map(records)) {
                 let newRecords = Buffer.Buffer<(CBOR, CBOR)>(records.size());
 
                 for ((key, val) in records.vals()){
-                    let res = transpile_candid_to_cbor(val);
+                    let res = transpile_candid_to_cbor(val, options);
                     let #ok(cbor_val) = res else return Utils.send_error(res);
                     newRecords.add((#majorType3(key), cbor_val));
                 };
@@ -100,7 +100,7 @@ module {
             // 
             // check out "CBOR Tests.options" in the tests folder to see how this in action
             case (#Option(option)) {
-                let res = transpile_candid_to_cbor(option);
+                let res = transpile_candid_to_cbor(option, options);
                 let #ok(cbor_val) = res else return Utils.send_error(res);
                 cbor_val
             };
@@ -116,18 +116,18 @@ module {
     };
 
     public func decode(blob: Blob, options: ?Options): Result<Blob, Text> {
-        let candid_res = toCandid(blob);
+        let candid_res = toCandid(blob, Option.get(options, CandidTypes.defaultOptions));
         let #ok(candid) = candid_res else return Utils.send_error(candid_res);
         Candid.encodeOne(candid, options);
     };
 
-    public func toCandid(blob: Blob): Result<Candid, Text> {
+    public func toCandid(blob: Blob, options: CandidTypes.Options): Result<Candid, Text> {
         let cbor_res = CBOR_Decoder.decode(blob);
         
         let candid_res = switch (cbor_res) {
             case (#ok(cbor)) {
-                let #majorType6({ tag = 55799; value }) = cbor else return transpile_cbor_to_candid(cbor);
-                transpile_cbor_to_candid(value);
+                let #majorType6({ tag = 55799; value }) = cbor else return transpile_cbor_to_candid(cbor, options);
+                transpile_cbor_to_candid(value, options);
             };
             case (#err(cbor_error)) {
                 switch(cbor_error){
@@ -142,7 +142,7 @@ module {
         #ok(candid);
     };
 
-    public func transpile_cbor_to_candid(cbor: CBOR) : Result<Candid, Text>{
+    public func transpile_cbor_to_candid(cbor: CBOR, options: CandidTypes.Options) : Result<Candid, Text>{
         let transpiled_candid = switch(cbor){
             case (#majorType0(n)) #Nat(Nat64.toNat(n));
             case (#majorType1(n)) #Int(n);
@@ -151,7 +151,7 @@ module {
             case (#majorType4(arr)) {
                 let buffer = Buffer.Buffer<Candid>(arr.size());
                 for (item in arr.vals()){
-                    let res = transpile_cbor_to_candid(item);
+                    let res = transpile_cbor_to_candid(item, options);
                     let #ok(candid_val) = res else return Utils.send_error(res);
                     buffer.add(candid_val);
                 };
@@ -162,12 +162,16 @@ module {
                 for ((cbor_text, val) in records.vals()){
                     let #majorType3(key) = cbor_text else return #err("Error decoding CBOR: Unexpected key type");
 
-                    let res = transpile_cbor_to_candid(val);
+                    let res = transpile_cbor_to_candid(val, options);
                     let #ok(candid_val) = res else return Utils.send_error(res);
                     buffer.add((key, candid_val));
                 };
 
-                #Record(Buffer.toArray(buffer));
+                if (options.use_icrc_3_value_type){
+                    #Map(Buffer.toArray(buffer));
+                } else {
+                    #Record(Buffer.toArray(buffer));
+                };
             };
             case (#majorType7(#_undefined)) #Empty;
             case (#majorType7(#_null)) #Null;

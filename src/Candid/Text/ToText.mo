@@ -70,7 +70,7 @@ module {
                 text # "}";
             };
 
-            case (#Record(fields)) {
+            case (#Record(fields) or #Map(fields)) {
                 var text = "record { ";
 
                 for ((key, val) in fields.vals()) {

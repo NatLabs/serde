@@ -3,11 +3,9 @@ import List "mo:base/List";
 
 import C "mo:parser-combinators/Combinators";
 import P "mo:parser-combinators/Parser";
-import NatX "mo:xtended-numbers/NatX";
 
 import Candid "../../Types";
 
-import { listToNat } "Common";
 import { parseNat } "Nat";
 
 module {

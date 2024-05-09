@@ -33,6 +33,7 @@ module {
         #Option : Candid;
         #Array : [Candid];
         #Record : [KeyValuePair];
+        #Map : [KeyValuePair];
         #Variant : KeyValuePair;
     };
 
@@ -101,6 +102,16 @@ module {
     public type Options = {
         /// Contains an array of tuples of the form (old_name, new_name) to rename the record keys.
         renameKeys : [(Text, Text)];
+
+        // convertAllNumbersToFloats : Bool;
+
+        use_icrc_3_value_type : Bool;
     }; 
+
+    public let defaultOptions = {
+        renameKeys = [];
+        // convertAllNumbersToFloats = false;
+        use_icrc_3_value_type = false;
+    };
 
 };

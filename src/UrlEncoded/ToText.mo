@@ -1,20 +1,11 @@
-import Array "mo:base/Array";
-import Blob "mo:base/Blob";
-import Buffer "mo:base/Buffer";
-import Debug "mo:base/Debug";
 import Result "mo:base/Result";
 import Nat "mo:base/Nat";
-import Int "mo:base/Int";
 import Nat32 "mo:base/Nat32";
 import Text "mo:base/Text";
 import TrieMap "mo:base/TrieMap";
 import Iter "mo:base/Iter";
-import Hash "mo:base/Hash";
 import Float "mo:base/Float";
-import Order "mo:base/Order";
-import Option "mo:base/Option";
 import Principal "mo:base/Principal";
-import Prelude "mo:base/Prelude";
 
 import itertools "mo:itertools/Iter";
 
@@ -39,7 +30,7 @@ module {
     public func fromCandid(candid : Candid) : Result<Text, Text> {
 
         let records = switch (candid) {
-            case (#Record(records)) records;
+            case (#Record(records) or #Map(records)) records;
             case (_) return #err("invalid type: the value must be a record");
         };
 
@@ -82,7 +73,7 @@ module {
                 };
             };
 
-            case (#Record(records)) {
+            case (#Record(records) or #Map(records)) {
                 for ((key, value) in records.vals()) {
                     let record_key = storedKey # "[" # key # "]";
                     toKeyValuePairs(pairs, record_key, value);

@@ -1,12 +1,13 @@
 [package]
 name = "serde"
-version = "2.2.0"
+version = "2.3.0"
 description = "A serialisation and deserialisation library for Motoko."
 repository = "https://github.com/NatLabs/serde"
 keywords = [ "json", "candid", "cbor", "urlencoded", "serialization" ]
+license = "MIT"
 
 [dependencies]
-base = "0.10.3"
+base = "0.11.1"
 itertools = "0.2.1"
 candid = "1.0.2"
 xtended-numbers = "0.2.1"
@@ -22,3 +23,4 @@ fuzz = "0.2.1"
 
 [toolchain]
 wasmtime = "14.0.4"
+moc = "0.11.1"

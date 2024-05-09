@@ -1,5 +1,4 @@
 import Debug "mo:base/Debug";
-import Iter "mo:base/Iter";
 import List "mo:base/List";
 import Int8 "mo:base/Int8";
 import Int16 "mo:base/Int16";
@@ -10,8 +9,8 @@ import C "mo:parser-combinators/Combinators";
 import P "mo:parser-combinators/Parser";
 
 import Candid "../../Types";
-import { ignoreSpace; toText } "Common";
-import { parseInt; intParser } "Int";
+import { ignoreSpace } "Common";
+import { parseInt } "Int";
 
 module {
     type Candid = Candid.Candid;

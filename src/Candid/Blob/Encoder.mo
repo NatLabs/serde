@@ -1,7 +1,6 @@
 import Array "mo:base/Array";
 import Blob "mo:base/Blob";
 import Buffer "mo:base/Buffer";
-import Debug "mo:base/Debug";
 import Result "mo:base/Result";
 import Nat64 "mo:base/Nat64";
 import Nat8 "mo:base/Nat8";
@@ -13,7 +12,6 @@ import Prelude "mo:base/Prelude";
 import Text "mo:base/Text";
 
 import Encoder "mo:candid/Encoder";
-import Decoder "mo:candid/Decoder";
 import Arg "mo:candid/Arg";
 import Value "mo:candid/Value";
 import Type "mo:candid/Type";
@@ -23,10 +21,8 @@ import PeekableIter "mo:itertools/PeekableIter";
 import Map "mo:map/Map";
 
 import T "../Types";
-import U "../../Utils";
 import TrieMap "mo:base/TrieMap";
 import Utils "../../Utils";
-import Order "mo:base/Order";
 import Func "mo:base/Func";
 import Char "mo:base/Char";
 import Int16 "mo:base/Int16";
@@ -454,7 +450,7 @@ module {
                 (#vector(types), #vector(values));
             };
 
-            case (#Record(records)) {
+            case (#Record(records) or #Map(records)) {
                 let types_buffer = Buffer.Buffer<InternalKeyValuePair>(records.size());
                 let values_buffer = Buffer.Buffer<RecordFieldValue>(records.size());
 
@@ -552,7 +548,6 @@ module {
 
     func merge_variants_and_array_types(rows : Buffer<[InternalTypeNode]>) : Result<Type, Text> {
         let buffer = Buffer.Buffer<TypeNode>(8);
-        let total_rows = rows.size();
 
         func calc_height(parent : Nat, child : Nat) : Nat = parent + child;
 
@@ -714,7 +709,6 @@ module {
     };
 
     func order_types_by_height_bfs(rows : Buffer<[InternalTypeNode]>) {
-        var merged_type : ?InternalType = null;
 
         label while_loop while (rows.size() > 0) {
             let candid_values = Buffer.last(rows) else return Prelude.unreachable();

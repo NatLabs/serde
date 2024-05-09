@@ -1,14 +1,6 @@
-import Array "mo:base/Array";
 import Buffer "mo:base/Buffer";
-import Debug "mo:base/Debug";
 import Result "mo:base/Result";
-import TrieMap "mo:base/TrieMap";
-import Nat32 "mo:base/Nat32";
 import Text "mo:base/Text";
-import Iter "mo:base/Iter";
-import Hash "mo:base/Hash";
-import Float "mo:base/Float";
-import Prelude "mo:base/Prelude";
 
 import JSON "mo:json/JSON";
 import NatX "mo:xtended-numbers/NatX";
@@ -82,7 +74,7 @@ module {
                 #Array(Buffer.toArray(newArr));
             };
 
-            case (#Record(records)) {
+            case (#Record(records) or #Map(records)) {
                 let newRecords = Buffer.Buffer<(Text, JSON)>(records.size());
 
                 for ((key, val) in records.vals()){
