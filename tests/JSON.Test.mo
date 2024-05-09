@@ -155,7 +155,8 @@ let success = run([
                             };
 
                             let text = "{\"label\": 123, \"query\": \"?user_id=12&address=2014%20Forest%20Hill%20Drive\"}";
-                            let options = {
+
+                            let options = { Candid.defaultOptions with 
                                 renameKeys = [("label", "account_label"), ("query", "user_query")];
                             };
 
@@ -260,7 +261,7 @@ let success = run([
                             };
 
                             let UserDataKeys = ["account_label", "user_query"];
-                            let options = {
+                            let options = { Candid.defaultOptions with
                                 renameKeys = [("account_label", "label"), ("user_query", "query")];
                             };
 

@@ -246,7 +246,7 @@ let success = run([
                         do {
                             let motoko = [{ name = "candid"; arr = [1, 2, 3, 4] }, { name = "motoko"; arr = [5, 6, 7, 8] }, { name = "rust"; arr = [9, 10, 11, 12] }];
                             let blob = to_candid (motoko);
-                            let options = {
+                            let options = { Candid.defaultOptions with
                                 renameKeys = [("arr", "array"), ("name", "username")];
                             };
                             let candid = Candid.decode(blob, ["name", "arr"], ?options);
@@ -613,7 +613,7 @@ let success = run([
                                 daily_downloads : [Nat];
                             };
 
-                            let options = {
+                            let options = { Candid.defaultOptions with
                                 renameKeys = [("array", "daily_downloads"), ("name", "language")];
                             };
                             let #ok(blob) = Candid.encodeOne(candid, ?options);

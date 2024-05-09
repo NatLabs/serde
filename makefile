@@ -1,11 +1,11 @@
-.PHONY: compile-tests no-warn docs
+.PHONY: test compile-tests docs no-warn
 
-compile-tests:
-	bash compile-tests.sh $(file)
+test: 
+	mops test
 
-no-warn:
-	find src -type f -name '*.mo' -print0 | xargs -0 $(shell mocv bin)/moc -r $(shell mops sources) -Werror -wasi-system-api
+check:
+	find src -type f -name '*.mo' -print0 | \
+	xargs -0 $(shell mops toolchain bin moc) -r $(shell mops sources) -Werror -wasi-system-api
 
-docs:
-	$(shell mocv bin)/mo-doc
-	$(shell mocv bin)/mo-doc --format plain
+bench:
+	mops bench --gc incremental

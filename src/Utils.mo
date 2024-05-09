@@ -84,8 +84,6 @@ module {
     };
 
     public func text_to_nat32(text : Text) : Nat32 {
-        var n : Nat32 = 0;
-
         Itertools.fold(
             text.chars(),
             0 : Nat32,

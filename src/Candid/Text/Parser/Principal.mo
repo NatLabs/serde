@@ -1,5 +1,3 @@
-import Blob "mo:base/Blob";
-import Iter "mo:base/Iter";
 import List "mo:base/List";
 import Principal "mo:base/Principal";
 

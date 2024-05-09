@@ -1,4 +1,3 @@
-import Iter "mo:base/Iter";
 import List "mo:base/List";
 
 import C "mo:parser-combinators/Combinators";
