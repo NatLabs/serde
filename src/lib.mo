@@ -1,6 +1,3 @@
-import Iter "mo:base/Iter";
-
-import Itertools "mo:itertools/Iter";
 
 import CandidTypes "Candid/Types";
 import UrlEncodedModule "UrlEncoded";
@@ -22,4 +19,5 @@ module {
     public let CBOR = CborModule;
 
     public let concatKeys = Utils.concatKeys;
+    public let defaultOptions = CandidTypes.defaultOptions;
 }

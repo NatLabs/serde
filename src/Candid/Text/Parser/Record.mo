@@ -5,7 +5,7 @@ import C "mo:parser-combinators/Combinators";
 import P "mo:parser-combinators/Parser";
 
 import Candid "../../Types";
-import { ignoreSpace; hexChar; fromHex; toText } "Common";
+import { ignoreSpace; toText } "Common";
 import { parseText } "Text";
 
 module {

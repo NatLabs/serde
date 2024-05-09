@@ -6,18 +6,14 @@ import Debug "mo:base/Debug";
 import Result "mo:base/Result";
 import TrieMap "mo:base/TrieMap";
 import Nat "mo:base/Nat";
-import Nat32 "mo:base/Nat32";
 import Text "mo:base/Text";
 import Iter "mo:base/Iter";
-import Hash "mo:base/Hash";
-import Float "mo:base/Float";
 import Option "mo:base/Option";
-import Prelude "mo:base/Prelude";
 
 import Itertools "mo:itertools/Iter";
 
 import Candid "../Candid";
-import CandidTypes "../Candid/Types";
+import T "../Candid/Types";
 import { parseValue } "./Parser";
 import U "../Utils";
 import Utils "../Utils";
@@ -42,20 +38,20 @@ module {
     func newMap() : NestedTrieMap = TrieMap.TrieMap(Text.equal, Text.hash);
 
     /// Converts a Url-Encoded Text to a serialized Candid Record
-    public func fromText(text : Text, options: ?CandidTypes.Options) : Result<Blob, Text> {
-        let res = toCandid(text);
+    public func fromText(text : Text, options: ?T.Options) : Result<Blob, Text> {
+        let res = toCandid(text, Option.get(options, T.defaultOptions));
         let #ok(candid) = res else return Utils.send_error(res);
 
         Candid.encodeOne(candid, options);
     };
 
     /// Converts a Url-Encoded Text to a Candid Record
-    public func toCandid(text : Text) : Result<Candid, Text> {
-        let triemap_res = entriesToTrieMap(text);
+    public func toCandid(text : Text, options: T.Options) : Result<Candid, Text> {
+        let triemap_res = entriesToTrieMap(text, options);
 
         let #ok(triemap) = triemap_res else return Utils.send_error(triemap_res);
 
-        trieMapToCandid(triemap);
+        trieMapToCandid(triemap, options);
     };
 
     // Converting entries from UrlSearchParams
@@ -88,7 +84,7 @@ module {
     //     },
     // }
     // --------------------------------------------------
-    func entriesToTrieMap(text : Text) : Result<NestedTrieMap, Text> {
+    func entriesToTrieMap(text : Text, options: T.Options) : Result<NestedTrieMap, Text> {
         let entries : [Text] = Array.sort(
             Iter.toArray(Text.split(text, #char '&')),
             Text.compare,
@@ -183,7 +179,7 @@ module {
     // }
     // --------------------------------------------------
 
-    func trieMapToCandid(triemap : NestedTrieMap) : Result<Candid, Text> {
+    func trieMapToCandid(triemap : NestedTrieMap, options: T.Options) : Result<Candid, Text> {
         var i = 0;
         let isArray = Itertools.all(
             Iter.sort(triemap.keys(), Text.compare),
@@ -205,7 +201,7 @@ module {
                         buffer.add(candid);
                     };
                     case (?(#triemap(map))) {
-                        let res = trieMapToCandid(map);
+                        let res = trieMapToCandid(map, options);
                         let #ok(candid) = res else return Utils.send_error(res);
                         buffer.add(candid);
                     };
@@ -233,7 +229,7 @@ module {
 
                 let value_res = switch (value) {
                     case (#text(text)) #ok(parseValue(text));
-                    case (#triemap(map)) trieMapToCandid(map);
+                    case (#triemap(map)) trieMapToCandid(map, options);
                 };
 
                 let #ok(val) = value_res else return Utils.send_error(value_res);
@@ -251,7 +247,7 @@ module {
                     buffer.add((key, candid));
                 };
                 case (#triemap(map)) {
-                    let res = trieMapToCandid(map);
+                    let res = trieMapToCandid(map, options);
                     let #ok(candid) = res else return Utils.send_error(res);
                     buffer.add((key, candid));
                 };
@@ -260,6 +256,7 @@ module {
 
         let records = Buffer.toArray(buffer);
 
+        // let map_or_record = if ()
         #ok(#Record(records));
     };
 

@@ -1,12 +1,10 @@
-import Blob "mo:base/Blob";
-import Iter "mo:base/Iter";
 import List "mo:base/List";
 
 import C "mo:parser-combinators/Combinators";
 import P "mo:parser-combinators/Parser";
 
 import Candid "../../Types";
-import { ignoreSpace; hexChar; fromHex } "Common";
+import { ignoreSpace; } "Common";
 
 module {
     type Candid = Candid.Candid;

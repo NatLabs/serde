@@ -9,7 +9,7 @@ import P "mo:parser-combinators/Parser";
 
 import Candid "../../Types";
 
-import { ignoreSpace; any } "Common";
+import { ignoreSpace } "Common";
 
 import { arrayParser } "Array";
 import { blobParser } "Blob";

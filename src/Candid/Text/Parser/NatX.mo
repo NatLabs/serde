@@ -1,5 +1,4 @@
 import Debug "mo:base/Debug";
-import Iter "mo:base/Iter";
 import List "mo:base/List";
 import Nat8 "mo:base/Nat8";
 import Nat16 "mo:base/Nat16";
@@ -10,8 +9,8 @@ import C "mo:parser-combinators/Combinators";
 import P "mo:parser-combinators/Parser";
 
 import Candid "../../Types";
-import { ignoreSpace; toText } "Common";
-import { parseNat; natParser } "Nat";
+import { ignoreSpace } "Common";
+import { parseNat } "Nat";
 
 module {
     type Candid = Candid.Candid;

@@ -8,7 +8,7 @@ The library contains four modules:
     - `toText()` - Converts serialized candid to its [textual representation](https://internetcomputer.org/docs/current/tutorials/developer-journey/level-2/2.4-intro-candid/#candid-textual-values).
     - `encode()` - Converts the [Candid variant](./src/Candid/Types.mo#L6) to a blob.
     - `decode()` - Converts a blob to the [Candid variant](./src/Candid/Types.mo#L6).
-
+    > encoding and decoding functions also support conversion between the [`ICRC3` value type](https://github.com/dfinity/ICRC-1/tree/main/standards/ICRC-3#value) and candid. Checkout the example in the [usage guide](./usage.md#icrc3-value)
 - **CBOR**
     - `encode()` - Converts serialized candid to CBOR.
     - `decode()` - Converts CBOR to a serialized candid.
@@ -159,13 +159,14 @@ assert renamedKeys == ?{ item_type = "bar"; item_label = "foo"; id = 112 };
 ```
 
 Checkout the [usage guide](https://github.com/NatLabs/serde/blob/main/usage.md) for additional examples:
-- [Candid Text](https://github.com/NatLabs/serde/blob/main/usage.md#candid-text)
+- [Candid](https://github.com/NatLabs/serde/blob/main/usage.md#candid-text)
 - [URL-Encoded Pairs](https://github.com/NatLabs/serde/blob/main/usage.md#url-encoded-pairs)
 
 ## Limitations
 
 - Users must provide a list of record keys and variant names during conversions from Motoko to other data formats due to constraints in the candid format.
 - Lack of specific syntax for conversion between `Blob`, `Principal`, and bounded `Nat`/`Int` types.
+- Floats are only recognised if they have a decimal point, e.g., `1.0` is a Float, but `1` is an `Int` / `Nat`.
 
 ## Running Tests
 

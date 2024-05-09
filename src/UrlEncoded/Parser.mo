@@ -1,5 +1,4 @@
 import Char "mo:base/Char";
-import Debug "mo:base/Debug";
 import Iter "mo:base/Iter";
 import Float "mo:base/Float";
 import List "mo:base/List";
@@ -7,10 +6,8 @@ import Nat32 "mo:base/Nat32";
 
 import C "mo:parser-combinators/Combinators";
 import P "mo:parser-combinators/Parser";
-import Itertools "mo:itertools/Iter";
 
 import Candid "../Candid";
-import U "../Utils";
 
 module {
     type Candid = Candid.Candid;

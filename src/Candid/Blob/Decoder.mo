@@ -1,17 +1,13 @@
-import Array "mo:base/Array";
 import Blob "mo:base/Blob";
 import Buffer "mo:base/Buffer";
-import Debug "mo:base/Debug";
 import Result "mo:base/Result";
 import TrieMap "mo:base/TrieMap";
 import Nat32 "mo:base/Nat32";
 import Text "mo:base/Text";
 import Iter "mo:base/Iter";
-import Order "mo:base/Order";
+import Option "mo:base/Option";
 import Hash "mo:base/Hash";
-import Prelude "mo:base/Prelude";
 
-import Encoder "mo:candid/Encoder";
 import Decoder "mo:candid/Decoder";
 import Arg "mo:candid/Arg";
 import Value "mo:candid/Value";
@@ -81,7 +77,7 @@ module {
 
         let ?(args) = decoded else return #err("Candid Error: Failed to decode candid blob");
 
-        fromArgs(args, recordKeyMap);
+        fromArgs(args, recordKeyMap, Option.get(options, T.defaultOptions));
     };
 
     func formatVariantKey(key : Text) : Text {
@@ -99,11 +95,11 @@ module {
         );
     };
 
-    public func fromArgs(args : [Arg], recordKeyMap : TrieMap.TrieMap<Nat32, Text>) : Result<[Candid], Text> {
+    public func fromArgs(args : [Arg], recordKeyMap : TrieMap.TrieMap<Nat32, Text>, options: T.Options) : Result<[Candid], Text> {
         let buffer = Buffer.Buffer<Candid>(args.size());
 
         for (arg in args.vals()) {
-            let res = fromArg(arg.type_, arg.value, recordKeyMap);
+            let res = fromArg(arg.type_, arg.value, recordKeyMap, options);
             let #ok(val) = res else return Utils.send_error(res);
             buffer.add(val);
         };
@@ -111,7 +107,7 @@ module {
         #ok(Buffer.toArray(buffer));
     };
 
-    func fromArg(type_ : Type, val : Value, recordKeyMap : TrieMap.TrieMap<Nat32, Text>) : Result<Candid, Text> {
+    func fromArg(type_ : Type, val : Value, recordKeyMap : TrieMap.TrieMap<Nat32, Text>, options: T.Options) : Result<Candid, Text> {
         let result : Candid = switch (type_, val) {
             case ((#recursiveReference(_) or #nat), #nat(n)) #Nat(n);
             case ((#recursiveReference(_) or #nat8), #nat8(n)) #Nat8(n);
@@ -140,13 +136,13 @@ module {
             case (_, #opt(#null_)) { #Option(#Null) };
 
             case (#opt(innerType), #opt(optVal)) {
-                let res = fromArg(innerType, optVal, recordKeyMap);
+                let res = fromArg(innerType, optVal, recordKeyMap, options);
                 let #ok(val) = res else return Utils.send_error(res);
                 #Option(val);
             };
 
             case (#recursiveReference(ref_id), #opt(optVal)){
-                let res = fromArg(#recursiveReference(ref_id), optVal, recordKeyMap);
+                let res = fromArg(#recursiveReference(ref_id), optVal, recordKeyMap, options);
                 let #ok(val) = res else return Utils.send_error(res);
                 #Option(val);
             };
@@ -168,7 +164,7 @@ module {
                 let buffer = Buffer.Buffer<Candid>(arr.size());
 
                 for (elem in arr.vals()){
-                    let res = fromArg(innerType, elem, recordKeyMap);
+                    let res = fromArg(innerType, elem, recordKeyMap, options);
                     let #ok(val) = res else return Utils.send_error(res);
                     buffer.add(val);
                 };
@@ -182,7 +178,7 @@ module {
                 let buffer = Buffer.Buffer<Candid>(arr.size());
 
                 for (elem in arr.vals()){
-                    let res = fromArg(#recursiveReference(ref_id), elem, recordKeyMap);
+                    let res = fromArg(#recursiveReference(ref_id), elem, recordKeyMap, options);
                     let #ok(val) = res else return Utils.send_error(res);
                     buffer.add(val);
                 };
@@ -203,15 +199,19 @@ module {
                     let { tag; value } = record_val;
 
                     let key = getKey(tag, recordKeyMap);
-                    let res = fromArg(innerType, value, recordKeyMap);
+                    let res = fromArg(innerType, value, recordKeyMap, options);
                     let #ok(val) = res else return Utils.send_error(res);
 
                     newRecords.add((key, val));
                 };
 
                 newRecords.sort(U.cmpRecords);
-
-                #Record(Buffer.toArray(newRecords));
+                
+                if (options.use_icrc_3_value_type){
+                    #Map(Buffer.toArray(newRecords));
+                } else {
+                    #Record(Buffer.toArray(newRecords));
+                };
             };
 
             case (#recursiveReference(ref_id), #record(records)) {
@@ -222,7 +222,7 @@ module {
                     let { tag; value } = record;
 
                     let key = getKey(tag, recordKeyMap);
-                    let res = fromArg(#recursiveReference(ref_id), value, recordKeyMap);
+                    let res = fromArg(#recursiveReference(ref_id), value, recordKeyMap, options);
                     let #ok(val) = res else return Utils.send_error(res);
 
                     newRecords.add((key, val));
@@ -230,7 +230,11 @@ module {
 
                 newRecords.sort(U.cmpRecords);
 
-                #Record(Buffer.toArray(newRecords));
+                if (options.use_icrc_3_value_type){
+                    #Map(Buffer.toArray(newRecords));
+                } else {
+                    #Record(Buffer.toArray(newRecords));
+                };
             };
 
             case ( #variant(variantTypes), #variant(v)) {
@@ -238,7 +242,7 @@ module {
                 for ({ tag; type_ = innerType } in variantTypes.vals()) {
                     if (tag == v.tag) {
                         let key = getKey(tag, recordKeyMap);
-                        let res = fromArg(innerType, v.value, recordKeyMap);
+                        let res = fromArg(innerType, v.value, recordKeyMap, options);
 
                         let #ok(val) = res else return Utils.send_error(res);
 
@@ -251,7 +255,7 @@ module {
 
             case (#recursiveReference(ref_id), #variant(v)) {
                 let key = getKey(v.tag, recordKeyMap);
-                let res = fromArg(#recursiveReference(ref_id), v.value, recordKeyMap);
+                let res = fromArg(#recursiveReference(ref_id), v.value, recordKeyMap, options);
 
                 let #ok(val) = res else return Utils.send_error(res);
 
@@ -259,7 +263,7 @@ module {
             };
 
             case (#recursiveType({ type_ }), value_) {
-                let res = fromArg(type_, value_, recordKeyMap);
+                let res = fromArg(type_, value_, recordKeyMap, options);
                 let #ok(val) = res else return Utils.send_error(res);
                 val;
             };
