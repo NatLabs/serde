@@ -2,7 +2,7 @@ import Buffer "mo:base/Buffer";
 import Result "mo:base/Result";
 import Text "mo:base/Text";
 
-import JSON "mo:json/JSON";
+import JSON "mo:json-float/JSON";
 import NatX "mo:xtended-numbers/NatX";
 import IntX "mo:xtended-numbers/IntX";
 

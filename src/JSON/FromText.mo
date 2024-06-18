@@ -3,7 +3,7 @@ import Result "mo:base/Result";
 import Text "mo:base/Text";
 import Int "mo:base/Int";
 
-import JSON "mo:json/JSON";
+import JSON "mo:json-float/JSON";
 
 import Candid "../Candid";
 import U "../Utils";

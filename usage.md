@@ -53,13 +53,13 @@
         id: Nat;
     };
 
-    let candid_variant = #Map([
+    let icrc3 = #Map([
         ("name", #Text("bar")),
         ("id", #Nat(112))
     ]);
 
     let options = { Candid.defaultOptions with use_icrc_3_value_type = true };
-    let #ok(blob) = Candid.encode(candid_variant, ?Options);
+    let #ok(blob) = Candid.encode(icrc3, ?options);
     let user : ?User = from_candid(blob);
 
     assert user == ?{ name = "bar"; id = 112 };

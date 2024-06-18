@@ -166,6 +166,7 @@ Checkout the [usage guide](https://github.com/NatLabs/serde/blob/main/usage.md) 
 
 - Users must provide a list of record keys and variant names during conversions from Motoko to other data formats due to constraints in the candid format.
 - Lack of specific syntax for conversion between `Blob`, `Principal`, and bounded `Nat`/`Int` types.
+- Cannot deserialize Tuples as they are not candid types. They are just shorthands for records with unnamed fields. See https://forum.dfinity.org/t/candid-and-tuples/17800/7
 - Floats are only recognised if they have a decimal point, e.g., `1.0` is a Float, but `1` is an `Int` / `Nat`.
 
 ## Running Tests
