@@ -45,10 +45,10 @@ module {
     let { n32hash; thash } = Map;
 
     public func encode(candid_values : [Candid], options : ?T.Options) : Result<Blob, Text> {
-        Debug.print("candid_values: " # debug_show candid_values);
+        // Debug.print("candid_values: " # debug_show candid_values);
         let renaming_map = TrieMap.TrieMap<Text, Text>(Text.equal, Text.hash);
 
-        Debug.print("init renaming_map: ");
+        // Debug.print("init renaming_map: ");
         ignore do ? {
             let renameKeys = options!.renameKeys;
             for ((k, v) in renameKeys.vals()) {
@@ -56,15 +56,15 @@ module {
             };
         };
 
-        Debug.print("filling renaming map");
+        // Debug.print("filling renaming map");
 
         let res = toArgs(candid_values, renaming_map);
-        Debug.print("converted to arge");
+        // Debug.print("converted to arge");
 
         let #ok(args) = res else return Utils.send_error(res);
-        Debug.print("extract args from results");
+        // Debug.print("extract args from results");
 
-        Debug.print(debug_show args);
+        // Debug.print(debug_show args);
         #ok(Encoder.encode(args));
     };
 
@@ -370,11 +370,11 @@ module {
     public func toArgs(candid_values : [Candid], renaming_map : TrieMap<Text, Text>) : Result<[Arg], Text> {
         let buffer = Buffer.Buffer<Arg>(candid_values.size());
 
-        Debug.print("convert ... ");
+        // Debug.print("convert ... ");
         for (candid in candid_values.vals()) {
             let (internal_arg_type, arg_value) = toArgTypeAndValue(candid, renaming_map);
 
-            Debug.print("get internal arg type and value");
+            // Debug.print("get internal arg type and value");
 
             let rows = Buffer.Buffer<[InternalTypeNode]>(8);
 
@@ -384,19 +384,19 @@ module {
                 parent_index = 0;
                 tag = #name("");
             };
-            Debug.print("init node");
+            // Debug.print("init node");
 
             rows.add([node]);
 
             order_types_by_height_bfs(rows);
-            Debug.print("order types by height");
+            // Debug.print("order types by height");
 
             let res = merge_variants_and_array_types(rows);
-            Debug.print("merge variants and array types");
+            // Debug.print("merge variants and array types");
             let #ok(merged_type) = res else return Utils.send_error(res);
 
             buffer.add({ type_ = merged_type; value = arg_value });
-            Debug.print("add to buffer");
+            // Debug.print("add to buffer");
         };
 
         #ok(Buffer.toArray(buffer));
