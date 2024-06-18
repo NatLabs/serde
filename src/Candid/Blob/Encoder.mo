@@ -1,6 +1,7 @@
 import Array "mo:base/Array";
 import Blob "mo:base/Blob";
 import Buffer "mo:base/Buffer";
+import Debug "mo:base/Debug";
 import Result "mo:base/Result";
 import Nat64 "mo:base/Nat64";
 import Nat8 "mo:base/Nat8";
@@ -39,6 +40,7 @@ module {
     type Buffer<A> = Buffer.Buffer<A>;
 
     type Candid = T.Candid;
+    type CandidTypes = T.CandidTypes;
     type KeyValuePair = T.KeyValuePair;
     let { n32hash; thash } = Map;
 
@@ -70,287 +72,286 @@ module {
         encode([candid], options);
     };
 
-    type CandidTypes = Candid.CandidTypes;
 
     func div_ceil(n : Nat, d : Nat) : Nat {
         (n + d - 1) / d;
     };
 
-    // https://en.wikipedia.org/wiki/LEB128
-    func unsigned_leb128(buffer : Buffer<Nat8>, n : Nat) {
-        var n64 : Nat64 = Nat64.fromNat(n);
-        let bit_length = Nat64.toNat(64 - Nat64.bitcountLeadingZero(n64));
-        let n7bits = div_ceil(bit_length, 7);
+    // // https://en.wikipedia.org/wiki/LEB128
+    // func unsigned_leb128(buffer : Buffer<Nat8>, n : Nat) {
+    //     var n64 : Nat64 = Nat64.fromNat(n);
+    //     let bit_length = Nat64.toNat(64 - Nat64.bitcountLeadingZero(n64));
+    //     let n7bits = div_ceil(bit_length, 7);
 
-        var i = 0;
-        while (i < n7bits) {
-            var byte = n64 & 0x7F |> Nat64.toNat(_) |> Nat8.fromNat(_);
-            n64 := n64 >> 7;
+    //     var i = 0;
+    //     while (i < n7bits) {
+    //         var byte = n64 & 0x7F |> Nat64.toNat(_) |> Nat8.fromNat(_);
+    //         n64 := n64 >> 7;
 
-            byte := if (i == bits_of_7 - 1) (byte) else (byte | 0x80);
-            buffer.add(byte);
-            i += 1;
-        };
-    };
+    //         byte := if (i == bits_of_7 - 1) (byte) else (byte | 0x80);
+    //         buffer.add(byte);
+    //         i += 1;
+    //     };
+    // };
 
-    func signed_leb128(buffer : Buffer<Nat8>, num : Int) {
-        var i64 = if (num < 0) Int64.fromInt(-num) else return unsigned_leb128(buffer, Int.abs(num));
+    // func signed_leb128(buffer : Buffer<Nat8>, num : Int) {
+    //     var i64 = if (num < 0) Int64.fromInt(-num) else return unsigned_leb128(buffer, Int.abs(num));
 
-        let bit_length = Int64.toInt(64 - Int64.bitcountLeadingZero(i64)) |> Int.abs(_);
-        let n7bits = div_ceil(bit_length, 7);
+    //     let bit_length = Int64.toInt(64 - Int64.bitcountLeadingZero(i64)) |> Int.abs(_);
+    //     let n7bits = div_ceil(bit_length, 7);
 
-        // potentially replace with Int64.toNat64()
-        let expected_bytes = (n7bits * 7);
-        i64 := i64 ^ (0x7FFF_FFFF_FFFF_FFFF >> Int64.fromInt(63 - expected_bytes)); // flip all bits
-        i64 += 1;
+    //     // potentially replace with Int64.toNat64()
+    //     let expected_bytes = (n7bits * 7);
+    //     i64 := i64 ^ (0x7FFF_FFFF_FFFF_FFFF >> Int64.fromInt(63 - expected_bytes)); // flip all bits
+    //     i64 += 1;
 
-        var n64 = Int64.toInt(i64) |> Int.abs(_) |> Nat64.fromNat(_);
+    //     var n64 = Int64.toInt(i64) |> Int.abs(_) |> Nat64.fromNat(_);
 
-        var i = 0;
+    //     var i = 0;
 
-        while (i < n7bits) {
-            var byte = n64 & 0x7F |> Nat64.toNat(_) |> Nat8.fromNat(_);
-            n64 := n64 >> 7;
+    //     while (i < n7bits) {
+    //         var byte = n64 & 0x7F |> Nat64.toNat(_) |> Nat8.fromNat(_);
+    //         n64 := n64 >> 7;
 
-            byte := if (i == n7bits - 1) (byte) else (byte | 0x80);
-            buffer.add(byte);
-            i += 1;
-        };
-    };
+    //         byte := if (i == n7bits - 1) (byte) else (byte | 0x80);
+    //         buffer.add(byte);
+    //         i += 1;
+    //     };
+    // };
 
-    public func one_shot(candid_values : [Candid], options : ?T.Options) : Result<Blob, Text> {
-        Debug.print("candid_values: " # debug_show candid_values);
-        let renaming_map = TrieMap.TrieMap<Text, Text>(Text.equal, Text.hash);
+    // public func one_shot(candid_values : [Candid], options : ?T.Options) : Result<Blob, Text> {
+    //     Debug.print("candid_values: " # debug_show candid_values);
+    //     let renaming_map = TrieMap.TrieMap<Text, Text>(Text.equal, Text.hash);
 
-        let type_buffer = Buffer.Buffer(8);
-        let value_buffer = Buffer.Buffer(8);
+    //     let type_buffer = Buffer.Buffer(8);
+    //     let value_buffer = Buffer.Buffer(8);
 
-        Debug.print("init renaming_map: ");
-        ignore do ? {
-            let renameKeys = options!.renameKeys;
-            for ((k, v) in renameKeys.vals()) {
-                renaming_map.put(k, v);
-            };
-        };
+    //     Debug.print("init renaming_map: ");
+    //     ignore do ? {
+    //         let renameKeys = options!.renameKeys;
+    //         for ((k, v) in renameKeys.vals()) {
+    //             renaming_map.put(k, v);
+    //         };
+    //     };
 
-        let buffer = one_shot_encode(candid_values, renaming_map);
+    //     let buffer = one_shot_encode(candid_values, renaming_map);
 
-        let type_blob = Blob.fromArray(Buffer.toArray(type_buffer));
-        let value_blob = Blob.fromArray(Buffer.toArray(value_buffer));
+    //     let type_blob = Blob.fromArray(Buffer.toArray(type_buffer));
+    //     let value_blob = Blob.fromArray(Buffer.toArray(value_buffer));
 
-        #ok(blob);
-    };
+    //     #ok(blob);
+    // };
 
-    public func one_shot_encode(candid_types : [CandidTypes], candid_values : [Candid], type_buffer : Buffer<Nat8>, value_buffer : Buffer<Nat8>, renaming_map : TrieMap<Text, Text>) : Buffer<Nat8> {
-        assert candid_values.size() == candid_types.size();
+    // public func one_shot_encode(candid_types : [CandidTypes], candid_values : [Candid], type_buffer : Buffer<Nat8>, value_buffer : Buffer<Nat8>, renaming_map : TrieMap<Text, Text>) : Buffer<Nat8> {
+    //     assert candid_values.size() == candid_types.size();
 
-        // include size of candid values
-        unsigned_leb128(type_buffer, candid_values.size());
+    //     // include size of candid values
+    //     unsigned_leb128(type_buffer, candid_values.size());
 
-        let unique_map = Map.new<Hash, Nat>();
-        let recursive_map = Map.new<Text, Text>();
-        let primitive_type_buffer = Buffer.Buffer<Nat8>(candid_values.size() * 8);
+    //     let unique_map = Map.new<Hash, Nat>();
+    //     let recursive_map = Map.new<Text, Text>();
+    //     let primitive_type_buffer = Buffer.Buffer<Nat8>(candid_values.size() * 8);
 
-        func encode(
-            candid_type : CandidTypes,
-            candid_value : Candid,
-            type_buffer : Buffer<Nat8>,
-            primitive_type_buffer : Buffer<Nat8>,
-            value_buffer : Buffer<Nat8>,
-            renaming_map : TrieMap<Text, Text>,
-            unique_map : Map<Hash, Nat>,
-            recursive_map : Map<Text, Text>,
-        ) : ?Hash {
-            switch (candid_type, candid_value) {
-                case (#Nat, #Nat(n)) {
-                    primitive_type_buffer.add(T.TypeCode.Nat);
-                    unsigned_leb128(value_buffer, n);
-                    null;
-                };
-                case (#Nat8, #Nat8(n)) {
-                    primitive_type_buffer.add(T.TypeCode.Nat8);
-                    value_buffer.add(n);
-                    null;
-                };
-                case (#Nat16, #Nat16(n)) {
-                    primitive_type_buffer.add(T.TypeCode.Nat16);
-                    value_buffer.add((n & 0xFF) |> Nat16.toNat8(_));
-                    value_buffer.add((n >> 8) |> Nat16.toNat8(_));
-                    null;
-                };
-                case (#Nat32, #Nat32(n)) {
-                    primitive_type_buffer.add(T.TypeCode.Nat32);
-                    value_buffer.add((n & 0xFF) |> Nat32.toNat16(_) |> Nat16.toNat8(_));
-                    value_buffer.add(((n >> 8) & 0xFF) |> Nat32.toNat16(_) |> Nat16.toNat8(_));
-                    value_buffer.add(((n >> 16) & 0xFF) |> Nat32.toNat16(_) |> Nat16.toNat8(_));
-                    value_buffer.add((n >> 24) |> Nat32.toNat16(_) |> Nat16.toNat8(_));
-                    null;
-                };
-                case (#Nat64, #Nat64(n)) {
-                    primitive_type_buffer.add(T.TypeCode.Nat64);
-                    value_buffer.add((n & 0xFF) |> Nat64.toNat(_) |> Nat8.fromNat(_));
-                    value_buffer.add(((n >> 8) & 0xFF) |> Nat64.toNat(_) |> Nat8.fromNat(_));
-                    value_buffer.add(((n >> 16) & 0xFF) |> Nat64.toNat(_) |> Nat8.fromNat(_));
-                    value_buffer.add(((n >> 24) & 0xFF) |> Nat64.toNat(_) |> Nat8.fromNat(_));
-                    value_buffer.add(((n >> 32) & 0xFF) |> Nat64.toNat(_) |> Nat8.fromNat(_));
-                    value_buffer.add(((n >> 40) & 0xFF) |> Nat64.toNat(_) |> Nat8.fromNat(_));
-                    value_buffer.add(((n >> 48) & 0xFF) |> Nat64.toNat(_) |> Nat8.fromNat(_));
-                    value_buffer.add((n >> 56) |> Nat64.toNat(_) |> Nat8.fromNat(_));
-                    null;
-                };
-                case (#Int, #Int(n)) {
-                    primitive_type_buffer.add(T.TypeCode.Int);
-                    signed_leb128(value_buffer, n);
-                    null;
-                };
-                case (#Int8, #Int8(i8)) {
-                    primitive_type_buffer.add(T.TypeCode.Int8);
-                    value_buffer.add(Int8.toNat8(i8));
-                    null;
-                };
-                case (#Int16, #Int16(i16)) {
-                    primitive_type_buffer.add(T.TypeCode.Int16);
-                    let n16 = Int16.toNat16(i16);
-                    value_buffer.add((n16 & 0xFF) |> Nat16.toNat8(_));
-                    value_buffer.add((n16 >> 8) |> Nat16.toNat8(_));
-                    null;
-                };
-                case (#Int32, #Int32(i32)) {
-                    primitive_type_buffer.add(T.TypeCode.Int32);
-                    let n = Int32.toNat32(i32);
+    //     func encode(
+    //         candid_type : CandidTypes,
+    //         candid_value : Candid,
+    //         type_buffer : Buffer<Nat8>,
+    //         primitive_type_buffer : Buffer<Nat8>,
+    //         value_buffer : Buffer<Nat8>,
+    //         renaming_map : TrieMap<Text, Text>,
+    //         unique_map : Map<Hash, Nat>,
+    //         recursive_map : Map<Text, Text>,
+    //     ) : ?Hash {
+    //         switch (candid_type, candid_value) {
+    //             case (#Nat, #Nat(n)) {
+    //                 primitive_type_buffer.add(T.TypeCode.Nat);
+    //                 unsigned_leb128(value_buffer, n);
+    //                 null;
+    //             };
+    //             case (#Nat8, #Nat8(n)) {
+    //                 primitive_type_buffer.add(T.TypeCode.Nat8);
+    //                 value_buffer.add(n);
+    //                 null;
+    //             };
+    //             case (#Nat16, #Nat16(n)) {
+    //                 primitive_type_buffer.add(T.TypeCode.Nat16);
+    //                 value_buffer.add((n & 0xFF) |> Nat16.toNat8(_));
+    //                 value_buffer.add((n >> 8) |> Nat16.toNat8(_));
+    //                 null;
+    //             };
+    //             case (#Nat32, #Nat32(n)) {
+    //                 primitive_type_buffer.add(T.TypeCode.Nat32);
+    //                 value_buffer.add((n & 0xFF) |> Nat32.toNat16(_) |> Nat16.toNat8(_));
+    //                 value_buffer.add(((n >> 8) & 0xFF) |> Nat32.toNat16(_) |> Nat16.toNat8(_));
+    //                 value_buffer.add(((n >> 16) & 0xFF) |> Nat32.toNat16(_) |> Nat16.toNat8(_));
+    //                 value_buffer.add((n >> 24) |> Nat32.toNat16(_) |> Nat16.toNat8(_));
+    //                 null;
+    //             };
+    //             case (#Nat64, #Nat64(n)) {
+    //                 primitive_type_buffer.add(T.TypeCode.Nat64);
+    //                 value_buffer.add((n & 0xFF) |> Nat64.toNat(_) |> Nat8.fromNat(_));
+    //                 value_buffer.add(((n >> 8) & 0xFF) |> Nat64.toNat(_) |> Nat8.fromNat(_));
+    //                 value_buffer.add(((n >> 16) & 0xFF) |> Nat64.toNat(_) |> Nat8.fromNat(_));
+    //                 value_buffer.add(((n >> 24) & 0xFF) |> Nat64.toNat(_) |> Nat8.fromNat(_));
+    //                 value_buffer.add(((n >> 32) & 0xFF) |> Nat64.toNat(_) |> Nat8.fromNat(_));
+    //                 value_buffer.add(((n >> 40) & 0xFF) |> Nat64.toNat(_) |> Nat8.fromNat(_));
+    //                 value_buffer.add(((n >> 48) & 0xFF) |> Nat64.toNat(_) |> Nat8.fromNat(_));
+    //                 value_buffer.add((n >> 56) |> Nat64.toNat(_) |> Nat8.fromNat(_));
+    //                 null;
+    //             };
+    //             case (#Int, #Int(n)) {
+    //                 primitive_type_buffer.add(T.TypeCode.Int);
+    //                 signed_leb128(value_buffer, n);
+    //                 null;
+    //             };
+    //             case (#Int8, #Int8(i8)) {
+    //                 primitive_type_buffer.add(T.TypeCode.Int8);
+    //                 value_buffer.add(Int8.toNat8(i8));
+    //                 null;
+    //             };
+    //             case (#Int16, #Int16(i16)) {
+    //                 primitive_type_buffer.add(T.TypeCode.Int16);
+    //                 let n16 = Int16.toNat16(i16);
+    //                 value_buffer.add((n16 & 0xFF) |> Nat16.toNat8(_));
+    //                 value_buffer.add((n16 >> 8) |> Nat16.toNat8(_));
+    //                 null;
+    //             };
+    //             case (#Int32, #Int32(i32)) {
+    //                 primitive_type_buffer.add(T.TypeCode.Int32);
+    //                 let n = Int32.toNat32(i32);
 
-                    value_buffer.add((n & 0xFF) |> Nat32.toNat16(_) |> Nat16.toNat8(_));
-                    value_buffer.add(((n >> 8) & 0xFF) |> Nat32.toNat16(_) |> Nat16.toNat8(_));
-                    value_buffer.add(((n >> 16) & 0xFF) |> Nat32.toNat16(_) |> Nat16.toNat8(_));
-                    value_buffer.add((n >> 24) |> Nat32.toNat16(_) |> Nat16.toNat8(_));
-                    null;
-                };
-                case (#Int64, #Int64(i64)) {
-                    primitive_type_buffer.add(T.TypeCode.Int64);
-                    let n = Int64.toNat64(i64);
+    //                 value_buffer.add((n & 0xFF) |> Nat32.toNat16(_) |> Nat16.toNat8(_));
+    //                 value_buffer.add(((n >> 8) & 0xFF) |> Nat32.toNat16(_) |> Nat16.toNat8(_));
+    //                 value_buffer.add(((n >> 16) & 0xFF) |> Nat32.toNat16(_) |> Nat16.toNat8(_));
+    //                 value_buffer.add((n >> 24) |> Nat32.toNat16(_) |> Nat16.toNat8(_));
+    //                 null;
+    //             };
+    //             case (#Int64, #Int64(i64)) {
+    //                 primitive_type_buffer.add(T.TypeCode.Int64);
+    //                 let n = Int64.toNat64(i64);
 
-                    value_buffer.add((n & 0xFF) |> Nat64.toNat(_) |> Nat8.fromNat(_));
-                    value_buffer.add(((n >> 8) & 0xFF) |> Nat64.toNat(_) |> Nat8.fromNat(_));
-                    value_buffer.add(((n >> 16) & 0xFF) |> Nat64.toNat(_) |> Nat8.fromNat(_));
-                    value_buffer.add(((n >> 24) & 0xFF) |> Nat64.toNat(_) |> Nat8.fromNat(_));
-                    value_buffer.add(((n >> 32) & 0xFF) |> Nat64.toNat(_) |> Nat8.fromNat(_));
-                    value_buffer.add(((n >> 40) & 0xFF) |> Nat64.toNat(_) |> Nat8.fromNat(_));
-                    value_buffer.add(((n >> 48) & 0xFF) |> Nat64.toNat(_) |> Nat8.fromNat(_));
-                    value_buffer.add((n >> 56) |> Nat64.toNat(_) |> Nat8.fromNat(_));
-                    null;
-                };
-                case (#Float, #Float(f64)) {
-                    Debug.trap("Float not implemented");
-                    // primitive_type_buffer.add(T.TypeCode.Float);
-                    // let bytes = Float.toBytes(f64);
-                    // for (byte in bytes.vals()){
-                    //     value_buffer.add(byte);
-                    // };
-                };
-                case (#Bool, #Bool(b)) {
-                    primitive_type_buffer.add(T.TypeCode.Bool);
-                    value_buffer.add(if (b) (1) else (0));
-                };
-                case (#Null, #Null) {
-                    primitive_type_buffer.add(T.TypeCode.Null);
-                };
-                case (#Empty, #Empty) {
-                    primitive_type_buffer.add(T.TypeCode.Empty);
-                };
-                case (#Text, #Text(t)) {
-                    primitive_type_buffer.add(T.TypeCode.Text);
+    //                 value_buffer.add((n & 0xFF) |> Nat64.toNat(_) |> Nat8.fromNat(_));
+    //                 value_buffer.add(((n >> 8) & 0xFF) |> Nat64.toNat(_) |> Nat8.fromNat(_));
+    //                 value_buffer.add(((n >> 16) & 0xFF) |> Nat64.toNat(_) |> Nat8.fromNat(_));
+    //                 value_buffer.add(((n >> 24) & 0xFF) |> Nat64.toNat(_) |> Nat8.fromNat(_));
+    //                 value_buffer.add(((n >> 32) & 0xFF) |> Nat64.toNat(_) |> Nat8.fromNat(_));
+    //                 value_buffer.add(((n >> 40) & 0xFF) |> Nat64.toNat(_) |> Nat8.fromNat(_));
+    //                 value_buffer.add(((n >> 48) & 0xFF) |> Nat64.toNat(_) |> Nat8.fromNat(_));
+    //                 value_buffer.add((n >> 56) |> Nat64.toNat(_) |> Nat8.fromNat(_));
+    //                 null;
+    //             };
+    //             case (#Float, #Float(f64)) {
+    //                 Debug.trap("Float not implemented");
+    //                 // primitive_type_buffer.add(T.TypeCode.Float);
+    //                 // let bytes = Float.toBytes(f64);
+    //                 // for (byte in bytes.vals()){
+    //                 //     value_buffer.add(byte);
+    //                 // };
+    //             };
+    //             case (#Bool, #Bool(b)) {
+    //                 primitive_type_buffer.add(T.TypeCode.Bool);
+    //                 value_buffer.add(if (b) (1) else (0));
+    //             };
+    //             case (#Null, #Null) {
+    //                 primitive_type_buffer.add(T.TypeCode.Null);
+    //             };
+    //             case (#Empty, #Empty) {
+    //                 primitive_type_buffer.add(T.TypeCode.Empty);
+    //             };
+    //             case (#Text, #Text(t)) {
+    //                 primitive_type_buffer.add(T.TypeCode.Text);
 
-                    let utf8_bytes = Blob.toArray(Text.encodeUtf8(t));
-                    unsigned_leb128(value_buffer, utf8_bytes.size());
+    //                 let utf8_bytes = Blob.toArray(Text.encodeUtf8(t));
+    //                 unsigned_leb128(value_buffer, utf8_bytes.size());
 
-                    var i = 0;
-                    while (i < utf8_bytes.size()) {
-                        value_buffer.add(utf8_bytes[i]);
-                        i += 1;
-                    };
+    //                 var i = 0;
+    //                 while (i < utf8_bytes.size()) {
+    //                     value_buffer.add(utf8_bytes[i]);
+    //                     i += 1;
+    //                 };
 
-                };
-                case (#Principal, #Principal(p)) {
-                    primitive_type_buffer.add(T.TypeCode.Principal);
+    //             };
+    //             case (#Principal, #Principal(p)) {
+    //                 primitive_type_buffer.add(T.TypeCode.Principal);
 
-                    value_buffer.add(0x01); // indicate transparency state
-                    let bytes = Blob.toArray(Principal.toBlob(p));
-                    unsigned_leb128(value_buffer, bytes.size());
+    //                 value_buffer.add(0x01); // indicate transparency state
+    //                 let bytes = Blob.toArray(Principal.toBlob(p));
+    //                 unsigned_leb128(value_buffer, bytes.size());
 
-                    var i = 0;
-                    while (i < bytes.size()) {
-                        value_buffer.add(bytes[i]);
-                        i += 1;
-                    };
-                };
+    //                 var i = 0;
+    //                 while (i < bytes.size()) {
+    //                     value_buffer.add(bytes[i]);
+    //                     i += 1;
+    //                 };
+    //             };
 
-                // ----------------- Compound Types ----------------- //
+    //             // ----------------- Compound Types ----------------- //
 
-                case (#Option(opt_type), #Option(opt_value)) {
-                    primitive_type_buffer.add(T.TypeCode.Option);
-                    var checkpoint = value_buffer.size();
+    //             case (#Option(opt_type), #Option(opt_value)) {
+    //                 primitive_type_buffer.add(T.TypeCode.Option);
+    //                 var checkpoint = value_buffer.size();
 
-                    let hash = switch (opt_type, opt_value) {
-                        case (_, #Null) {
-                            value_buffer.add(0); // no value
-                            let hash = hash_type(opt_type);
-                        };
-                        case (_, _) {
-                            value_buffer.add(1); // has value
-                            let hash = encode(
-                                opt_type,
-                                opt_value,
-                                type_buffer,
-                                primitive_type_buffer,
-                                value_buffer,
-                                renaming_map,
-                                unique_map,
-                                recursive_map,
-                            );
-                        };
-                    };
+    //                 let hash = switch (opt_type, opt_value) {
+    //                     case (_, #Null) {
+    //                         value_buffer.add(0); // no value
+    //                         let hash = hash_type(opt_type);
+    //                     };
+    //                     case (_, _) {
+    //                         value_buffer.add(1); // has value
+    //                         let hash = encode(
+    //                             opt_type,
+    //                             opt_value,
+    //                             type_buffer,
+    //                             primitive_type_buffer,
+    //                             value_buffer,
+    //                             renaming_map,
+    //                             unique_map,
+    //                             recursive_map,
+    //                         );
+    //                     };
+    //                 };
 
-                    if (hash == null) return null;
+    //                 if (hash == null) return null;
 
-                    let ?offset = Map.get(unique_map, n32hash, hash) else return null;
+    //                 let ?offset = Map.get(unique_map, n32hash, hash) else return null;
 
-                    unsigned_leb128(value_buffer, offset);
-                    null;
+    //                 unsigned_leb128(value_buffer, offset);
+    //                 null;
 
-                };
+    //             };
 
-                case (#Array(arr_type), #Array(arr_values)) {
-                    primitive_type_buffer.add(T.TypeCode.Array);
-                    let code = get_type_code_or_ref(arr_type, type_buffer, unique_map, recursive_map);
+    //             case (#Array(arr_type), #Array(arr_values)) {
+    //                 primitive_type_buffer.add(T.TypeCode.Array);
+    //                 let code = get_type_code_or_ref(arr_type, type_buffer, unique_map, recursive_map);
 
-                    unsigned_leb128(value_buffer, arr_values.size());
+    //                 unsigned_leb128(value_buffer, arr_values.size());
 
-                    var i = 0;
-                    while (i < arr_values.size()) {
-                        let hash = encode(
-                            arr_type,
-                            arr_values[i],
-                            type_buffer,
-                            primitive_type_buffer,
-                            value_buffer,
-                            renaming_map,
-                            unique_map,
-                            recursive_map,
-                        );
-                        // if (hash == null) return null;
-                        // unsigned_leb128(value_buffer, hash);
-                        i += 1;
-                    };
+    //                 var i = 0;
+    //                 while (i < arr_values.size()) {
+    //                     let hash = encode(
+    //                         arr_type,
+    //                         arr_values[i],
+    //                         type_buffer,
+    //                         primitive_type_buffer,
+    //                         value_buffer,
+    //                         renaming_map,
+    //                         unique_map,
+    //                         recursive_map,
+    //                     );
+    //                     // if (hash == null) return null;
+    //                     // unsigned_leb128(value_buffer, hash);
+    //                     i += 1;
+    //                 };
 
-                };
+    //             };
 
-                case (#Record(field_types), #Record(field_values)) {
+    //             case (#Record(field_types), #Record(field_values)) {
 
-                };
-            };
-        };
+    //             };
+    //         };
+    //     };
 
-    };
+    // };
 
     type InternalTypeNode = {
         type_ : InternalType;

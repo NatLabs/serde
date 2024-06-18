@@ -8,9 +8,7 @@ import Text "mo:base/Text";
 
 import { test; suite } "mo:test";
 
-import { Candid } "../src";
-
-type Candid = Candid.Candid;
+import Candid "../src/Candid";
 
 suite(
     "One Shot Candid Test",
@@ -20,9 +18,9 @@ suite(
             "primitives",
             func() {
 
-                let nat : Candid = #Nat(123);
+                let nat : Candid.Candid = #Nat(123);
 
-                let encoded_nat = Candid.encode(nat);
+                let encoded_nat = Candid.encodeOne(nat);
                 
                 // let int : Int = -123;
                 // let float : Float = 123.456;

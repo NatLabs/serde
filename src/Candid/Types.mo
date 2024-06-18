@@ -1,8 +1,4 @@
-import Variant "Text/Parser/Variant";
-import Record "Text/Parser/Record";
-import Principal "Text/Parser/Principal";
-import Float "Text/Parser/Float";
-import Nat8 "mo:base/Nat8";
+
 module {
 
     public type KeyValuePair = (Text, Candid);
@@ -96,7 +92,7 @@ module {
         // Func = 0x6a;
         // Service = 0x69;
 
-    }
+    };
 
     /// Encoding and Decoding options
     public type Options = {
