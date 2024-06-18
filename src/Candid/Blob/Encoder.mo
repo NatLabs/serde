@@ -118,7 +118,30 @@ module {
         };
     };
 
-    public func one_shot_encode(candid_types : [CandidTypes], candid_values : [Candid], type_buffer : Buffer<Nat8>, value_buffer : Buffer<Nat8>, renaming_map : TrieMap<Text, Text>) {
+    public func one_shot(candid_values : [Candid], options : ?T.Options) : Result<Blob, Text> {
+        Debug.print("candid_values: " # debug_show candid_values);
+        let renaming_map = TrieMap.TrieMap<Text, Text>(Text.equal, Text.hash);
+
+        let type_buffer = Buffer.Buffer(8);
+        let value_buffer = Buffer.Buffer(8);
+
+        Debug.print("init renaming_map: ");
+        ignore do ? {
+            let renameKeys = options!.renameKeys;
+            for ((k, v) in renameKeys.vals()) {
+                renaming_map.put(k, v);
+            };
+        };
+
+        let buffer = one_shot_encode(candid_values, renaming_map);
+
+        let type_blob = Blob.fromArray(Buffer.toArray(type_buffer));
+        let value_blob = Blob.fromArray(Buffer.toArray(value_buffer));
+
+        #ok(blob);
+    };
+
+    public func one_shot_encode(candid_types : [CandidTypes], candid_values : [Candid], type_buffer : Buffer<Nat8>, value_buffer : Buffer<Nat8>, renaming_map : TrieMap<Text, Text>) : Buffer<Nat8> {
         assert candid_values.size() == candid_types.size();
 
         // include size of candid values
@@ -321,7 +344,7 @@ module {
 
                 };
 
-                case (#Record(field_types), #Record(field_values)){
+                case (#Record(field_types), #Record(field_values)) {
 
                 };
             };
