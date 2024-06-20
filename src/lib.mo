@@ -14,6 +14,8 @@ module {
     public type Candid = CandidTypes.Candid;
     public let Candid = CandidModule;
 
+    public type CandidTypes = CandidTypes.CandidTypes;
+
     public let JSON = JsonModule;
     public let URLEncoded = UrlEncodedModule;
     public let CBOR = CborModule;
