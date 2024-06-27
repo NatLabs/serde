@@ -1,3 +1,4 @@
+import Map "mo:map/Map";
 module {
 
     public type KeyValuePair = (Text, Candid);
@@ -56,9 +57,20 @@ module {
         #Option : CandidTypes;
         #Array : CandidTypes;
         #Record : [(Text, CandidTypes)];
+        #Tuple : [CandidTypes];
+        #Map : [(Text, CandidTypes)]; // ICRC3 version of #Record
         #Variant : [(Text, CandidTypes)];
-        #Recursive : (Nat, CandidTypes);
+        #Recursive : (Nat);
 
+    };
+
+    // nat values could be either reference pointers to compound types
+    // or actual primitive value codes
+    public type ShallowCandidTypes = {
+        #OptionRef: Nat;
+        #ArrayRef: Nat;
+        #RecordRef: [(Text, Nat)];
+        #VariantRef: [(Text, Nat)];
     };
 
     public let TypeCode = {
@@ -95,25 +107,37 @@ module {
 
     /// Encoding and Decoding options
     public type Options = {
+        
+        /// #### Encoding Options
         /// Contains an array of tuples of the form (old_name, new_name) to rename the record keys.
         renameKeys : [(Text, Text)];
 
         // convertAllNumbersToFloats : Bool;
 
+        /// Returns #Map instead of #Record supported by the icrc3 spec
         use_icrc_3_value_type : Bool;
-        
+
         /// encodes faster if the complete type is known, but not necessary
         /// fails if types are incorrect
         types : ?[CandidTypes]; 
 
+        /// #### Decoding Options
+        /// When decoding, you have the option to pass in the Candid variant type
+        /// and omit the type portion of the candid blob and only pass in the 
+        /// serialized values
+        blob_contains_only_values: Bool;
+        
+
     };
 
-    public let defaultOptions = {
+    public let defaultOptions : Options = {
         renameKeys = [];
         // convertAllNumbersToFloats = false;
         use_icrc_3_value_type = false;
 
         types = null;
+
+        blob_contains_only_values = false;
     };
 
 };

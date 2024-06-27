@@ -11,6 +11,10 @@ import Itertools "mo:itertools/Iter";
 import { test; suite } "mo:test";
 
 import Serde "../src";
+import CandidEncoder "../src/Candid/Blob/Encoder";
+import CandidDecoder "../src/Candid/Blob/Decoder";
+import LegacyCandidDecoder "../src/Candid/Blob/Decoder";
+import LegacyCandidEncoder "../src/Candid/Blob/Encoder";
 
 let fuzz = Fuzz.fromSeed(0x7eadbeef);
 
@@ -47,27 +51,61 @@ type CustomerReview = {
     comment : Text;
 };
 
-type AvailableSizes = { #xs; #s: Nat; #m; #l; #xl };
+let CustomerReview = #Record([
+    ("username", #Text),
+    ("rating", #Nat),
+    ("comment", #Text),
+]);
+
+type AvailableSizes = { #xs; #s; #m; #l; #xl };
+
+let AvailableSizes = #Variant([
+    ("xs", #Null),
+    ("s", #Null),
+    ("m", #Null),
+    ("l", #Null),
+    ("xl", #Null),
+]);
 
 type ColorOption = {
     name : Text;
     hex : Text;
 };
 
+let ColorOption = #Record([
+    ("name", #Text),
+    ("hex", #Text),
+]);
+
 type StoreItem = {
     name : Text;
     store : Text;
     customer_reviews : [CustomerReview];
-    // available_sizes : AvailableSizes;
+    available_sizes : AvailableSizes;
     color_options : [ColorOption];
     price : Float;
     in_stock : Bool;
     address : (Text, Text, Text, Text);
-    // contact : {
-    //     email : Text;
-    //     phone : ?Text;
-    // };
+    contact : {
+        email : Text;
+        phone : ?Text;
+    };
 };
+
+let StoreItem : Serde.Candid.CandidTypes  = #Record([
+    ("name", #Text),
+    ("store", #Text),
+    ("customer_reviews", #Array(CustomerReview)),
+    ("available_sizes", AvailableSizes),
+    ("color_options", #Array(ColorOption)),
+    ("price", #Float),
+    ("in_stock", #Bool),
+    ("address", #Tuple([#Text, #Text, #Text, #Text])),
+    ("contact", #Record([
+        ("email", #Text),
+        ("phone", #Option(#Text)),
+    ])),
+]);
 
 
 let cities = ["Toronto", "Ottawa", "New York", "Los Angeles", "Chicago", "Houston", "Phoenix", "Philadelphia", "San Antonio", "San Diego", "Dallas", "San Jose"];
@@ -83,7 +121,7 @@ let available_sizes = [#xs, #s, #m, #l, #xl];
 
 func new_item() : StoreItem {
     let store_name = fuzz.array.randomEntry(stores).1;
-    let store_item = {
+    let store_item : StoreItem = {
         name = fuzz.array.randomEntry(cs_starter_kid).1;
         store = store_name;
         customer_reviews = [
@@ -98,7 +136,7 @@ func new_item() : StoreItem {
                 comment = "ok";
             },
         ];
-        // available_sizes = #s(0);
+        available_sizes = #s;
         color_options = [
             { name = "red"; hex = "#ff0000" },
             { name = "blue"; hex = "#0000ff" },
@@ -111,20 +149,21 @@ func new_item() : StoreItem {
             fuzz.array.randomEntry(states).1,
             fuzz.text.randomAlphanumeric(6),
         );
-        // contact = {
-        //     email = store_name # "@" # fuzz.array.randomEntry(email_terminator).1;
-        //     phone = if (fuzz.nat.randomRange(0, 100) % 3 == 0) { null } else {
-        //         ?Text.fromIter(
-        //             fuzz.array.randomArray<Char>(10, func() : Char { Char.fromNat32(fuzz.nat32.randomRange(0, 9) + Char.toNat32('0')) }).vals() : Iter.Iter<Char>
-        //         );
-        //     };
-        // };
+        contact = {
+            email = store_name # "@" # fuzz.array.randomEntry(email_terminator).1;
+            phone = if (fuzz.nat.randomRange(0, 100) % 3 == 0) { null } else {
+                ?Text.fromIter(
+                    fuzz.array.randomArray<Char>(10, func() : Char { Char.fromNat32(fuzz.nat32.randomRange(0, 9) + Char.toNat32('0')) }).vals() : Iter.Iter<Char>
+                );
+            };
+        };
     };
 };
 
 let store_item_keys = ["name", "store", "customer_reviews", "username", "rating", "comment", "available_sizes", "xs", "s", "m", "l", "xl", "color_options", "name", "hex", "price", "in_stock", "address", "contact", "email", "phone"];
 
 let candid_buffer = Buffer.Buffer<[Serde.Candid]>(limit);
+let store_items = Buffer.Buffer<StoreItem>(limit);
 
 suite(
     "Serde.Candid",
@@ -134,8 +173,9 @@ suite(
             func() {
                 for (i in Itertools.range(0, limit)) {
                     let item = new_item();
+                    store_items.add(item);
                     let candid_blob = candify_store_item.to_blob(item);
-                    let #ok(candid) = Serde.Candid.decode(candid_blob, store_item_keys, null);
+                    let #ok(candid) = CandidDecoder.one_shot(candid_blob, store_item_keys, null);
                     candid_buffer.add(candid);
                 };
             },
@@ -144,11 +184,11 @@ suite(
             "encode()",
             func() {
                 for (i in Itertools.range(0, limit)) {
-                    Debug.print("i = " # debug_show i);
                     let candid = candid_buffer.get(i);
-                    let res = Serde.Candid.encode(candid, null);
-                    Debug.print("res = " # debug_show res);
+                    let res = LegacyCandidEncoder.encode(candid, ?{Serde.Candid.defaultOptions with types = ?[StoreItem]});
                     let #ok(blob) = res;
+                    let item = candify_store_item.from_blob(blob);
+                    assert item == store_items.get(i);
                 };
             },
         );
