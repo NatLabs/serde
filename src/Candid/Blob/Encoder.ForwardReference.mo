@@ -29,10 +29,8 @@ import Tag "mo:candid/Tag";
 import Itertools "mo:itertools/Iter";
 import PeekableIter "mo:itertools/PeekableIter";
 import Map "mo:map/Map";
-import BitBuffer "mo:bitbuffer/BitBuffer";
 import FloatX "mo:xtended-numbers/FloatX";
 import { hashName = hash_record_key } "mo:candid/Tag";
-import BufferDeque "mo:buffer-deque/BufferDeque";
 
 import T "../Types";
 import TrieMap "mo:base/TrieMap";
