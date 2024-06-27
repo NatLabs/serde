@@ -7,7 +7,7 @@ import JSON "mo:json-float/JSON";
 
 import Candid "../Candid";
 import U "../Utils";
-import CandidTypes "../Candid/Types";
+import CandidType "../Candid/Types";
 import Utils "../Utils";
 
 module {
@@ -16,7 +16,7 @@ module {
     type Result<A, B> = Result.Result<A, B>;
 
     /// Converts JSON text to a serialized Candid blob that can be decoded to motoko values using `from_candid()`
-    public func fromText(rawText : Text, options: ?CandidTypes.Options) : Result<Blob, Text> {
+    public func fromText(rawText : Text, options: ?CandidType.Options) : Result<Blob, Text> {
         let candid_res = toCandid(rawText);
         let #ok(candid) = candid_res else return Utils.send_error(candid_res);
         Candid.encodeOne(candid, options);

@@ -18,7 +18,7 @@ import CandidEncoder "../src/Candid/Blob/Encoder";
 import CandidDecoder "../src/Candid/Blob/Decoder";
 import { toArgs; toArgType } "../src/libs/motoko_candid/utils";
 
-type CandidTypes = Candid.CandidTypes;
+type CandidType = Candid.CandidType;
 
 let empty_map = TrieMap.TrieMap<Text, Text>(Text.equal, Text.hash);
 
@@ -32,11 +32,11 @@ func validate_encoding(candid_values : [Candid.Candid]) : Bool {
     return encoded == expected;
 };
 
-func validate_encoding_with_types(candid_values : [Candid.Candid], types : [CandidTypes]) : Bool {
+func validate_encoding_with_types(candid_values : [Candid.Candid], types : [CandidType]) : Bool {
     let #ok(encoded) = CandidEncoder.one_shot(candid_values, ?{ Candid.defaultOptions with types = ?types });
 
     let #ok(args) = toArgs(candid_values, empty_map);
-    let arg_types = Array.map<CandidTypes, Type.Type>(types, toArgType);
+    let arg_types = Array.map<CandidType, Type.Type>(types, toArgType);
 
     let arg_types_iter = arg_types.vals();
     let augmented_args = Array.map(
@@ -66,7 +66,7 @@ func validate_decoding(candid_values: [Candid.Candid]): Bool {
     candid_values == expected;
 };
 
-func validate_decoding_with_types(candid_values: [Candid.Candid], types: [CandidTypes]): Bool {
+func validate_decoding_with_types(candid_values: [Candid.Candid], types: [CandidType]): Bool {
     let #ok(encoded) = CandidEncoder.one_shot(candid_values, ?{ Candid.defaultOptions with types = ?types });
     // Debug.print("encoded: " # debug_show encoded);
 
@@ -76,7 +76,7 @@ func validate_decoding_with_types(candid_values: [Candid.Candid], types: [Candid
     candid_values == expected;
 };
 
-func encode(candid_values : [Candid.Candid], types : ?[CandidTypes]) : Blob {
+func encode(candid_values : [Candid.Candid], types : ?[CandidType]) : Blob {
     let #ok(encoded) = CandidEncoder.one_shot(candid_values, ?{ Candid.defaultOptions with types });
     return encoded;
 };

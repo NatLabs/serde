@@ -51,7 +51,7 @@ module {
     type Order = Order.Order;
 
     type Candid = T.Candid;
-    type CandidTypes = T.CandidTypes;
+    type CandidType = T.CandidType;
     type KeyValuePair = T.KeyValuePair;
     let { n32hash; thash } = Map;
 
@@ -187,8 +187,8 @@ module {
 
     };
 
-    func infer_candid_types(candid_values : [Candid], renaming_map : TrieMap<Text, Text>) : Result<[CandidTypes], Text> {
-        let buffer = Buffer.Buffer<CandidTypes>(candid_values.size());
+    func infer_candid_types(candid_values : [Candid], renaming_map : TrieMap<Text, Text>) : Result<[CandidType], Text> {
+        let buffer = Buffer.Buffer<CandidType>(candid_values.size());
 
         // Debug.print("convert ... ");
         for (candid in candid_values.vals()) {
@@ -250,7 +250,7 @@ module {
             };
         };
 
-        var candid_types : [CandidTypes] = [];
+        var candid_types : [CandidType] = [];
 
         ignore do ? {
             candid_types := options!.types!;
@@ -329,17 +329,17 @@ module {
         );
     };
 
-    func tuple_type_to_record(tuple_types : [CandidTypes]) : [(Text, CandidTypes)] {
-        Array.tabulate<(Text, CandidTypes)>(
+    func tuple_type_to_record(tuple_types : [CandidType]) : [(Text, CandidType)] {
+        Array.tabulate<(Text, CandidType)>(
             tuple_types.size(),
-            func(i : Nat) : (Text, CandidTypes) {
+            func(i : Nat) : (Text, CandidType) {
                 (Char.toText(Char.fromNat32(Nat32.fromNat(i))), tuple_types[i]);
             },
         );
     };
 
     public func one_shot_encode(
-        candid_types : [CandidTypes],
+        candid_types : [CandidType],
         candid_values : [Candid],
         compound_type_buffer : Buffer<Nat8>,
         primitive_type_buffer : Buffer<Nat8>,
@@ -356,7 +356,7 @@ module {
         let recursive_map = Map.new<Text, Text>();
 
         func encode_nested_type(
-            candid_type : CandidTypes,
+            candid_type : CandidType,
             compound_type_buffer : Buffer<Nat8>,
         ) {
             switch (candid_type) {
@@ -415,7 +415,7 @@ module {
             };
         };
 
-        func is_compound_type(candid_type : CandidTypes) : Bool {
+        func is_compound_type(candid_type : CandidType) : Bool {
             switch (candid_type) {
                 case (#Option(_)) true;
                 case (#Array(_)) true;
@@ -427,7 +427,7 @@ module {
         };
 
         func encode_primitive_type_only(
-            candid_type : CandidTypes,
+            candid_type : CandidType,
             compound_type_buffer : Buffer<Nat8>,
             primitive_type_buffer : Buffer<Nat8>,
             is_nested_child_of_compound_type : Bool,
@@ -464,7 +464,7 @@ module {
         };
 
         func encode_compound_type_only(
-            candid_type : CandidTypes,
+            candid_type : CandidType,
             compound_type_buffer : Buffer<Nat8>,
             primitive_type_buffer : Buffer<Nat8>,
             unique_compound_type_map : Map<Text, Nat>,
@@ -535,9 +535,9 @@ module {
                     compound_type_buffer.add(T.TypeCode.Record);
                     unsigned_leb128_64(compound_type_buffer, record_types.size());
 
-                    let sorted_record_types = Array.sort<(Text, CandidTypes)>(
+                    let sorted_record_types = Array.sort<(Text, CandidType)>(
                         record_types,
-                        func((a, _) : (Text, CandidTypes), (b, _) : (Text, CandidTypes)) : Order {
+                        func((a, _) : (Text, CandidType), (b, _) : (Text, CandidType)) : Order {
                             Text.compare(a, b);
                         },
                     );
@@ -584,7 +584,7 @@ module {
         };
 
         func encode_type_only(
-            candid_type : CandidTypes,
+            candid_type : CandidType,
             compound_type_buffer : Buffer<Nat8>,
             primitive_type_buffer : Buffer<Nat8>,
             unique_compound_type_map : Map<Text, Nat>,
@@ -609,7 +609,7 @@ module {
         };
 
         func encode_primitive_type(
-            candid_type : CandidTypes,
+            candid_type : CandidType,
             candid_value : Candid,
             compound_type_buffer : Buffer<Nat8>,
             primitive_type_buffer : Buffer<Nat8>,
@@ -748,7 +748,7 @@ module {
         };
 
         func encode_compound_type(
-            candid_type : CandidTypes,
+            candid_type : CandidType,
             candid_value : Candid,
             compound_type_buffer : Buffer<Nat8>,
             primitive_type_buffer : Buffer<Nat8>,
@@ -930,9 +930,9 @@ module {
 
                 case (#Record(record_types), #Record(record_entries)) {
 
-                    let sorted_record_types = Array.sort<(Text, CandidTypes)>(
+                    let sorted_record_types = Array.sort<(Text, CandidType)>(
                         record_types,
-                        func((a, _) : (Text, CandidTypes), (b, _) : (Text, CandidTypes)) : Order {
+                        func((a, _) : (Text, CandidType), (b, _) : (Text, CandidType)) : Order {
                             Text.compare(a, b);
                         },
                     );
@@ -1016,18 +1016,18 @@ module {
                 case (#Variant(variant_types), #Variant((variant_key, variant_value))) {
 
                     let sorted_variant_types = variant_types;
-                    // let sorted_variant_types = Array.sort<(Text, CandidTypes)>(
+                    // let sorted_variant_types = Array.sort<(Text, CandidType)>(
                     //     variant_types,
-                    //     func((a, _) : (Text, CandidTypes), (b, _) : (Text, CandidTypes)) : Order {
+                    //     func((a, _) : (Text, CandidType), (b, _) : (Text, CandidType)) : Order {
                     //         Text.compare(a, b);
                     //     },
                     // );
 
                     let record_buffer = Buffer.Buffer<Nat8>(8); // will be innefficient
-                    let ?variant_index = Array.indexOf<(Text, CandidTypes)>(
+                    let ?variant_index = Array.indexOf<(Text, CandidType)>(
                         (variant_key, #Empty),
                         sorted_variant_types,
-                        func((a, _) : (Text, CandidTypes), (b, _) : (Text, CandidTypes)) : Bool = a == b,
+                        func((a, _) : (Text, CandidType), (b, _) : (Text, CandidType)) : Bool = a == b,
                     ) else Debug.trap("unable to find variant key in variant types");
 
                     if (not type_exists) {
@@ -1089,7 +1089,7 @@ module {
         };
 
         func encode(
-            _candid_type : CandidTypes,
+            _candid_type : CandidType,
             _candid_value : Candid,
             compound_type_buffer : Buffer<Nat8>,
             primitive_type_buffer : Buffer<Nat8>,
@@ -1110,10 +1110,10 @@ module {
 
             let type_codes = Buffer.Buffer<Nat8>(8);
 
-            let arrays = Buffer.Buffer<[CandidTypes]>(8);
+            let arrays = Buffer.Buffer<[CandidType]>(8);
             let array_info = Buffer.Buffer<Nat>(8); // array_index;
 
-            let fields = Buffer.Buffer<[(Text, CandidTypes)]>(8);
+            let fields = Buffer.Buffer<[(Text, CandidType)]>(8);
             let field_info = Buffer.Buffer<[var Nat]>(8); // [type: record (0) or variant(1), field_index];
 
             var candid_is_compound_type = true;
@@ -1536,7 +1536,7 @@ module {
     };
 
     type CandidTypeNode = {
-        type_ : CandidTypes;
+        type_ : CandidType;
         height : Nat;
         parent_index : Nat;
         key : ?Text;
@@ -1817,15 +1817,15 @@ module {
         };
     };
 
-    func internal_to_candid_type(internal_type : InternalCandidTypes, vec_index : ?Nat) : CandidTypes {
+    func internal_to_candid_type(internal_type : InternalCandidTypes, vec_index : ?Nat) : CandidType {
         switch (internal_type, vec_index) {
             case (#Array(vec_types), ?vec_index) #Array(internal_to_candid_type(vec_types[vec_index], null));
             case (#Array(vec_types), _) #Array(internal_to_candid_type(vec_types[0], null));
             case (#Option(opt_type), _) #Option(internal_to_candid_type(opt_type, null));
             case (#Record(record_types), _) {
-                let new_record_types = Array.map<(Text, InternalCandidTypes), (Text, CandidTypes)>(
+                let new_record_types = Array.map<(Text, InternalCandidTypes), (Text, CandidType)>(
                     record_types,
-                    func((key, field_type) : (Text, InternalCandidTypes)) : (Text, CandidTypes) {
+                    func((key, field_type) : (Text, InternalCandidTypes)) : (Text, CandidType) {
                         let inner_type = internal_to_candid_type(field_type, null);
                         (key, inner_type);
                     },
@@ -1834,9 +1834,9 @@ module {
                 #Record(new_record_types);
             };
             case (#Variant(variant_types), _) {
-                let new_variant_types = Array.map<(Text, InternalCandidTypes), (Text, CandidTypes)>(
+                let new_variant_types = Array.map<(Text, InternalCandidTypes), (Text, CandidType)>(
                     variant_types,
-                    func((key, variant_type) : (Text, InternalCandidTypes)) : (Text, CandidTypes) {
+                    func((key, variant_type) : (Text, InternalCandidTypes)) : (Text, CandidType) {
                         let inner_type = internal_to_candid_type(variant_type, null);
                         (key, inner_type);
                     },
@@ -1874,7 +1874,7 @@ module {
         tag = node.tag;
     };
 
-    func to_candid_record_field_type(node : CandidTypeNode) : (Text, CandidTypes) {
+    func to_candid_record_field_type(node : CandidTypeNode) : (Text, CandidType) {
         let ?key = node.key else return Debug.trap("to_candid_record_field_type: key is null");
         return (key, node.type_);
     };
@@ -2034,7 +2034,7 @@ module {
         #ok(merged_type);
     };
 
-    func merge_candid_variants_and_array_types(rows : Buffer<[InternalCandidTypeNode]>) : Result<CandidTypes, Text> {
+    func merge_candid_variants_and_array_types(rows : Buffer<[InternalCandidTypeNode]>) : Result<CandidType, Text> {
         let buffer = Buffer.Buffer<CandidTypeNode>(8);
 
         func calc_height(parent : Nat, child : Nat) : Nat = parent + child;
@@ -2057,7 +2057,7 @@ module {
 
             var bottom_iter = Itertools.peekable(bottom.vals());
 
-            let variants = Buffer.Buffer<(Text, CandidTypes)>(bottom.size());
+            let variants = Buffer.Buffer<(Text, CandidType)>(bottom.size());
             let variant_indexes = Buffer.Buffer<Nat>(bottom.size());
 
             for ((index, parent_node) in Itertools.enumerate(above_bottom.vals())) {
@@ -2081,7 +2081,7 @@ module {
 
                         let max = {
                             var height = 0;
-                            var type_ : CandidTypes = #Empty;
+                            var type_ : CandidType = #Empty;
                         };
 
                         for (node in vec_nodes.vals()) {
@@ -2107,10 +2107,10 @@ module {
                             height := Nat.max(height, item.height);
                         };
 
-                        let record_fields : [(Text, CandidTypes)] = Iter.toArray(
-                            Iter.map<CandidTypeNode, (Text, CandidTypes)>(
+                        let record_fields : [(Text, CandidType)] = Iter.toArray(
+                            Iter.map<CandidTypeNode, (Text, CandidType)>(
                                 tmp_bottom_iter,
-                                func(node : CandidTypeNode) : (Text, CandidTypes) {
+                                func(node : CandidTypeNode) : (Text, CandidType) {
                                     get_max_height(node);
                                     to_candid_record_field_type(node);
                                 },
@@ -2132,10 +2132,10 @@ module {
                             height := Nat.max(height, item.height);
                         };
 
-                        let variant_types : [(Text, CandidTypes)] = Iter.toArray(
-                            Iter.map<CandidTypeNode, (Text, CandidTypes)>(
+                        let variant_types : [(Text, CandidType)] = Iter.toArray(
+                            Iter.map<CandidTypeNode, (Text, CandidType)>(
                                 tmp_bottom_iter,
-                                func(node : CandidTypeNode) : (Text, CandidTypes) {
+                                func(node : CandidTypeNode) : (Text, CandidType) {
                                     get_max_height(node);
                                     to_candid_record_field_type(node);
                                 },
@@ -2172,7 +2172,7 @@ module {
             };
 
             if (variants.size() > 0) {
-                let full_variant_type : CandidTypes = #Variant(Buffer.toArray(variants));
+                let full_variant_type : CandidType = #Variant(Buffer.toArray(variants));
 
                 for (index in variant_indexes.vals()) {
                     let prev_node = buffer.get(index);

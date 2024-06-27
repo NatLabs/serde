@@ -34,7 +34,7 @@ module {
         #Variant : KeyValuePair;
     };
 
-    public type CandidTypes = {
+    public type CandidType = {
         #Int;
         #Int8;
         #Int16;
@@ -54,12 +54,12 @@ module {
         #Empty;
         #Principal;
 
-        #Option : CandidTypes;
-        #Array : CandidTypes;
-        #Record : [(Text, CandidTypes)];
-        #Tuple : [CandidTypes];
-        #Map : [(Text, CandidTypes)]; // ICRC3 version of #Record
-        #Variant : [(Text, CandidTypes)];
+        #Option : CandidType;
+        #Array : CandidType;
+        #Record : [(Text, CandidType)];
+        #Tuple : [CandidType];
+        #Map : [(Text, CandidType)]; // ICRC3 version of #Record
+        #Variant : [(Text, CandidType)];
         #Recursive : (Nat);
 
     };
@@ -119,7 +119,7 @@ module {
 
         /// encodes faster if the complete type is known, but not necessary
         /// fails if types are incorrect
-        types : ?[CandidTypes]; 
+        types : ?[CandidType]; 
 
         /// #### Decoding Options
         /// When decoding, you have the option to pass in the Candid variant type

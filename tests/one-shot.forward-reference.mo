@@ -18,7 +18,7 @@ import { test; suite } "mo:test";
 import Candid "../src/Candid";
 import CandidEncoder "../src/Candid/Blob/Encoder.ForwardReference";
 
-type CandidTypes = Candid.CandidTypes;
+type CandidType = Candid.CandidType;
 
 let { toArgs } = CandidEncoder;
 
@@ -34,11 +34,11 @@ func validate_encoding(candid_values : [Candid.Candid]) : Bool {
     return encoded == expected;
 };
 
-func validate_encoding_with_types(candid_values : [Candid.Candid], types : [CandidTypes]) : Bool {
+func validate_encoding_with_types(candid_values : [Candid.Candid], types : [CandidType]) : Bool {
     let #ok(encoded) = CandidEncoder.one_shot(candid_values, ?{ Candid.defaultOptions with types = ?types });
 
     let #ok(args) = toArgs(candid_values, empty_map);
-    let arg_types = Array.map<CandidTypes, Type.Type>(types, toArgType);
+    let arg_types = Array.map<CandidType, Type.Type>(types, toArgType);
 
     let arg_types_iter = arg_types.vals();
     let augmented_args = Array.map(
@@ -61,7 +61,7 @@ func encode(candid_values : [Candid.Candid],) : Blob {
     return encoded;
 };
 
-func encode_with_types(candid_values : [Candid.Candid], types : [CandidTypes]) : Blob {
+func encode_with_types(candid_values : [Candid.Candid], types : [CandidType]) : Blob {
     let #ok(encoded) = CandidEncoder.one_shot(candid_values, ?{ Candid.defaultOptions with types = ?types });
     return encoded;
 };
@@ -72,7 +72,7 @@ func equals(encoding : Blob, expected : Blob) : Bool {
 };
 
 
-func toArgType(candid : CandidTypes) : (Type.Type) {
+func toArgType(candid : CandidType) : (Type.Type) {
     let (arg_type) : (Type.Type) = switch (candid) {
         case (#Nat) (#nat);
         case (#Nat8) (#nat8);
@@ -105,7 +105,7 @@ func toArgType(candid : CandidTypes) : (Type.Type) {
         case (#Record(records) or #Map(records)) #record(
             Array.map(
                 records,
-                func((key, val) : (Text, CandidTypes)) : Type.RecordFieldType = {
+                func((key, val) : (Text, CandidType)) : Type.RecordFieldType = {
                     tag = #name(key);
                     type_ = toArgType(val);
                 },
@@ -115,7 +115,7 @@ func toArgType(candid : CandidTypes) : (Type.Type) {
         case (#Variant(variants)) #variant(
             Array.map(
                 variants,
-                func((key, val) : (Text, CandidTypes)) : Type.RecordFieldType = {
+                func((key, val) : (Text, CandidType)) : Type.RecordFieldType = {
                     tag = #name(key);
                     type_ = toArgType(val);
                 },

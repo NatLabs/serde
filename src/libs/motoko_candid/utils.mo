@@ -52,9 +52,9 @@ module {
     type Order = Order.Order;
 
     type Candid = T.Candid;
-    type CandidTypes = T.CandidTypes;
+    type CandidType = T.CandidType;
     type KeyValuePair = T.KeyValuePair;
-    public func toArgType(candid : CandidTypes) : (Type.Type) {
+    public func toArgType(candid : CandidType) : (Type.Type) {
         let (arg_type) : (Type.Type) = switch (candid) {
             case (#Nat) (#nat);
             case (#Nat8) (#nat8);
@@ -87,7 +87,7 @@ module {
             case (#Record(records) or #Map(records)) #record(
                 Array.map(
                     records,
-                    func((key, val) : (Text, CandidTypes)) : Type.RecordFieldType = {
+                    func((key, val) : (Text, CandidType)) : Type.RecordFieldType = {
                         tag = #name(key);
                         type_ = toArgType(val);
                     },
@@ -97,7 +97,7 @@ module {
             case (#Variant(variants)) #variant(
                 Array.map(
                     variants,
-                    func((key, val) : (Text, CandidTypes)) : Type.RecordFieldType = {
+                    func((key, val) : (Text, CandidType)) : Type.RecordFieldType = {
                         tag = #name(key);
                         type_ = toArgType(val);
                     },

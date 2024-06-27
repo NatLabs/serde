@@ -1,5 +1,5 @@
 
-import CandidTypes "Candid/Types";
+import CandidType "Candid/Types";
 import UrlEncodedModule "UrlEncoded";
 import JsonModule "JSON";
 import CandidModule "Candid";
@@ -9,17 +9,17 @@ import Utils "Utils";
 
 module {
 
-    public type Options = CandidTypes.Options;
+    public type Options = CandidType.Options;
 
-    public type Candid = CandidTypes.Candid;
+    public type Candid = CandidType.Candid;
     public let Candid = CandidModule;
 
-    public type CandidTypes = CandidTypes.CandidTypes;
+    public type CandidType = CandidType.CandidType;
 
     public let JSON = JsonModule;
     public let URLEncoded = UrlEncodedModule;
     public let CBOR = CborModule;
 
     public let concatKeys = Utils.concatKeys;
-    public let defaultOptions = CandidTypes.defaultOptions;
+    public let defaultOptions = CandidType.defaultOptions;
 }

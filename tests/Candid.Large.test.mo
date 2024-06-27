@@ -92,7 +92,7 @@ type StoreItem = {
     };
 };
 
-let StoreItem : Serde.Candid.CandidTypes  = #Record([
+let StoreItem : Serde.Candid.CandidType  = #Record([
     ("name", #Text),
     ("store", #Text),
     ("customer_reviews", #Array(CustomerReview)),
@@ -136,7 +136,7 @@ func new_item() : StoreItem {
                 comment = "ok";
             },
         ];
-        available_sizes = #s;
+        available_sizes = fuzz.array.randomEntry(available_sizes).1;
         color_options = [
             { name = "red"; hex = "#ff0000" },
             { name = "blue"; hex = "#0000ff" },
@@ -165,6 +165,9 @@ let store_item_keys = ["name", "store", "customer_reviews", "username", "rating"
 let candid_buffer = Buffer.Buffer<[Serde.Candid]>(limit);
 let store_items = Buffer.Buffer<StoreItem>(limit);
 
+let candid_buffer_with_types = Buffer.Buffer<[Serde.Candid]>(limit);
+let store_items_with_types = Buffer.Buffer<StoreItem>(limit);
+
 suite(
     "Serde.Candid",
     func() {
@@ -185,10 +188,35 @@ suite(
             func() {
                 for (i in Itertools.range(0, limit)) {
                     let candid = candid_buffer.get(i);
-                    let res = LegacyCandidEncoder.encode(candid, ?{Serde.Candid.defaultOptions with types = ?[StoreItem]});
+                    let res = LegacyCandidEncoder.encode(candid, null);
                     let #ok(blob) = res;
                     let item = candify_store_item.from_blob(blob);
                     assert item == store_items.get(i);
+                };
+            },
+        );
+        test(
+            "decode() with types",
+            func() {
+                for (i in Itertools.range(0, limit)) {
+                    let item = new_item();
+                    store_items_with_types.add(item);
+                    let candid_blob = candify_store_item.to_blob(item);
+                    let #ok(split_blob) = CandidDecoder.split(candid_blob, null);
+                    let #ok(candid) = CandidDecoder.one_shot(candid_blob, store_item_keys, ?{Serde.Candid.defaultOptions with types = ?[StoreItem]});
+                    candid_buffer_with_types.add(candid);
+                };
+            },
+        );
+        test(
+            "encode() with types",
+            func() {
+                for (i in Itertools.range(0, limit)) {
+                    let candid = candid_buffer_with_types.get(i);
+                    let res = LegacyCandidEncoder.encode(candid, ?{Serde.Candid.defaultOptions with types = ?[StoreItem]});
+                    let #ok(blob) = res;
+                    let item = candify_store_item.from_blob(blob);
+                    assert item == store_items_with_types.get(i);
                 };
             },
         );

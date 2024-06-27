@@ -7,7 +7,7 @@ import NatX "mo:xtended-numbers/NatX";
 import IntX "mo:xtended-numbers/IntX";
 
 import Candid "../Candid";
-import CandidTypes "../Candid/Types";
+import CandidType "../Candid/Types";
 import Utils "../Utils";
 
 module {
@@ -16,7 +16,7 @@ module {
     type Result<A, B> = Result.Result<A, B>;
 
     /// Converts serialized Candid blob to JSON text
-    public func toText(blob : Blob, keys : [Text], options: ?CandidTypes.Options) : Result<Text, Text> {
+    public func toText(blob : Blob, keys : [Text], options: ?CandidType.Options) : Result<Text, Text> {
         let decoded_res = Candid.decode(blob, keys, options);
         let #ok(candid) = decoded_res else return Utils.send_error(decoded_res);
 

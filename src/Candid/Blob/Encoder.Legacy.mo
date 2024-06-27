@@ -40,7 +40,7 @@ module {
     type Buffer<A> = Buffer.Buffer<A>;
 
     type Candid = T.Candid;
-    type CandidTypes = T.CandidTypes;
+    type CandidType = T.CandidType;
     type KeyValuePair = T.KeyValuePair;
     let { n32hash; thash } = Map;
 
