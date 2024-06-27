@@ -12,7 +12,7 @@ import itertools "mo:itertools/Iter";
 import Candid "../Candid";
 import U "../Utils";
 import Utils "../Utils";
-import CandidTypes "../Candid/Types";
+import CandidType "../Candid/Types";
 
 module {
     type Candid = Candid.Candid;
@@ -20,7 +20,7 @@ module {
     type Result<K, V> = Result.Result<K, V>;
 
     /// Converts a serialized Candid blob to a URL-Encoded string.
-    public func toText(blob : Blob, keys : [Text], options: ?CandidTypes.Options) : Result<Text, Text> {
+    public func toText(blob : Blob, keys : [Text], options: ?CandidType.Options) : Result<Text, Text> {
         let res = Candid.decode(blob, keys, options);
         let #ok(candid) = res else return Utils.send_error(res);
         fromCandid(candid[0]);

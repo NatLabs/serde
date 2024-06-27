@@ -17,6 +17,8 @@ module {
     public type Candid = T.Candid;
     public type Options = T.Options;
     public let defaultOptions = T.defaultOptions;
+
+    public type CandidType = T.CandidType;
     
     /// Converts a motoko value to a [Candid](#Candid) value
     public let { encode; encodeOne } = Encoder;

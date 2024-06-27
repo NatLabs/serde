@@ -1,4 +1,4 @@
-
+import Map "mo:map/Map";
 module {
 
     public type KeyValuePair = (Text, Candid);
@@ -29,11 +29,12 @@ module {
         #Option : Candid;
         #Array : [Candid];
         #Record : [KeyValuePair];
+        #Tuple : [Candid]; // shorthand for record with indexed keys -> #Record([(0, Candid), (1, Candid), ...])
         #Map : [KeyValuePair];
         #Variant : KeyValuePair;
     };
 
-    public type CandidTypes = {
+    public type CandidType = {
         #Int;
         #Int8;
         #Int16;
@@ -53,61 +54,90 @@ module {
         #Empty;
         #Principal;
 
-        #Option : CandidTypes;
-        #Array : CandidTypes;
-        #Record : [(Text, CandidTypes)];
-        #Variant : [(Text, CandidTypes)];
-        #Recursive: (Nat, CandidTypes);
+        #Option : CandidType;
+        #Array : CandidType;
+        #Record : [(Text, CandidType)];
+        #Tuple : [CandidType];
+        #Map : [(Text, CandidType)]; // ICRC3 version of #Record
+        #Variant : [(Text, CandidType)];
+        #Recursive : (Nat);
 
     };
 
+    // nat values could be either reference pointers to compound types
+    // or actual primitive value codes
+    public type ShallowCandidTypes = {
+        #OptionRef: Nat;
+        #ArrayRef: Nat;
+        #RecordRef: [(Text, Nat)];
+        #VariantRef: [(Text, Nat)];
+    };
 
     public let TypeCode = {
         // primitive types
-        Null = 0x7f;
-        Bool = 0x7e;
-        Nat = 0x7d;
-        Int = 0x7c;
-        Nat8 = 0x7b;
-        Nat16 = 0x7a;
-        Nat32 = 0x79;
-        Nat64 = 0x78;
-        Int8 = 0x77;
-        Int16 = 0x76;
-        Int32 = 0x75;
-        Int64 = 0x74;
-        // Float32 = 0x73;
-        Float = 0x72;
-        Text = 0x71;
-        // Reserved = 0x70;
-        Empty = 0x6f;
-        Principal = 0x68;
-        
+        Null : Nat8 = 0x7f;
+        Bool : Nat8 = 0x7e;
+        Nat : Nat8 = 0x7d;
+        Int : Nat8 = 0x7c;
+        Nat8 : Nat8 = 0x7b;
+        Nat16 : Nat8 = 0x7a;
+        Nat32 : Nat8 = 0x79;
+        Nat64 : Nat8 = 0x78;
+        Int8 : Nat8 = 0x77;
+        Int16 : Nat8 = 0x76;
+        Int32 : Nat8 = 0x75;
+        Int64 : Nat8 = 0x74;
+        // Float32 : Nat8 = 0x73;
+        Float : Nat8 = 0x72;
+        Text : Nat8 = 0x71;
+        // Reserved : Nat8 = 0x70;
+        Empty : Nat8 = 0x6f;
+        Principal : Nat8 = 0x68;
+
         // compound types
 
-        Option = 0x6e;
-        Array = 0x6d;
-        Record = 0x6c;
-        Variant = 0x6b;
-        // Func = 0x6a;
-        // Service = 0x69;
+        Option : Nat8 = 0x6e;
+        Array : Nat8 = 0x6d;
+        Record : Nat8 = 0x6c;
+        Variant : Nat8 = 0x6b;
+        // Func : Nat8 = 0x6a;
+        // Service : Nat8 = 0x69;
 
     };
 
     /// Encoding and Decoding options
     public type Options = {
+        
+        /// #### Encoding Options
         /// Contains an array of tuples of the form (old_name, new_name) to rename the record keys.
         renameKeys : [(Text, Text)];
 
         // convertAllNumbersToFloats : Bool;
 
+        /// Returns #Map instead of #Record supported by the icrc3 spec
         use_icrc_3_value_type : Bool;
-    }; 
 
-    public let defaultOptions = {
+        /// encodes faster if the complete type is known, but not necessary
+        /// fails if types are incorrect
+        types : ?[CandidType]; 
+
+        /// #### Decoding Options
+        /// When decoding, you have the option to pass in the Candid variant type
+        /// and omit the type portion of the candid blob and only pass in the 
+        /// serialized values
+        blob_contains_only_values: Bool;
+        
+
+    };
+
+    public let defaultOptions : Options = {
         renameKeys = [];
         // convertAllNumbersToFloats = false;
         use_icrc_3_value_type = false;
+
+        types = null;
+
+        blob_contains_only_values = false;
     };
 
 };

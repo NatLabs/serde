@@ -10,6 +10,11 @@ import Fuzz "mo:fuzz";
 import Itertools "mo:itertools/Iter";
 
 import Serde "../src";
+import CandidEncoder "../src/Candid/Blob/Encoder";
+import LegacyCandidEncoder "../src/Candid/Blob/Encoder.Legacy";
+import CandidEncoderFR "../src/Candid/Blob/Encoder.ForwardReference";
+import CandidDecoder "../src/Candid/Blob/Decoder";
+import LegacyCandidDecoder "../src/Candid/Blob/Decoder.Legacy";
 
 module {
     public func init() : Bench.Bench {
@@ -18,9 +23,16 @@ module {
         bench.name("Benchmarking Serde");
         bench.description("Benchmarking the performance with 10k calls");
 
-        bench.rows(["Serde"]);
+        bench.rows([
+            "Serde: One Shot",
+            "Serde: One Shot sans type inference",
+            // "Serde 'mo:motoko_candid' lib",
+            "Motoko (to_candid(), from_candid())",
+
+            // "#Nat"
+        ]);
+
         bench.cols([
-            "to_candid()",
             "decode()",
             "encode()",
         ]);
@@ -44,20 +56,50 @@ module {
             hex : Text;
         };
 
+        // partial types for StoreItem
+        // as mo:motoko_candid is limited and throws errors on some complex types
         type StoreItem = {
             name : Text;
             store : Text;
             customer_reviews : [CustomerReview];
-            // available_sizes : AvailableSizes;
-            // color_options : [ColorOption];
+            available_sizes : AvailableSizes;
+            color_options : [ColorOption];
             price : Float;
             in_stock : Bool;
             address : (Text, Text, Text, Text);
-            // contact : {
-            //     email : Text;
-            //     phone : ?Text;
-            // };
+            contact : {
+                email : Text;
+                phone : ?Text;
+            };
         };
+
+        let CustomerReview = #Record([
+            ("username", #Text),
+            ("comment", #Text),
+            ("rating", #Nat),
+        ]);
+
+        let AvailableSizes = #Variant([("xs", #Null), ("s", #Null), ("m", #Null), ("l", #Null), ("xl", #Null)]);
+
+        let ColorOption = #Record([
+            ("name", #Text),
+            ("hex", #Text),
+        ]);
+
+        let StoreItem : Serde.Candid.CandidType = #Record([
+            ("name", #Text),
+            ("store", #Text),
+            ("customer_reviews", #Array(CustomerReview)),
+            ("available_sizes", AvailableSizes),
+            ("color_options", #Array(ColorOption)),
+            ("price", #Float),
+            ("in_stock", #Bool),
+            ("address", #Tuple([#Text, #Text, #Text, #Text])),
+            ("contact", #Record([
+                ("email", #Text),
+                ("phone", #Option(#Text)),
+            ])),
+        ]);
 
         let candify_store_item = {
             from_blob = func(blob : Blob) : StoreItem {
@@ -120,6 +162,7 @@ module {
         };
 
         let buffer = Buffer.Buffer<StoreItem>(limit);
+        let candid_blobs = Buffer.Buffer<Blob>(limit);
         let candid_buffer = Buffer.Buffer<[Serde.Candid]>(limit);
 
         for (i in Itertools.range(0, limit)) {
@@ -127,36 +170,118 @@ module {
             buffer.add(item);
         };
 
-        let store_item_keys = ["name", "store", "customer_reviews", "username", "rating", "comment", "available_sizes", "xs", "s", "m", "l", "xl", "color_options", "name", "hex", "price", "in_stock", "address", "contact", "email", "phone"];
+        let StoreItemKeys = ["name", "store", "customer_reviews", "username", "rating", "comment", "available_sizes", "xs", "s", "m", "l", "xl", "color_options", "name", "hex", "price", "in_stock", "address", "contact", "email", "phone"];
 
         bench.runner(
             func(row, col) = switch (row, col) {
-                case ("Serde", "to_candid()") {
+                case ("Motoko (to_candid(), from_candid())", "encode()") {
                     for (i in Itertools.range(0, limit)) {
                         let item = buffer.get(i);
-                        let candid = to_candid(item);
+                        let candid = to_candid (item);
+                        // candid_blobs.add(candid);
                     };
                 };
-                case ("Serde", "decode()") {
+                case ("Motoko (to_candid(), from_candid())", "decode()") {
+                    for (i in Itertools.range(0, limit)) {
+                        let blob = candid_blobs.get(i);
+                        let ?store_item : ?StoreItem = from_candid (blob);
+                    };
+                };
+
+                // case ("Serde 'mo:motoko_candid' lib", "decode()") {
+                //     for (i in Itertools.range(0, limit)) {
+                //         let item : StoreItem = buffer.get(i);
+                //         let candid_blob = candify_store_item.to_blob(item);
+                //         candid_blobs.add(candid_blob);
+                //         let #ok(candid) = LegacyCandidDecoder.decode(candid_blob, StoreItemKeys, null);
+                //         candid_buffer.add(candid);
+                //     };
+                // };
+                // case ("Serde 'mo:motoko_candid' lib", "encode()") {
+                //     for (i in Itertools.range(0, limit)) {
+                //         let candid = candid_buffer.get(i);
+                //         let res = LegacyCandidEncoder.encode(candid, null);
+                //         let #ok(blob) = res;
+                //     };
+                // };
+
+                case ("Serde: One Shot", "decode()") {
                     for (i in Itertools.range(0, limit)) {
                         let item = buffer.get(i);
                         let candid_blob = candify_store_item.to_blob(item);
-                        let #ok(candid) = Serde.Candid.decode(candid_blob, store_item_keys, null);
+                        candid_blobs.add(candid_blob);
+                        let #ok(candid) = CandidDecoder.one_shot(candid_blob, StoreItemKeys, null);
                         candid_buffer.add(candid);
                     };
                 };
-                case ("Serde", "encode()") {
+                case ("Serde: One Shot", "encode()") {
                     for (i in Itertools.range(0, limit)) {
-                        Debug.print("i = " # debug_show i);
                         let candid = candid_buffer.get(i);
-                        let res = Serde.Candid.encode(candid, null);
-                        Debug.print("res = " # debug_show res );
+                        let res = CandidEncoder.one_shot(candid, null);
                         let #ok(blob) = res;
                     };
                 };
+
+                case ("Serde: One Shot sans type inference", "decode()") {
+                    for (i in Itertools.range(0, limit)) {
+                        let item = buffer.get(i);
+                        let candid_blob = candify_store_item.to_blob(item);
+
+                        let options = {
+                            Serde.Candid.defaultOptions with types = ?[StoreItem]
+                        };
+
+                        let #ok(candid) = CandidDecoder.one_shot(candid_blob, StoreItemKeys, ?options);
+                        // candid_buffer.add(candid);
+                    };
+                };
+
+                case ("Serde: One Shot sans type inference", "encode()") {
+                    for (i in Itertools.range(0, limit)) {
+                        let candid = candid_buffer.get(i);
+
+                        let options = {
+                            Serde.Candid.defaultOptions with types = ?[StoreItem]
+                        };
+                        let res = CandidEncoder.one_shot(candid, ?options);
+                        let #ok(blob) = res;
+                    };
+                };
+
+                case ("Serde: One Shot Forward Reference (FR)", "decode()") {};
+                case ("Serde: One Shot Forward Reference (FR)", "encode()") {
+                    for (i in Itertools.range(0, limit)) {
+                        let candid = candid_buffer.get(i);
+                        let res = CandidEncoderFR.one_shot(candid, null);
+                        let #ok(blob) = res;
+                    };
+                };
+
+                case ("Serde: One Shot FR sans type inference", "decode()") {};
+
+                case ("Serde: One Shot FR sans type inference", "encode()") {
+                    for (i in Itertools.range(0, limit)) {
+                        let candid = candid_buffer.get(i);
+
+                        let options = {
+                            Serde.Candid.defaultOptions with types = ?[StoreItem]
+                        };
+                        let res = CandidEncoderFR.one_shot(candid, ?options);
+                        let #ok(blob) = res;
+                    };
+                };
+
+                // case ("#Nat", "decode()"){
+                //     for (i in Itertools.range(0, limit)) {
+                //         let item = buffer.get(i);
+                //         let candid_blob = candify_store_item.to_blob(item);
+                //         let #ok(candid) = CandidDecoder.decode(candid_blob, StoreItemKeys, null);
+                //         // candid_buffer.add(candid);
+                //     };
+                // };
                 case (_, _) {
                     Debug.trap("Should be unreachable:\n row = \"" # debug_show row # "\" and col = \"" # debug_show col # "\"");
-                }
+                };
             }
         );
 

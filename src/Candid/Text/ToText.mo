@@ -5,12 +5,12 @@ import TrieMap "mo:base/TrieMap";
 
 import Itertools "mo:itertools/Iter";
 
-import CandidTypes "../Types";
+import CandidType "../Types";
 
 import U "../../Utils";
 
 module {
-    type Candid = CandidTypes.Candid;
+    type Candid = CandidType.Candid;
     type TrieMap<K, V> = TrieMap.TrieMap<K, V>;
 
     public func toText(candid_values : [Candid]) : Text {

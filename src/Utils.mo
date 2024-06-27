@@ -25,6 +25,13 @@ module {
         };
     };
 
+    public func array_slice<A>(arr: [A], start: Nat, end: Nat): [A] {
+        Array.tabulate<A>(
+            end - start,
+            func (i: Nat) = arr[start + i]
+        );
+    };
+
     public func concatKeys(keys : [[Text]]) : [Text] {
         Iter.toArray(
             Itertools.flattenArray(keys)
@@ -95,6 +102,29 @@ module {
                 };
             },
         );
-
     };
+
+    public func text_to_nat(text: Text): Nat {
+        Itertools.fold(
+            text.chars(),
+            0 : Nat,
+            func (acc : Nat, c : Char) : Nat {
+                if( c == '_') {
+                    acc
+                } else {
+                    acc * 10 + Nat32.toNat(Char.toNat32(c) - Char.toNat32('0'));
+                };
+            },
+        );
+    };
+
+    public func text_is_number(text: Text): Bool {
+        Itertools.all(
+            text.chars(),
+            func(c: Char): Bool {
+                Char.isDigit(c) or c == '_';
+            },
+        )
+    };
+
 };

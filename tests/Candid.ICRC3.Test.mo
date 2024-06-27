@@ -14,7 +14,7 @@ suite(
     "Candid ICRC3 compatability Test",
     func() {
         test(
-            "record",
+            "#Map",
             func() {
                 let record = { a = 1; b = 2 };
 
