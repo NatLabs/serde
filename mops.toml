@@ -1,13 +1,13 @@
 [package]
 name = "serde"
-version = "3.0.0"
+version = "3.1.0"
 description = "A serialisation and deserialisation library for Motoko."
 repository = "https://github.com/NatLabs/serde"
 keywords = [ "json", "candid", "cbor", "urlencoded", "serialization" ]
 license = "MIT"
 
 [dependencies]
-base = "0.11.1"
+base = "0.12.0"
 itertools = "0.2.1"
 candid = "1.0.2"
 xtended-numbers = "0.2.1"
@@ -15,6 +15,8 @@ json-float = "https://github.com/NatLabs/json.mo#float@f3c8e7d418a7a8f2d6c0d7e2d
 parser-combinators = "https://github.com/aviate-labs/parser-combinators.mo#v0.1.2@6a331bf78e9dcd7623977f06c8e561fd1a8c0103"
 cbor = "0.1.3"
 map = "9.0.1"
+sha2 = "0.0.6"
+rep-indy-hash = "0.1.1"
 
 [dev-dependencies]
 test = "2.0.0"
