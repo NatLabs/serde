@@ -62,6 +62,21 @@ module {
         one_shot(blob, record_keys, options);
     };
 
+    public func decodeOne(blob : Blob, record_keys : [Text], options : ?T.Options) : Result<Candid, Text> {
+        let result = one_shot(blob, record_keys, options);
+
+        switch (result) {
+            case (#ok(candid_values)) {
+                if (candid_values.size() == 1) {
+                    #ok(candid_values[0]);
+                } else {
+                    #err("Expected one value in blob, instead got " # debug_show (candid_values.size()));
+                };
+            };
+            case (#err(msg)) #err(msg);
+        };
+    };
+
     ///
     type CandidBlobSequences = {
         magic : Blob;
@@ -82,7 +97,7 @@ module {
         };
 
         let compound_types_start_index = state[C.BYTES_INDEX];
-        let total_compound_types = decode_unsigned_leb_64(bytes, state);
+        let total_compound_types = decode_leb128(bytes, state);
         skip_compound_types(bytes, state, total_compound_types);
 
         let types_start_index = state[C.BYTES_INDEX];
@@ -112,7 +127,7 @@ module {
             return #err("Invalid Magic Number");
         };
 
-        let total_compound_types = decode_unsigned_leb_64(bytes, state);
+        let total_compound_types = decode_leb128(bytes, state);
         skip_compound_types(bytes, state, total_compound_types);
 
         skip_types(bytes, state);
@@ -166,7 +181,41 @@ module {
     };
 
     func code_to_primitive_type(code : Nat8) : CandidType {
-        if (code == T.TypeCode.Null) #Null else if (code == T.TypeCode.Bool) #Bool else if (code == T.TypeCode.Nat) #Nat else if (code == T.TypeCode.Nat8) #Nat8 else if (code == T.TypeCode.Nat16) #Nat16 else if (code == T.TypeCode.Nat32) #Nat32 else if (code == T.TypeCode.Nat64) #Nat64 else if (code == T.TypeCode.Int) #Int else if (code == T.TypeCode.Int8) #Int8 else if (code == T.TypeCode.Int16) #Int16 else if (code == T.TypeCode.Int32) #Int32 else if (code == T.TypeCode.Int64) #Int64 else if (code == T.TypeCode.Float) #Float else if (code == T.TypeCode.Text) #Text else if (code == T.TypeCode.Principal) #Principal else if (code == T.TypeCode.Empty) #Empty else Debug.trap("code [" # debug_show code # "] does not belong to a primitive type");
+        if (code == T.TypeCode.Null) {
+            #Null;
+        } else if (code == T.TypeCode.Bool) {
+            #Bool;
+        } else if (code == T.TypeCode.Nat) {
+            #Nat;
+        } else if (code == T.TypeCode.Nat8) {
+            #Nat8;
+        } else if (code == T.TypeCode.Nat16) {
+            #Nat16;
+        } else if (code == T.TypeCode.Nat32) {
+            #Nat32;
+        } else if (code == T.TypeCode.Nat64) {
+            #Nat64;
+        } else if (code == T.TypeCode.Int) {
+            #Int;
+        } else if (code == T.TypeCode.Int8) {
+            #Int8;
+        } else if (code == T.TypeCode.Int16) {
+            #Int16;
+        } else if (code == T.TypeCode.Int32) {
+            #Int32;
+        } else if (code == T.TypeCode.Int64) {
+            #Int64;
+        } else if (code == T.TypeCode.Float) {
+            #Float;
+        } else if (code == T.TypeCode.Text) {
+            #Text;
+        } else if (code == T.TypeCode.Principal) {
+            #Principal;
+        } else if (code == T.TypeCode.Empty) {
+            #Empty;
+        } else {
+            Debug.trap("code [" # debug_show code # "] does not belong to a primitive type");
+        };
     };
 
     func is_code_primitive_type(code : Nat8) : Bool {
@@ -184,7 +233,7 @@ module {
                     ignore read(bytes, state);
                     Nat8.toNat(code);
                 } else {
-                    let ref_pos = decode_unsigned_leb_64(bytes, state);
+                    let ref_pos = decode_leb128(bytes, state);
                 };
 
                 #OptionRef(code_or_ref);
@@ -194,16 +243,16 @@ module {
                     ignore read(bytes, state);
                     Nat8.toNat(code);
                 } else {
-                    let ref_pos = decode_unsigned_leb_64(bytes, state);
+                    let ref_pos = decode_leb128(bytes, state);
                 };
 
                 #ArrayRef(code_or_ref);
             } else if (compound_type_code == T.TypeCode.Record or compound_type_code == T.TypeCode.Variant) {
-                let size = decode_unsigned_leb_64(bytes, state);
+                let size = decode_leb128(bytes, state);
                 let fields = Array.tabulate<(Text, Nat)>(
                     size,
                     func(i : Nat) : (Text, Nat) {
-                        let hash = decode_unsigned_leb_64(bytes, state) |> Nat32.fromNat(_);
+                        let hash = decode_leb128(bytes, state) |> Nat32.fromNat(_);
                         let field_key = switch (Map.get(record_key_map, n32hash, hash)) {
                             case (?field_key) field_key;
                             case (null) debug_show hash;
@@ -214,7 +263,7 @@ module {
                             ignore read(bytes, state);
                             Nat8.toNat(code);
                         } else {
-                            let ref_pos = decode_unsigned_leb_64(bytes, state);
+                            let ref_pos = decode_leb128(bytes, state);
                         };
 
                         (field_key, field_code_or_pos);
@@ -309,20 +358,23 @@ module {
     };
 
     func build_types(bytes : [Nat8], state : [var Nat], compound_types : [ShallowCandidTypes], recursive_types : Map<Nat, CandidType>) : [CandidType] {
-        let total_candid_types = decode_unsigned_leb_64(bytes, state);
+        let total_candid_types = decode_leb128(bytes, state);
 
-        let candid_types = Array.tabulate(total_candid_types, func(i: Nat): CandidType {
-            let code = peek(bytes, state);
-            if (is_code_primitive_type(code)) {
-                ignore read(bytes, state);
-                let primitive_type = code_to_primitive_type(code);
-            } else {
-                let start_pos = decode_unsigned_leb_64(bytes, state);
-                let compound_type = build_compound_type(compound_types, start_pos, recursive_types);
-            };
-        });
+        let candid_types = Array.tabulate(
+            total_candid_types,
+            func(i : Nat) : CandidType {
+                let code = peek(bytes, state);
+                if (is_code_primitive_type(code)) {
+                    ignore read(bytes, state);
+                    let primitive_type = code_to_primitive_type(code);
+                } else {
+                    let start_pos = decode_leb128(bytes, state);
+                    let compound_type = build_compound_type(compound_types, start_pos, recursive_types);
+                };
+            },
+        );
 
-        candid_types
+        candid_types;
     };
 
     func skip_compound_types(bytes : [Nat8], state : [var Nat], total_compound_types : Nat) {
@@ -335,27 +387,27 @@ module {
                 if (is_code_primitive_type(code)) {
                     ignore read(bytes, state); // advance past code
                 } else {
-                    ignore decode_unsigned_leb_64(bytes, state); // start_pos
+                    ignore decode_leb128(bytes, state); // start_pos
                 };
             } else if (compound_type_code == T.TypeCode.Array) {
                 let code = peek(bytes, state);
                 if (is_code_primitive_type(code)) {
                     ignore read(bytes, state); // advance past code
                 } else {
-                    ignore decode_unsigned_leb_64(bytes, state); // start_pos
+                    ignore decode_leb128(bytes, state); // start_pos
                 };
             } else if (compound_type_code == T.TypeCode.Record or compound_type_code == T.TypeCode.Variant) {
-                let size = decode_unsigned_leb_64(bytes, state);
+                let size = decode_leb128(bytes, state);
                 var i = 0;
 
                 while (i < size) {
-                    ignore decode_unsigned_leb_64(bytes, state); // hash
+                    ignore decode_leb128(bytes, state); // hash
 
                     let code = peek(bytes, state);
                     if (is_code_primitive_type(code)) {
                         ignore read(bytes, state); // advance past code
                     } else {
-                        ignore decode_unsigned_leb_64(bytes, state); // start_pos
+                        ignore decode_leb128(bytes, state); // start_pos
                     };
 
                     i += 1;
@@ -370,7 +422,7 @@ module {
 
     func skip_types(bytes : [Nat8], state : [var Nat]) {
 
-        let total_candid_types = decode_unsigned_leb_64(bytes, state);
+        let total_candid_types = decode_leb128(bytes, state);
 
         var i = 0;
 
@@ -379,7 +431,7 @@ module {
             if (is_code_primitive_type(code)) {
                 ignore read(bytes, state); // advance past code
             } else {
-                ignore decode_unsigned_leb_64(bytes, state); // start_pos
+                ignore decode_leb128(bytes, state); // start_pos
             };
 
             i += 1;
@@ -410,14 +462,14 @@ module {
 
         if (not is_types_set) {
             // extract types from blob
-            let total_compound_types = decode_unsigned_leb_64(bytes, state);
+            let total_compound_types = decode_leb128(bytes, state);
             let compound_types = extract_compound_types(bytes, state, total_compound_types, record_key_map);
             candid_types := build_types(bytes, state, compound_types, recursive_types);
 
         } else if (not options.blob_contains_only_values) {
             // types are set but 'blob_contains_only_values' is not set,
             // then skip type section and locate start of values section
-            let total_compound_types = decode_unsigned_leb_64(bytes, state);
+            let total_compound_types = decode_leb128(bytes, state);
             skip_compound_types(bytes, state, total_compound_types);
             skip_types(bytes, state);
 
@@ -439,7 +491,81 @@ module {
     };
 
     // https://en.wikipedia.org/wiki/LEB128
-    func decode_unsigned_leb_64(bytes : [Nat8], state : [var Nat]) : Nat {
+    // func decode_leb128(bytes : [Nat8], state : [var Nat]) : Nat {
+    //     var n64 : Nat64 = 0;
+    //     var shift : Nat64 = 0;
+
+    //     var num : Nat = 0;
+
+    //     label decoding_leb loop {
+    //         let byte = read(bytes, state);
+
+    //         n64 |= (Nat64.fromNat(Nat8.toNat(byte & 0x7f)) << shift);
+
+    //         shift += 7;
+
+    //         if (shift % 63 == 0) {
+    //             if (num != 0) num := num * (2 ** 63);
+    //             num += Nat64.toNat(n64);
+
+    //             // n64 := 0;
+    //         };
+
+    //         if (byte & 0x80 == 0) break decoding_leb;
+
+    //     };
+
+    //     let num2 = Nat64.toNat(n64);
+    //     // Debug.print("(num, num2): " # debug_show (num, num2));
+    //     num2;
+
+    // };
+    let nat64_bound = 18_446_744_073_709_551_616;
+    // func decode_leb128(bytes : [Nat8], state : [var Nat]) : Nat {
+    //     var n64 : Nat64 = 0;
+    //     var shift : Nat64 = 0;
+    //     var shifted : Nat = 0;
+
+    //     var num : Nat = 0;
+
+    //     label decoding_leb loop {
+    //         let byte = read(bytes, state);
+
+    //         n64 |= (Nat64.fromNat(Nat8.toNat(byte & 0x7f)) << shift);
+
+    //         shift += 7;
+
+    //         if (shift % 63 == 0) {
+    //             // Debug.print("shift: " # debug_show (shift));
+    //             num += Nat64.toNat(n64) * (2 ** shifted);
+
+    //             shifted += Nat64.toNat(shift);
+    //             shift := 0;
+
+    //             n64 := 0;
+    //         };
+
+    //         if (byte & 0x80 == 0) {
+    //             if (num > nat64_bound) {
+    //                 num += Nat64.toNat(n64) * (2 ** shifted);
+    //             } else {
+    //                 num := Nat64.toNat(n64);
+    //             };
+
+    //             break decoding_leb;
+
+    //         };
+
+    //     };
+
+    //     // let num2 = Nat64.toNat(n64);
+    //     // Debug.print("(num, num2): " # debug_show (num, num2));
+    //     num;
+
+    // };
+
+    // https://en.wikipedia.org/wiki/LEB128
+    func decode_leb128(bytes : [Nat8], state : [var Nat]) : Nat {
         var n64 : Nat64 = 0;
         var shift : Nat64 = 0;
 
@@ -509,7 +635,7 @@ module {
         // Debug.print("Decoding candid type: " # debug_show (candid_type) # " at index: " # debug_show (state[C.BYTES_INDEX]));
 
         let value : Candid = switch (candid_type) {
-            case (#Nat) #Nat(decode_unsigned_leb_64(bytes, state));
+            case (#Nat) #Nat(decode_leb128(bytes, state));
             case (#Nat8) #Nat8(read(bytes, state));
             case (#Nat16) {
                 let n = Nat8.toNat16(read(bytes, state)) | Nat8.toNat16(read(bytes, state)) << 8;
@@ -576,7 +702,7 @@ module {
             case (#Null) #Null;
             case (#Empty) #Empty;
             case (#Text) {
-                let size = decode_unsigned_leb_64(bytes, state);
+                let size = decode_leb128(bytes, state);
                 let text_bytes = Array.tabulate<Nat8>(
                     size,
                     func(i : Nat) : Nat8 {
@@ -594,7 +720,7 @@ module {
             };
             case (#Principal) {
                 assert read(bytes, state) == 0x01; // transparency state. opaque not supported yet.
-                let size = decode_unsigned_leb_64(bytes, state);
+                let size = decode_leb128(bytes, state);
 
                 let principal_bytes = Array.tabulate<Nat8>(
                     size,
@@ -626,7 +752,7 @@ module {
             };
 
             case (#Array(#Nat8)) {
-                let size = decode_unsigned_leb_64(bytes, state);
+                let size = decode_leb128(bytes, state);
                 var error : ?Text = null;
 
                 let values = Array.tabulate(
@@ -657,7 +783,7 @@ module {
             };
 
             case (#Array(arr_type)) {
-                let size = decode_unsigned_leb_64(bytes, state);
+                let size = decode_leb128(bytes, state);
                 var error : ?Text = null;
                 let values = Array.tabulate(
                     size,
@@ -735,7 +861,7 @@ module {
                 #Record(Array.tabulate<(Text, CandidType)>(tuple_types.size(), func(i : Nat) : (Text, CandidType) = (debug_show (i), tuple_types[i]))),
             );
             case (#Variant(variant_types)) {
-                let variant_index = decode_unsigned_leb_64(bytes, state);
+                let variant_index = decode_leb128(bytes, state);
 
                 let variant_key = variant_types[variant_index].0;
                 let variant_type = variant_types[variant_index].1;

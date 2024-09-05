@@ -2,15 +2,15 @@
 
 import Text "mo:base/Text";
 
-
 import Encoder "Blob/Encoder";
 import Decoder "Blob/Decoder";
+import RepIndyHash "Blob/RepIndyHash";
+
 import Parser "Text/Parser";
 import ToText "Text/ToText";
 
 import T "Types";
 import Utils "../Utils";
-
 
 module {
     /// A representation of the Candid format with variants for all possible types.
@@ -19,9 +19,11 @@ module {
     public let defaultOptions = T.defaultOptions;
 
     public type CandidType = T.CandidType;
-    
+
     /// Converts a motoko value to a [Candid](#Candid) value
     public let { encode; encodeOne } = Encoder;
+
+    public let repIndyHash = RepIndyHash.hash;
 
     /// Converts a [Candid](#Candid) value to a motoko value
     public let { decode } = Decoder;
@@ -33,6 +35,5 @@ module {
     public let { toText } = ToText;
 
     public let concatKeys = Utils.concatKeys;
-
 
 };

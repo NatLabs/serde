@@ -87,3 +87,22 @@ Heap
 | Serde: One Shot BR sans type inference |              15_095_820 |               -9_291_632 |
 | Serde: One Shot Forward Reference (FR) |                   8_904 |              -11_919_024 |
 | Serde: One Shot FR sans type inference |                   8_904 |               -4_795_636 |
+
+#### sorting user provided types before encoding or decoding
+
+Instructions
+
+|                                     |    decode() |    encode() |
+| :---------------------------------- | ----------: | ----------: |
+| Serde: One Shot                     | 298_167_258 | 864_784_948 |
+| Serde: One Shot sans type inference | 343_730_830 | 654_138_729 |
+| Motoko (to_candid(), from_candid()) |  21_778_910 |   7_236_572 |
+
+
+Heap
+
+|                                     |   decode() |    encode() |
+| :---------------------------------- | ---------: | ----------: |
+| Serde: One Shot                     | 18_078_612 | -11_697_036 |
+| Serde: One Shot sans type inference | 19_894_612 |  -4_651_180 |
+| Motoko (to_candid(), from_candid()) |    433_756 |     376_168 |
