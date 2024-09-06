@@ -272,7 +272,6 @@ module {
 
         public func clear() {
             count := 0;
-
         };
 
         public func get(i : Nat) : A {

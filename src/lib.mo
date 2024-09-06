@@ -1,4 +1,3 @@
-
 import CandidType "Candid/Types";
 import UrlEncodedModule "UrlEncoded";
 import JsonModule "JSON";
@@ -16,10 +15,12 @@ module {
 
     public type CandidType = CandidType.CandidType;
 
+    public type ICRC3Value = CandidType.ICRC3Value;
+
     public let JSON = JsonModule;
     public let URLEncoded = UrlEncodedModule;
     public let CBOR = CborModule;
 
     public let concatKeys = Utils.concatKeys;
     public let defaultOptions = CandidType.defaultOptions;
-}
+};

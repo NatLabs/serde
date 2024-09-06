@@ -1,9 +1,9 @@
 [package]
 name = "serde"
-version = "3.2.0"
+version = "3.2.1"
 description = "A serialisation and deserialisation library for Motoko."
 repository = "https://github.com/NatLabs/serde"
-keywords = [ "json", "candid", "cbor", "urlencoded", "serialization" ]
+keywords = ["json", "candid", "cbor", "urlencoded", "serialization"]
 license = "MIT"
 
 [dependencies]
@@ -16,7 +16,6 @@ parser-combinators = "https://github.com/aviate-labs/parser-combinators.mo#v0.1.
 cbor = "1.0.0"
 map = "9.0.1"
 sha2 = "0.1.0"
-fuzz = "0.2.1"
 
 [dev-dependencies]
 test = "2.0.0"

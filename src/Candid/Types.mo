@@ -67,10 +67,10 @@ module {
     // nat values could be either reference pointers to compound types
     // or actual primitive value codes
     public type ShallowCandidTypes = {
-        #OptionRef: Nat;
-        #ArrayRef: Nat;
-        #RecordRef: [(Text, Nat)];
-        #VariantRef: [(Text, Nat)];
+        #OptionRef : Nat;
+        #ArrayRef : Nat;
+        #RecordRef : [(Text, Nat)];
+        #VariantRef : [(Text, Nat)];
     };
 
     public let TypeCode = {
@@ -107,7 +107,7 @@ module {
 
     /// Encoding and Decoding options
     public type Options = {
-        
+
         /// #### Encoding Options
         /// Contains an array of tuples of the form (old_name, new_name) to rename the record keys.
         renameKeys : [(Text, Text)];
@@ -119,15 +119,23 @@ module {
 
         /// encodes faster if the complete type is known, but not necessary
         /// fails if types are incorrect
-        types : ?[CandidType]; 
+        types : ?[CandidType];
 
         /// #### Decoding Options
         /// When decoding, you have the option to pass in the Candid variant type
-        /// and omit the type portion of the candid blob and only pass in the 
+        /// and omit the type portion of the candid blob and only pass in the
         /// serialized values
-        blob_contains_only_values: Bool;
-        
+        blob_contains_only_values : Bool;
 
+    };
+
+    public type ICRC3Value = {
+        #Blob : Blob;
+        #Text : Text;
+        #Nat : Nat;
+        #Int : Int;
+        #Array : [ICRC3Value];
+        #Map : [(Text, ICRC3Value)];
     };
 
     public let defaultOptions : Options = {

@@ -11,6 +11,7 @@ import ToText "Text/ToText";
 
 import T "Types";
 import Utils "../Utils";
+import ICRC3Value "ICRC3Value";
 
 module {
     /// A representation of the Candid format with variants for all possible types.
@@ -35,5 +36,17 @@ module {
     public let { toText } = ToText;
 
     public let concatKeys = Utils.concatKeys;
+
+    /// Converts an array of ICRC3Value values to [Candid](#Candid) values
+    public func fromICRC3Value(icrc3_values : [T.ICRC3Value]) : [Candid] {
+        ICRC3Value.fromICRC3Value(icrc3_values);
+    };
+
+    /// Converts an array of [Candid](#Candid) values to ICRC3Value values
+    public func toICRC3Value(candid_values : [Candid]) : [T.ICRC3Value] {
+        ICRC3Value.toICRC3Value(candid_values);
+    };
+
+    public type ICRC3Value = T.ICRC3Value;
 
 };
