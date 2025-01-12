@@ -96,6 +96,8 @@ module {
             ("contact", #Record([("email", #Text), ("phone", #Option(#Text))])),
         ]);
 
+        let FormattedStoreItem = Serde.Candid.formatCandidType([StoreItem], null);
+
         let candify_store_item = {
             from_blob = func(blob : Blob) : StoreItem {
                 let ?c : ?StoreItem = from_candid (blob);
@@ -222,8 +224,10 @@ module {
                         let item = buffer.get(i);
                         let candid_blob = candify_store_item.to_blob(item);
 
+                        let FormattedStoreItem = Serde.Candid.formatCandidType([StoreItem], null);
+
                         let options = {
-                            Serde.Candid.defaultOptions with types = ?[StoreItem]
+                            Serde.Candid.defaultOptions with types = ?FormattedStoreItem
                         };
 
                         let #ok(candid) = CandidDecoder.one_shot(candid_blob, StoreItemKeys, ?options);
@@ -236,7 +240,7 @@ module {
                         let candid = candid_buffer.get(i);
 
                         let options = {
-                            Serde.Candid.defaultOptions with types = ?[StoreItem]
+                            Serde.Candid.defaultOptions with types = ?FormattedStoreItem
                         };
                         let res = CandidEncoder.one_shot(candid, ?options);
                         let #ok(blob) = res;

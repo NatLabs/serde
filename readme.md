@@ -183,6 +183,7 @@ Checkout the [usage guide](https://github.com/NatLabs/serde/blob/main/usage.md) 
 - Cannot deserialize Tuples as they are not candid types. They are just shorthands for records with unnamed fields. See https://forum.dfinity.org/t/candid-and-tuples/17800/7
 - Floats are only recognised if they have a decimal point, e.g., `1.0` is a Float, but `1` is an `Int` / `Nat`.
 - Only supports candid data types (i.e primitive and constructed types). Service and function reference types are not supported.
+- A new rewrite of the library to improve performance has limited the max value of the `Nat` and `Int` to 64 bits.
 
 ## Running Tests
 

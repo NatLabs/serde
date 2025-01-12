@@ -123,16 +123,13 @@ module {
         var candid_types : [CandidType] = switch (options.types) {
             case (?types) { types };
             case (_) switch (infer_candid_types(candid_values, renaming_map)) {
-                case (#ok(inferred_types)) inferred_types;
+                case (#ok(inferred_types)) Array.map(
+                    inferred_types,
+                    func(candid_type : CandidType) : CandidType = CandidUtils.format_candid_type(candid_type, renaming_map),
+                );
                 case (#err(e)) return #err(e);
             };
         };
-
-        // need to sort both inferred and provided types
-        candid_types := Array.map(
-            candid_types,
-            func(candid_type : CandidType) : CandidType = CandidUtils.format_candid_type(candid_type, renaming_map),
-        );
 
         one_shot_encode(
             candid_types,

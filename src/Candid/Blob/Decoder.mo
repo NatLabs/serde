@@ -473,13 +473,6 @@ module {
             skip_compound_types(bytes, state, total_compound_types);
             skip_types(bytes, state);
 
-            candid_types := Array.map(
-                candid_types,
-                func(candid_type : CandidType) : CandidType {
-                    CandidUtils.sort_candid_type(candid_type);
-                },
-            );
-
         };
 
         // extract values with Candid variant Types
