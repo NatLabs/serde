@@ -11,10 +11,8 @@ import Itertools "mo:itertools/Iter";
 
 import Serde "../src";
 import CandidEncoder "../src/Candid/Blob/Encoder";
-import LegacyCandidEncoder "../src/Candid/Blob/Encoder.Legacy";
 import CandidEncoderFR "../src/Candid/Blob/Encoder.ForwardReference";
 import CandidDecoder "../src/Candid/Blob/Decoder";
-import LegacyCandidDecoder "../src/Candid/Blob/Decoder.Legacy";
 
 module {
     public func init() : Bench.Bench {
@@ -95,10 +93,7 @@ module {
             ("price", #Float),
             ("in_stock", #Bool),
             ("address", #Tuple([#Text, #Text, #Text, #Text])),
-            ("contact", #Record([
-                ("email", #Text),
-                ("phone", #Option(#Text)),
-            ])),
+            ("contact", #Record([("email", #Text), ("phone", #Option(#Text))])),
         ]);
 
         let candify_store_item = {

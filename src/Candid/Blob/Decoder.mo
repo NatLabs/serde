@@ -8,7 +8,6 @@ import Int8 "mo:base/Int8";
 import Int32 "mo:base/Int32";
 import Nat8 "mo:base/Nat8";
 import Nat32 "mo:base/Nat32";
-import Nat16 "mo:base/Nat16";
 import Int64 "mo:base/Int64";
 import Nat "mo:base/Nat";
 import Int "mo:base/Int";
@@ -16,7 +15,6 @@ import Iter "mo:base/Iter";
 import Principal "mo:base/Principal";
 import Text "mo:base/Text";
 import Order "mo:base/Order";
-import Char "mo:base/Char";
 import Int16 "mo:base/Int16";
 import TrieMap "mo:base/TrieMap";
 import Option "mo:base/Option";
@@ -367,9 +365,11 @@ module {
                 if (is_code_primitive_type(code)) {
                     ignore read(bytes, state);
                     let primitive_type = code_to_primitive_type(code);
+                    primitive_type;
                 } else {
                     let start_pos = decode_leb128(bytes, state);
                     let compound_type = build_compound_type(compound_types, start_pos, recursive_types);
+                    compound_type;
                 };
             },
         );

@@ -57,7 +57,7 @@ module {
     type Candid = T.Candid;
     type CandidType = T.CandidType;
     type KeyValuePair = T.KeyValuePair;
-    let { n32hash; thash } = Map;
+    let { thash } = Map;
     let { unsigned_leb128; signed_leb128_64 } = Utils;
 
     public func encode(candid_values : [Candid], options : ?T.Options) : Result<Blob, Text> {
@@ -66,10 +66,6 @@ module {
 
     public func encodeOne(candid : Candid, options : ?T.Options) : Result<Blob, Text> {
         encode([candid], options);
-    };
-
-    func div_ceil(n : Nat, d : Nat) : Nat {
-        (n + d - 1) / d;
     };
 
     func infer_candid_types(candid_values : [Candid], renaming_map : Map<Text, Text>) : Result<[CandidType], Text> {
@@ -1049,7 +1045,7 @@ module {
                     tuple_values.vals(),
                     func((k, v) : (Text, Any)) : Bool {
                         i += 1;
-                        Utils.text_is_number(k) and Utils.text_to_nat(k) == (i - 1);
+                        Utils.text_is_number(k) and Utils.text_to_nat(k) == (i - 1 : Nat);
                     },
                 );
 
@@ -1074,7 +1070,7 @@ module {
                     record_types.vals(),
                     func((k, v) : (Text, Any)) : Bool {
                         i += 1;
-                        Utils.text_is_number(k) and Utils.text_to_nat(k) == (i - 1);
+                        Utils.text_is_number(k) and Utils.text_to_nat(k) == (i - 1 : Nat);
                     },
                 );
 
@@ -1292,31 +1288,31 @@ module {
     };
 
     func to_candid_types(candid : Candid, renaming_map : Map<Text, Text>) : (InternalCandidTypes) {
-        let candid_type : InternalCandidTypes = switch (candid) {
-            case (#Nat(n)) (#Nat);
-            case (#Nat8(n)) (#Nat8);
-            case (#Nat16(n)) (#Nat16);
-            case (#Nat32(n)) (#Nat32);
-            case (#Nat64(n)) (#Nat64);
+        switch (candid) {
+            case (#Nat(_)) (#Nat);
+            case (#Nat8(_)) (#Nat8);
+            case (#Nat16(_)) (#Nat16);
+            case (#Nat32(_)) (#Nat32);
+            case (#Nat64(_)) (#Nat64);
 
-            case (#Int(n)) (#Int);
-            case (#Int8(n)) (#Int8);
-            case (#Int16(n)) (#Int16);
-            case (#Int32(n)) (#Int32);
-            case (#Int64(n)) (#Int64);
+            case (#Int(_)) (#Int);
+            case (#Int8(_)) (#Int8);
+            case (#Int16(_)) (#Int16);
+            case (#Int32(_)) (#Int32);
+            case (#Int64(_)) (#Int64);
 
-            case (#Float(n)) (#Float);
+            case (#Float(_)) (#Float);
 
-            case (#Bool(n)) (#Bool);
+            case (#Bool(_)) (#Bool);
 
-            case (#Principal(n)) (#Principal);
+            case (#Principal(_)) (#Principal);
 
-            case (#Text(n)) (#Text);
+            case (#Text(_)) (#Text);
 
             case (#Null) (#Null);
             case (#Empty) (#Empty);
 
-            case (#Blob(blob)) { #Array([#Nat8]) };
+            case (#Blob(_)) { #Array([#Nat8]) };
 
             case (#Option(optType)) {
                 let inner_type = to_candid_types(optType, renaming_map);

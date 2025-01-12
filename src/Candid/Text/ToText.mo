@@ -1,4 +1,5 @@
 import Float "mo:base/Float";
+import Array "mo:base/Array";
 import Text "mo:base/Text";
 import Principal "mo:base/Principal";
 import TrieMap "mo:base/TrieMap";
@@ -19,22 +20,21 @@ module {
         let candid_iter = Itertools.peekable(candid_values.vals());
 
         for (val in candid_iter) {
-            if (candid_iter.peek() == null){
-                text #= candidToText(val, );
+            if (candid_iter.peek() == null) {
+                text #= candidToText(val);
             } else {
                 text #= candidToText(val) # ", ";
             };
         };
 
-        if (candid_values.size() == 1 and Text.startsWith(text, #text("("))){
-            text
+        if (candid_values.size() == 1 and Text.startsWith(text, #text("("))) {
+            text;
         } else {
-             "(" # text # ")"
+            "(" # text # ")";
         };
     };
 
-
-    func candidToText(candid: Candid): Text{
+    func candidToText(candid : Candid) : Text {
         switch (candid) {
             case (#Nat(n)) removeUnderscore(debug_show (n));
             case (#Nat8(n)) addBrackets(removeUnderscore(debug_show (n)) # " : nat8");
@@ -69,6 +69,16 @@ module {
 
                 text # "}";
             };
+            case (#Tuple(values)) return candidToText(
+                #Record(
+                    Array.tabulate<(Text, Candid)>(
+                        values.size(),
+                        func(i : Nat) : (Text, Candid) {
+                            (debug_show i, values[i]);
+                        },
+                    )
+                )
+            );
 
             case (#Record(fields) or #Map(fields)) {
                 var text = "record { ";

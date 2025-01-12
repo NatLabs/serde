@@ -1,4 +1,3 @@
-import Map "mo:map/Map";
 module {
 
     public type KeyValuePair = (Text, Candid);
