@@ -111,10 +111,23 @@ module {
         };
     };
 
+    func tuple_type_to_record(tuple_types : [CandidType], mapper : (CandidType) -> CandidType) : [(Text, CandidType)] {
+        Array.tabulate<(Text, CandidType)>(
+            tuple_types.size(),
+            func(i : Nat) : (Text, CandidType) {
+                let key = Text.replace(debug_show (i), #char('_'), "");
+                (key, mapper(tuple_types[i]));
+            },
+        );
+    };
+
     /// Sorts fields by their hash value and renames changed fields
+    ///
+    /// Also resolves aliases by renaming them to their canonical name,
+    /// for example #Blob to #Array(#Nat8)
     public func format_candid_type(candid_type : CandidType, renaming_map : Map<Text, Text>) : CandidType {
         switch (candid_type) {
-            case (#Record(fields)) {
+            case (#Record(fields) or #Map(fields)) {
 
                 var is_tuple = true;
 
@@ -171,9 +184,15 @@ module {
 
                 #Variant(sorted_fields);
             };
+            case (#Blob) #Array(#Nat8);
             case (#Array(arr_type)) #Array(format_candid_type(arr_type, renaming_map));
             case (#Option(opt_type)) #Option(format_candid_type(opt_type, renaming_map));
-            case (#Tuple(tuple_types)) #Tuple(Array.map(tuple_types, func(candid_type : CandidType) : CandidType = format_candid_type(candid_type, renaming_map)));
+            case (#Tuple(tuple_types)) #Record(
+                tuple_type_to_record(
+                    tuple_types,
+                    func(candid_type : CandidType) : CandidType = format_candid_type(candid_type, renaming_map),
+                )
+            );
             case (other_types) other_types;
         };
     };
