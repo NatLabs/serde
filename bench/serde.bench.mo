@@ -11,10 +11,8 @@ import Itertools "mo:itertools/Iter";
 
 import Serde "../src";
 import CandidEncoder "../src/Candid/Blob/Encoder";
-import LegacyCandidEncoder "../src/Candid/Blob/Encoder.Legacy";
 import CandidEncoderFR "../src/Candid/Blob/Encoder.ForwardReference";
 import CandidDecoder "../src/Candid/Blob/Decoder";
-import LegacyCandidDecoder "../src/Candid/Blob/Decoder.Legacy";
 
 module {
     public func init() : Bench.Bench {
@@ -95,11 +93,10 @@ module {
             ("price", #Float),
             ("in_stock", #Bool),
             ("address", #Tuple([#Text, #Text, #Text, #Text])),
-            ("contact", #Record([
-                ("email", #Text),
-                ("phone", #Option(#Text)),
-            ])),
+            ("contact", #Record([("email", #Text), ("phone", #Option(#Text))])),
         ]);
+
+        let FormattedStoreItem = Serde.Candid.formatCandidType([StoreItem], null);
 
         let candify_store_item = {
             from_blob = func(blob : Blob) : StoreItem {
@@ -227,8 +224,10 @@ module {
                         let item = buffer.get(i);
                         let candid_blob = candify_store_item.to_blob(item);
 
+                        let FormattedStoreItem = Serde.Candid.formatCandidType([StoreItem], null);
+
                         let options = {
-                            Serde.Candid.defaultOptions with types = ?[StoreItem]
+                            Serde.Candid.defaultOptions with types = ?FormattedStoreItem
                         };
 
                         let #ok(candid) = CandidDecoder.one_shot(candid_blob, StoreItemKeys, ?options);
@@ -241,7 +240,7 @@ module {
                         let candid = candid_buffer.get(i);
 
                         let options = {
-                            Serde.Candid.defaultOptions with types = ?[StoreItem]
+                            Serde.Candid.defaultOptions with types = ?FormattedStoreItem
                         };
                         let res = CandidEncoder.one_shot(candid, ?options);
                         let #ok(blob) = res;

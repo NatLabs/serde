@@ -103,6 +103,9 @@ module {
                     },
                 )
             );
+            case (unsupported) {
+                Debug.trap("toArgeType(): Unsupported type " # debug_show unsupported);
+            };
         };
     };
     public func toArgs(candid_values : [Candid], renaming_map : TrieMap<Text, Text>) : Result<[Arg], Text> {
@@ -240,15 +243,15 @@ module {
                     Array.map<Candid, (Text, Candid)>(
                         tuples,
                         func((tuple) : Candid) : (Text, Candid) {
-                            let key = debug_show(i);
-                            i+= 1;
+                            let key = debug_show (i);
+                            i += 1;
                             (key, tuple);
                         },
                     )
                 );
 
                 toArgTypeAndValue(record, renaming_map);
-            }
+            };
         };
 
         (arg_type, arg_value);

@@ -289,12 +289,7 @@ module {
         // add value to the buffer
         // unsigned_leb128_64(candid_buffer, counter[C.COUNTER.VALUE]);
 
-        let total_size = candid_buffer.size()
-            + compound_type_size_bytes.size()
-            + compound_type_buffer.size()
-            + primitive_type_size_bytes.size()
-            + primitive_type_buffer.size()
-            + value_buffer.size();
+        let total_size = candid_buffer.size() + compound_type_size_bytes.size() + compound_type_buffer.size() + primitive_type_size_bytes.size() + primitive_type_buffer.size() + value_buffer.size();
 
         let sequence = [
             candid_buffer,
@@ -312,18 +307,18 @@ module {
             Blob.fromArray(
                 Array.tabulate<Nat8>(
                     total_size,
-                    func(_: Nat): Nat8 {
+                    func(_ : Nat) : Nat8 {
                         var buffer = sequence[i];
-                        while (j >= buffer.size()){
+                        while (j >= buffer.size()) {
                             j := 0;
                             i += 1;
                             buffer := sequence[i];
                         };
 
                         let byte = buffer.get(j);
-                        j+= 1;
+                        j += 1;
                         byte;
-                    }
+                    },
                 )
             )
         );
@@ -781,7 +776,6 @@ module {
 
                 case (#Option(opt_type), #Option(opt_value)) {
 
-
                     let opt_type_is_compound = is_compound_type(opt_type);
 
                     if (not type_exists) {
@@ -1107,7 +1101,6 @@ module {
             // type_exists_in_compound_type_sequence
             var type_exists = ignore_type;
 
-
             let type_codes = Buffer.Buffer<Nat8>(8);
 
             let arrays = Buffer.Buffer<[CandidType]>(8);
@@ -1147,10 +1140,10 @@ module {
                     };
                 } else compound_type_buffer;
 
-                switch(candid_type){
+                switch (candid_type) {
                     case (#Nat) ref_primitive_type_buffer.add(T.TypeCode.Nat);
                     case (#Nat8) ref_primitive_type_buffer.add(T.TypeCode.Nat8);
-                    case (#Nat16,) ref_primitive_type_buffer.add(T.TypeCode.Nat16);
+                    case (#Nat16) ref_primitive_type_buffer.add(T.TypeCode.Nat16);
                     case (#Nat32) ref_primitive_type_buffer.add(T.TypeCode.Nat32);
                     case (#Nat64) ref_primitive_type_buffer.add(T.TypeCode.Nat64);
                     case (#Int) ref_primitive_type_buffer.add(T.TypeCode.Int);
@@ -1166,17 +1159,17 @@ module {
                     case (#Principal) ref_primitive_type_buffer.add(T.TypeCode.Principal);
 
                     // ============= Compound Types ============= //
-                    case (#Option(inner_type)){
+                    case (#Option(inner_type)) {
 
                         if (not type_exists) {
                             compound_type_buffer.add(T.TypeCode.Option);
 
                             let inner_type_is_compound = is_compound_type(inner_type);
-                            if (inner_type_is_compound){
+                            if (inner_type_is_compound) {
 
                                 let inner_type_info = debug_show inner_type;
 
-                                let pos = switch(Map.get(unique_compound_type_map, thash, inner_type_info)){
+                                let pos = switch (Map.get(unique_compound_type_map, thash, inner_type_info)) {
                                     case (?pos) pos;
                                     case (null) counter[C.COUNTER.COMPOUND_TYPE];
                                 };
@@ -1189,17 +1182,17 @@ module {
                         candid_type := inner_type;
                     };
 
-                    case (#Array(inner_type)){
+                    case (#Array(inner_type)) {
 
                         if (not type_exists) {
                             compound_type_buffer.add(T.TypeCode.Array);
 
                             let inner_type_is_compound = is_compound_type(inner_type);
-                            if (inner_type_is_compound){
+                            if (inner_type_is_compound) {
 
                                 let inner_type_info = debug_show inner_type;
 
-                                let pos = switch(Map.get(unique_compound_type_map, thash, inner_type_info)){
+                                let pos = switch (Map.get(unique_compound_type_map, thash, inner_type_info)) {
                                     case (?pos) pos;
                                     case (null) counter[C.COUNTER.COMPOUND_TYPE];
                                 };
@@ -1212,20 +1205,26 @@ module {
                         candid_type := inner_type;
                     };
 
-                    case (#Record(record_types)) {
-                       // field_info.add([var 0, 0]);
-                       // fields.add(record_types);
+                    case (#Record(record_types) or #Map(record_types)) {
+                        // field_info.add([var 0, 0]);
+                        // fields.add(record_types);
                     };
                     case (#Variant(variant_types)) {
-                       // field_info.add([var 1, 0]);
-                       // fields.add(variant_types);
+                        // field_info.add([var 1, 0]);
+                        // fields.add(variant_types);
                     };
+                    case (#Blob) {
+
+                    };
+                    case (#Tuple(types)) {
+
+                    };
+                    case (unsupported) Debug.trap("unsupported type: " # debug_show candid_type);
                 };
 
                 Debug.print("is_compound_type after switch type: " # debug_show (candid_is_compound_type));
 
-
-                switch(candid_value){
+                switch (candid_value) {
                     case (#Nat(n)) {
                         unsigned_leb128_64(value_buffer, n);
                     };
@@ -1290,8 +1289,8 @@ module {
                     case (#Bool(b)) {
                         value_buffer.add(if (b) (1) else (0));
                     };
-                    case (#Null) { };
-                    case (#Empty) { };
+                    case (#Null) {};
+                    case (#Empty) {};
                     case (#Text(t)) {
                         let utf8_bytes = Blob.toArray(Text.encodeUtf8(t));
                         unsigned_leb128_64(value_buffer, utf8_bytes.size());
@@ -1315,12 +1314,12 @@ module {
                         };
                     };
 
-                    case (#Option(opt_value)){
+                    case (#Option(opt_value)) {
                         value_buffer.add(if (opt_value == #Null) (0) else (1));
                         candid_value := opt_value;
                     };
 
-                    case (#Array(arr_values)){
+                    case (#Array(arr_values)) {
                         unsigned_leb128_64(value_buffer, arr_values.size());
 
                         var i = 0;
@@ -1352,7 +1351,7 @@ module {
                         candid_value := #Empty;
                     };
 
-                     case (#Record(record_entries)) {
+                    case (#Record(record_entries)) {
                         let record_types = switch (candid_type) {
                             case (#Record(record_types)) record_types;
                             case (_) Debug.trap("expected record type");
@@ -1382,7 +1381,7 @@ module {
                         var i = 0;
                         counter[C.COUNTER.COMPOUND_TYPE] -= 1;
 
-                        while (i < record_entries.size()){
+                        while (i < record_entries.size()) {
                             let record_type = record_types[i].1;
                             let record_key = record_entries[i].0;
                             let record_value = record_entries[i].1;
@@ -1400,12 +1399,10 @@ module {
                                 true,
                                 type_exists or not value_type_is_compound, // ignores primitive type but stores its value
                             );
-                            i+= 1;
+                            i += 1;
                         };
 
-
-
-                            Debug.print("record_types: " # debug_show record_types);
+                        Debug.print("record_types: " # debug_show record_types);
 
                         if (not type_exists) {
                             compound_type_buffer.add(T.TypeCode.Record);
@@ -1439,14 +1436,12 @@ module {
                         ignore Map.put(unique_compound_type_map, thash, type_info, counter[C.COUNTER.COMPOUND_TYPE]);
                         counter[C.COUNTER.COMPOUND_TYPE] += 1;
 
-
                         candid_is_compound_type := false; // end loop
                         candid_type := #Empty;
                         candid_value := #Empty;
                     };
 
-                    case (#Variant(_)){
-                    };
+                    case (#Variant(_)) {};
 
                     case (_) {
                         Debug.trap("unsupported type");
@@ -1454,7 +1449,6 @@ module {
                 };
 
                 Debug.print("is_compound_type after switch value: " # debug_show (candid_is_compound_type));
-
 
             };
 
@@ -1483,8 +1477,8 @@ module {
                 false,
             );
 
-            if (candid_is_compound_type){
-                let pos = switch(Map.get(unique_compound_type_map, thash, debug_show candid_type)) {
+            if (candid_is_compound_type) {
+                let pos = switch (Map.get(unique_compound_type_map, thash, debug_show candid_type)) {
                     case (?pos) pos;
                     case (_) Debug.trap("unable to find compound type pos to store in primitive type sequence");
                 };
@@ -1684,6 +1678,7 @@ module {
 
                 (#variant([{ tag; type_ }]), #variant({ tag; value }));
             };
+            case (unsupported) Debug.trap("unsupported type: " # debug_show candid);
         };
 
         (arg_type, arg_value);
@@ -1755,6 +1750,7 @@ module {
 
                 #Variant([(renamed_key, inner_type)]);
             };
+            case (unsupported) Debug.trap("unsupported type: " # debug_show candid);
         };
 
     };

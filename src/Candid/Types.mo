@@ -1,4 +1,3 @@
-import Map "mo:map/Map";
 module {
 
     public type KeyValuePair = (Text, Candid);
@@ -119,6 +118,8 @@ module {
 
         /// encodes faster if the complete type is known, but not necessary
         /// fails if types are incorrect
+        ///
+        /// Must call `Candid.formatCandidTypes` before passing in the types
         types : ?[CandidType];
 
         /// #### Decoding Options

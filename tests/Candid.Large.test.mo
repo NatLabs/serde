@@ -101,6 +101,8 @@ let StoreItem : Serde.Candid.CandidType = #Record([
     ("contact", #Record([("email", #Text), ("phone", #Option(#Text))])),
 ]);
 
+let FormattedStoreItem = Serde.Candid.formatCandidType([StoreItem], null);
+
 let cities = ["Toronto", "Ottawa", "New York", "Los Angeles", "Chicago", "Houston", "Phoenix", "Philadelphia", "San Antonio", "San Diego", "Dallas", "San Jose"];
 let states = ["ON", "QC", "NY", "CA", "IL", "TX", "AZ", "PA", "TX", "CA", "TX", "CA"];
 let streets = ["King St", "Queen St", "Yonge St", "Bay St", "Bloor St", "Dundas St", "College St", "Spadina Ave", "St Clair Ave", "Danforth Ave", "Eglinton Ave", "Lawrence Ave"];
@@ -196,7 +198,7 @@ suite(
                     store_items_with_types.add(item);
                     let candid_blob = candify_store_item.to_blob(item);
                     let #ok(split_blob) = CandidDecoder.split(candid_blob, null);
-                    let #ok(candid) = CandidDecoder.one_shot(candid_blob, store_item_keys, ?{ Serde.Candid.defaultOptions with types = ?[StoreItem] });
+                    let #ok(candid) = CandidDecoder.one_shot(candid_blob, store_item_keys, ?{ Serde.Candid.defaultOptions with types = ?FormattedStoreItem });
                     candid_buffer_with_types.add(candid);
                 };
             },
@@ -206,7 +208,7 @@ suite(
             func() {
                 for (i in Itertools.range(0, limit)) {
                     let candid = candid_buffer_with_types.get(i);
-                    let res = LegacyCandidEncoder.encode(candid, ?{ Serde.Candid.defaultOptions with types = ?[StoreItem] });
+                    let res = LegacyCandidEncoder.encode(candid, ?{ Serde.Candid.defaultOptions with types = ?FormattedStoreItem });
                     let #ok(blob) = res;
                     let item = candify_store_item.from_blob(blob);
                     assert item == store_items_with_types.get(i);

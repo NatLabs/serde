@@ -16,7 +16,7 @@ module {
     type Result<A, B> = Result.Result<A, B>;
 
     /// Converts serialized Candid blob to JSON text
-    public func toText(blob : Blob, keys : [Text], options: ?CandidType.Options) : Result<Text, Text> {
+    public func toText(blob : Blob, keys : [Text], options : ?CandidType.Options) : Result<Text, Text> {
         let decoded_res = Candid.decode(blob, keys, options);
         let #ok(candid) = decoded_res else return Utils.send_error(decoded_res);
 
@@ -37,7 +37,7 @@ module {
         let json : JSON = switch (candid) {
             case (#Null) #Null;
             case (#Bool(n)) #Boolean(n);
-            case (#Text(n)) #String(n);
+            case (#Text(n)) #String(Text.replace(n, #text("\""), ("\\\"")));
 
             case (#Int(n)) #Number(n);
             case (#Int8(n)) #Number(IntX.from8ToInt(n));
@@ -65,7 +65,7 @@ module {
             case (#Array(arr)) {
                 let newArr = Buffer.Buffer<JSON>(arr.size());
 
-                for (item in arr.vals()){
+                for (item in arr.vals()) {
                     let res = candidToJSON(item);
                     let #ok(json) = res else return Utils.send_error(res);
                     newArr.add(json);
@@ -77,7 +77,7 @@ module {
             case (#Record(records) or #Map(records)) {
                 let newRecords = Buffer.Buffer<(Text, JSON)>(records.size());
 
-                for ((key, val) in records.vals()){
+                for ((key, val) in records.vals()) {
                     let res = candidToJSON(val);
                     let #ok(json) = res else return Utils.send_error(res);
                     newRecords.add((key, json));
@@ -93,20 +93,13 @@ module {
 
                 #Object([("#" # key, json_val)]);
             };
-            
-            case (#Blob(_)){
-                return #err("#Blob(_) is not supported by JSON");
+
+            case (_) {
+                return #err(debug_show candid # " is not supported by JSON");
             };
 
-            case (#Empty){
-                return #err("#Empty is not supported by JSON");
-            };
-
-            case (#Principal(_)){
-                return #err("#Principal(_) is not supported by JSON");
-            };
         };
 
-        #ok(json)
+        #ok(json);
     };
 };

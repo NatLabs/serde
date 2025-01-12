@@ -112,8 +112,8 @@ module {
 
             case (#Principal(p)) #majorType2(Blob.toArray(Principal.toBlob(p)));
 
-            case (#Variant(_)) {
-                return #err("#Variant(_) is not supported in this implementation of CBOR");
+            case (#Variant(_) or #Tuple(_)) {
+                return #err(debug_show candid # " is not supported in this implementation of CBOR");
             };
         };
 
@@ -193,7 +193,7 @@ module {
             case (#majorType7(#_break)) {
                 return #err("Error decoding CBOR: #_break is not supported");
             };
-            case (#majorType6(tagged_cbor)) {
+            case (#majorType6(_)) {
                 return #err("Error decoding CBOR: Tagged values are not supported");
             };
         };

@@ -6,6 +6,7 @@ import TrieMap "mo:base/TrieMap";
 import Iter "mo:base/Iter";
 import Float "mo:base/Float";
 import Principal "mo:base/Principal";
+import Debug "mo:base/Debug";
 
 import itertools "mo:itertools/Iter";
 
@@ -20,7 +21,7 @@ module {
     type Result<K, V> = Result.Result<K, V>;
 
     /// Converts a serialized Candid blob to a URL-Encoded string.
-    public func toText(blob : Blob, keys : [Text], options: ?CandidType.Options) : Result<Text, Text> {
+    public func toText(blob : Blob, keys : [Text], options : ?CandidType.Options) : Result<Text, Text> {
         let res = Candid.decode(blob, keys, options);
         let #ok(candid) = res else return Utils.send_error(res);
         fromCandid(candid[0]);
@@ -49,9 +50,9 @@ module {
             },
         );
 
-        for (t in entries){
+        for (t in entries) {
             url_encoding := if (url_encoding == "") {
-                t ;
+                t;
             } else {
                 t # "&" # url_encoding;
             };
@@ -84,9 +85,9 @@ module {
                 let variant_key = storedKey # "#" # key;
                 toKeyValuePairs(pairs, variant_key, val);
             };
-            
+
             // TODO: convert blob to hex
-            case(#Blob(blob)) pairs.put(storedKey, "todo: Blob.toText(blob)");
+            // case (#Blob(blob)) pairs.put(storedKey, "todo: Blob.toText(blob)");
 
             case (#Option(p)) toKeyValuePairs(pairs, storedKey, p);
             case (#Text(t)) pairs.put(storedKey, t);
@@ -109,6 +110,8 @@ module {
             case (#Empty) pairs.put(storedKey, "");
 
             case (#Bool(b)) pairs.put(storedKey, debug_show (b));
+
+            case (_) Debug.trap(debug_show candid # " is not supported by URL-Encoded");
 
         };
     };
