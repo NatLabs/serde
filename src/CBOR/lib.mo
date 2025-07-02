@@ -127,7 +127,7 @@ module {
     };
 
     public func toCandid(blob : Blob, options : CandidType.Options) : Result<Candid, Text> {
-        let cbor_res = CBOR_Decoder.decode(blob);
+        let cbor_res = CBOR_Decoder.decode(blob.vals());
 
         let candid_res = switch (cbor_res) {
             case (#ok(cbor)) {
