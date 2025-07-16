@@ -183,7 +183,7 @@ module {
         buffer.clear();
 
         let resulting_hash = sha256.sum();
-        sha256.reset();
+        sha256.reset(); // !important to reset the sha256 instance for future use
 
         resulting_hash;
 

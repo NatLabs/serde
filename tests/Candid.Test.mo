@@ -107,13 +107,7 @@ suite(
                 let blob = to_candid (records);
                 let #ok(candid) = Candid.decode(blob, Serde.concatKeys([PermissionKeys, UserKeys, RecordKeys]), null);
 
-                let expected = [#Array([
-                    #Record([("group", #Text("null")), ("users", #Null)]), 
-                    #Record([("group", #Text("empty")), ("users", #Option(#Array([])))]), 
-                    #Record([("group", #Text("admins")), ("users", #Option(#Array([#Record([("age", #Nat(32)), ("permission", #Variant("admin", #Null)), ("name", #Text("John"))])])))]), 
-                    #Record([("group", #Text("users")), ("users", #Option(#Array([#Record([("age", #Nat(28)), ("permission", #Variant("read_all", #Null)), ("name", #Text("Ali"))]), #Record([("age", #Nat(40)), ("permission", #Variant("write_all", #Null)), ("name", #Text("James"))])])))]), 
-                    #Record([("group", #Text("base")), ("users", #Option(#Array([#Record([("age", #Nat(32)), ("permission", #Variant("read", #Array([#Text("posts"), #Text("comments")]))), ("name", #Text("Henry"))]), #Record([("age", #Nat(32)), ("permission", #Variant("write", #Array([#Text("posts"), #Text("comments")]))), ("name", #Text("Steven"))])])))])
-                ])];
+                let expected = [#Array([#Record([("group", #Text("null")), ("users", #Null)]), #Record([("group", #Text("empty")), ("users", #Option(#Array([])))]), #Record([("group", #Text("admins")), ("users", #Option(#Array([#Record([("age", #Nat(32)), ("permission", #Variant("admin", #Null)), ("name", #Text("John"))])])))]), #Record([("group", #Text("users")), ("users", #Option(#Array([#Record([("age", #Nat(28)), ("permission", #Variant("read_all", #Null)), ("name", #Text("Ali"))]), #Record([("age", #Nat(40)), ("permission", #Variant("write_all", #Null)), ("name", #Text("James"))])])))]), #Record([("group", #Text("base")), ("users", #Option(#Array([#Record([("age", #Nat(32)), ("permission", #Variant("read", #Array([#Text("posts"), #Text("comments")]))), ("name", #Text("Henry"))]), #Record([("age", #Nat(32)), ("permission", #Variant("write", #Array([#Text("posts"), #Text("comments")]))), ("name", #Text("Steven"))])])))])])];
 
                 assert candid == expected;
             },
@@ -278,7 +272,6 @@ suite(
                 let motoko_blob = Blob.fromArray([1, 2, 3, 4]);
                 let motoko_array : [Nat8] = [1, 2, 3, 4];
 
-                
                 let bytes_array = to_candid (motoko_blob);
                 let bytes_blob = to_candid (motoko_blob);
 
@@ -651,13 +644,13 @@ suite(
                 let array_val : ?Variant = from_candid (array_blob);
 
                 assert assertAllTrue([
-                    text_val == ? #text("hello"),
-                    nat_val == ? #nat(123),
-                    bool_val == ? #bool(true),
-                    record_val == ? #record({
+                    text_val == ?#text("hello"),
+                    nat_val == ?#nat(123),
+                    bool_val == ?#bool(true),
+                    record_val == ?#record({
                         site = "github";
                     }),
-                    array_val == ? #array([1, 2, 3]),
+                    array_val == ?#array([1, 2, 3]),
                 ]);
             },
         );

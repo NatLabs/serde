@@ -24,10 +24,8 @@ module {
         bench.rows([
             "Serde: One Shot",
             "Serde: One Shot sans type inference",
-            // "Serde 'mo:motoko_candid' lib",
             "Motoko (to_candid(), from_candid())",
 
-            // "#Nat"
         ]);
 
         bench.cols([
@@ -185,23 +183,6 @@ module {
                     };
                 };
 
-                // case ("Serde 'mo:motoko_candid' lib", "decode()") {
-                //     for (i in Itertools.range(0, limit)) {
-                //         let item : StoreItem = buffer.get(i);
-                //         let candid_blob = candify_store_item.to_blob(item);
-                //         candid_blobs.add(candid_blob);
-                //         let #ok(candid) = LegacyCandidDecoder.decode(candid_blob, StoreItemKeys, null);
-                //         candid_buffer.add(candid);
-                //     };
-                // };
-                // case ("Serde 'mo:motoko_candid' lib", "encode()") {
-                //     for (i in Itertools.range(0, limit)) {
-                //         let candid = candid_buffer.get(i);
-                //         let res = LegacyCandidEncoder.encode(candid, null);
-                //         let #ok(blob) = res;
-                //     };
-                // };
-
                 case ("Serde: One Shot", "decode()") {
                     for (i in Itertools.range(0, limit)) {
                         let item = buffer.get(i);
@@ -223,8 +204,6 @@ module {
                     for (i in Itertools.range(0, limit)) {
                         let item = buffer.get(i);
                         let candid_blob = candify_store_item.to_blob(item);
-
-                        let FormattedStoreItem = Serde.Candid.formatCandidType([StoreItem], null);
 
                         let options = {
                             Serde.Candid.defaultOptions with types = ?FormattedStoreItem
@@ -256,28 +235,6 @@ module {
                     };
                 };
 
-                case ("Serde: One Shot FR sans type inference", "decode()") {};
-
-                case ("Serde: One Shot FR sans type inference", "encode()") {
-                    for (i in Itertools.range(0, limit)) {
-                        let candid = candid_buffer.get(i);
-
-                        let options = {
-                            Serde.Candid.defaultOptions with types = ?[StoreItem]
-                        };
-                        let res = CandidEncoderFR.one_shot(candid, ?options);
-                        let #ok(blob) = res;
-                    };
-                };
-
-                // case ("#Nat", "decode()"){
-                //     for (i in Itertools.range(0, limit)) {
-                //         let item = buffer.get(i);
-                //         let candid_blob = candify_store_item.to_blob(item);
-                //         let #ok(candid) = CandidDecoder.decode(candid_blob, StoreItemKeys, null);
-                //         // candid_buffer.add(candid);
-                //     };
-                // };
                 case (_, _) {
                     Debug.trap("Should be unreachable:\n row = \"" # debug_show row # "\" and col = \"" # debug_show col # "\"");
                 };
