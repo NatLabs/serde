@@ -1,7 +1,7 @@
 import List "mo:base/List";
 
-import C "mo:parser-combinators/Combinators";
-import P "mo:parser-combinators/Parser";
+import C "../../../../submodules/parser-combinators.mo/src/Combinators";
+import P "../../../../submodules/parser-combinators.mo/src/Parser";
 
 import Candid "../../Types";
 import { ignoreSpace } "Common";
@@ -31,10 +31,10 @@ module {
                             C.oneOf([
                                 fieldParser(candidParser),
                                 emptyValueParser,
-                            ]),
+                            ])
                         ),
                         ignoreSpace(C.String.string("}")),
-                    ),
+                    )
                 ),
             ),
             func(variant : (Text, Candid)) : Candid {

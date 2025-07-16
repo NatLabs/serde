@@ -3,12 +3,12 @@ import Iter "mo:base/Iter";
 import List "mo:base/List";
 import Text "mo:base/Text";
 
-import C "mo:parser-combinators/Combinators";
-import P "mo:parser-combinators/Parser";
+import C "../../../../submodules/parser-combinators.mo/src/Combinators";
+import P "../../../../submodules/parser-combinators.mo/src/Parser";
 
 import Candid "../../Types";
 
-module{
+module {
     type Candid = Candid.Candid;
     type List<A> = List.List<A>;
 
@@ -23,7 +23,7 @@ module{
         );
     };
 
-    public func parseText(): Parser<Char, Text>{
+    public func parseText() : Parser<Char, Text> {
         C.map(
             C.bracket(
                 C.String.string("\""),
@@ -37,27 +37,36 @@ module{
     };
 
     func textChar() : P.Parser<Char, Char> = C.oneOf([
-        C.sat<Char>(func (c : Char) : Bool {
-            c != Char.fromNat32(0x22) and c != '\\';
-        }),
+        C.sat<Char>(
+            func(c : Char) : Bool {
+                c != Char.fromNat32(0x22) and c != '\\';
+            }
+        ),
         C.right(
             C.Character.char('\\'),
             C.map(
                 C.Character.oneOf([
-                    Char.fromNat32(0x22), '\\', '/', 'b', 'f', 'n', 'r', 't',
+                    Char.fromNat32(0x22),
+                    '\\',
+                    '/',
+                    'b',
+                    'f',
+                    'n',
+                    'r',
+                    't',
                     // TODO: u hex{4}
                 ]),
-                func (c : Char) : Char {
+                func(c : Char) : Char {
                     switch (c) {
-                        case ('b') { Char.fromNat32(0x08); };
-                        case ('f') { Char.fromNat32(0x0C); };
-                        case ('n') { Char.fromNat32(0x0A); };
-                        case ('r') { Char.fromNat32(0x0D); };
-                        case ('t') { Char.fromNat32(0x09); };
-                        case (_) { c; };
+                        case ('b') { Char.fromNat32(0x08) };
+                        case ('f') { Char.fromNat32(0x0C) };
+                        case ('n') { Char.fromNat32(0x0A) };
+                        case ('r') { Char.fromNat32(0x0D) };
+                        case ('t') { Char.fromNat32(0x09) };
+                        case (_) { c };
                     };
-                }
-            )
-        )
+                },
+            ),
+        ),
     ]);
-}
+};

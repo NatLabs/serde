@@ -1,7 +1,7 @@
 import List "mo:base/List";
 
-import C "mo:parser-combinators/Combinators";
-import P "mo:parser-combinators/Parser";
+import C "../../../../submodules/parser-combinators.mo/src/Combinators";
+import P "../../../../submodules/parser-combinators.mo/src/Parser";
 
 import Candid "../../Types";
 
@@ -17,7 +17,7 @@ module {
         C.map(
             C.right(
                 ignoreSpace(
-                    C.String.string("vec"),
+                    C.String.string("vec")
                 ),
                 ignoreSpace(
                     C.bracket(
@@ -26,7 +26,7 @@ module {
                             C.sepBy(
                                 P.delay(valueParser),
                                 ignoreSpace(C.Character.char(';')),
-                            ),
+                            )
                         ),
                         C.oneOf([
                             C.right(
@@ -34,8 +34,8 @@ module {
                                 ignoreSpace(C.String.string("}")),
                             ),
                             ignoreSpace(C.String.string("}")),
-                        ])
-                    ),
+                        ]),
+                    )
                 ),
             ),
             func(list : List<Candid>) : Candid {

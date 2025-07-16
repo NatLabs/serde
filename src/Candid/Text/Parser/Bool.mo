@@ -1,10 +1,10 @@
 import List "mo:base/List";
 
-import C "mo:parser-combinators/Combinators";
-import P "mo:parser-combinators/Parser";
+import C "../../../../submodules/parser-combinators.mo/src/Combinators";
+import P "../../../../submodules/parser-combinators.mo/src/Parser";
 
 import Candid "../../Types";
-import { ignoreSpace; } "Common";
+import { ignoreSpace } "Common";
 
 module {
     type Candid = Candid.Candid;
@@ -22,7 +22,7 @@ module {
                 C.oneOf([
                     C.String.string("true"),
                     C.String.string("false"),
-                ]),
+                ])
             ),
             func(t : Text) : Bool {
                 switch (t) {
