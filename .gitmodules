@@ -1,6 +1,0 @@
-[submodule "submodules/parser-combinators.mo"]
-	path = submodules/parser-combinators.mo
-	url = https://github.com/aviate-labs/parser-combinators.mo.git
-[submodule "submodules/json.mo"]
-	path = submodules/json.mo
-	url = https://github.com/NatLabs/json.mo.git
