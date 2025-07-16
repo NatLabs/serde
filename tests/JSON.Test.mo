@@ -4,14 +4,9 @@ import Debug "mo:base/Debug";
 import Iter "mo:base/Iter";
 import Nat "mo:base/Nat";
 
-import ActorSpec "./utils/ActorSpec";
 import { test; suite } "mo:test";
 
 import { Candid; JSON } "../src";
-
-let {
-    assertAllTrue;
-} = ActorSpec;
 
 type User = {
     name : Text;
@@ -98,15 +93,11 @@ suite(
                 let record_val : ?Variant = from_candid (record_blob);
                 let array_val : ?Variant = from_candid (array_blob);
 
-                assert assertAllTrue([
-                    text_val == ? #text("hello"),
-                    nat_val == ? #nat(123),
-                    bool_val == ? #bool(true),
-                    record_val == ? #record({
-                        site = "github";
-                    }),
-                    array_val == ? #array([1, 2, 3]),
-                ]);
+                assert (text_val == ?#text("hello"));
+                assert (nat_val == ?#nat(123));
+                assert (bool_val == ?#bool(true));
+                assert (record_val == ?#record({ site = "github" }));
+                assert (array_val == ?#array([1, 2, 3]));
             },
         );
         test(
@@ -121,14 +112,14 @@ suite(
                 let arr2_encoded : ?[[Nat]] = from_candid (arr2_blob);
                 let arr3_encoded : ?[[[Text]]] = from_candid (arr3_blob);
 
-                assert assertAllTrue([
-                    arr2_encoded == ?[[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11]],
+                assert (arr2_encoded == ?[[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11]]);
+                assert (
                     arr3_encoded == ?[
                         [["hello", "world"], ["foo", "bar"]],
                         [["hello", "world"], ["foo", "bar"]],
                         [["hello", "world"], ["foo", "bar"]],
-                    ],
-                ]);
+                    ]
+                );
             },
         );
         test(
@@ -215,13 +206,11 @@ suite(
                 let record_json = JSON.toText(record_blob, ["record", "site"], null);
                 let array_json = JSON.toText(array_blob, ["array"], null);
 
-                assert assertAllTrue([
-                    text_json == #ok("{\"#text\": \"hello\"}"),
-                    nat_json == #ok("{\"#nat\": 123}"),
-                    bool_json == #ok("{\"#bool\": true}"),
-                    record_json == #ok("{\"#record\": {\"site\": \"github\"}}"),
-                    array_json == #ok("{\"#array\": [1, 2, 3]}"),
-                ]);
+                assert (text_json == #ok("{\"#text\": \"hello\"}"));
+                assert (nat_json == #ok("{\"#nat\": 123}"));
+                assert (bool_json == #ok("{\"#bool\": true}"));
+                assert (record_json == #ok("{\"#record\": {\"site\": \"github\"}}"));
+                assert (array_json == #ok("{\"#array\": [1, 2, 3]}"));
             },
         );
         test(
@@ -235,10 +224,8 @@ suite(
                     [["hello", "world"], ["foo", "bar"]],
                 ];
 
-                assert assertAllTrue([
-                    JSON.toText(to_candid (arr2), [], null) == #ok("[[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11]]"),
-                    JSON.toText(to_candid (arr3), [], null) == #ok("[[[\"hello\", \"world\"], [\"foo\", \"bar\"]], [[\"hello\", \"world\"], [\"foo\", \"bar\"]], [[\"hello\", \"world\"], [\"foo\", \"bar\"]]]"),
-                ]);
+                assert (JSON.toText(to_candid (arr2), [], null) == #ok("[[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11]]"));
+                assert (JSON.toText(to_candid (arr3), [], null) == #ok("[[[\"hello\", \"world\"], [\"foo\", \"bar\"]], [[\"hello\", \"world\"], [\"foo\", \"bar\"]], [[\"hello\", \"world\"], [\"foo\", \"bar\"]]]"));
             },
         );
         test(

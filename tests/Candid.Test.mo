@@ -7,15 +7,9 @@ import Principal "mo:base/Principal";
 
 import { test; suite } "mo:test";
 
-import ActorSpec "./utils/ActorSpec";
-
 import Serde "../src";
 import Candid "../src/Candid";
 import Encoder "../src/Candid/Blob/Encoder";
-
-let {
-    assertAllTrue;
-} = ActorSpec;
 
 type Candid = Candid.Candid;
 
@@ -107,13 +101,7 @@ suite(
                 let blob = to_candid (records);
                 let #ok(candid) = Candid.decode(blob, Serde.concatKeys([PermissionKeys, UserKeys, RecordKeys]), null);
 
-                let expected = [#Array([
-                    #Record([("group", #Text("null")), ("users", #Null)]), 
-                    #Record([("group", #Text("empty")), ("users", #Option(#Array([])))]), 
-                    #Record([("group", #Text("admins")), ("users", #Option(#Array([#Record([("age", #Nat(32)), ("permission", #Variant("admin", #Null)), ("name", #Text("John"))])])))]), 
-                    #Record([("group", #Text("users")), ("users", #Option(#Array([#Record([("age", #Nat(28)), ("permission", #Variant("read_all", #Null)), ("name", #Text("Ali"))]), #Record([("age", #Nat(40)), ("permission", #Variant("write_all", #Null)), ("name", #Text("James"))])])))]), 
-                    #Record([("group", #Text("base")), ("users", #Option(#Array([#Record([("age", #Nat(32)), ("permission", #Variant("read", #Array([#Text("posts"), #Text("comments")]))), ("name", #Text("Henry"))]), #Record([("age", #Nat(32)), ("permission", #Variant("write", #Array([#Text("posts"), #Text("comments")]))), ("name", #Text("Steven"))])])))])
-                ])];
+                let expected = [#Array([#Record([("group", #Text("null")), ("users", #Null)]), #Record([("group", #Text("empty")), ("users", #Option(#Array([])))]), #Record([("group", #Text("admins")), ("users", #Option(#Array([#Record([("age", #Nat(32)), ("permission", #Variant("admin", #Null)), ("name", #Text("John"))])])))]), #Record([("group", #Text("users")), ("users", #Option(#Array([#Record([("age", #Nat(28)), ("permission", #Variant("read_all", #Null)), ("name", #Text("Ali"))]), #Record([("age", #Nat(40)), ("permission", #Variant("write_all", #Null)), ("name", #Text("James"))])])))]), #Record([("group", #Text("base")), ("users", #Option(#Array([#Record([("age", #Nat(32)), ("permission", #Variant("read", #Array([#Text("posts"), #Text("comments")]))), ("name", #Text("Henry"))]), #Record([("age", #Nat(32)), ("permission", #Variant("write", #Array([#Text("posts"), #Text("comments")]))), ("name", #Text("Steven"))])])))])])];
 
                 assert candid == expected;
             },
@@ -254,22 +242,8 @@ suite(
                     [["hello", "world"], ["foo", "bar"]],
                 ];
 
-                assert assertAllTrue([
-                    Candid.decode(to_candid (arr2), [], null) == #ok([
-                        #Array([
-                            #Array([#Nat(1), #Nat(2), #Nat(3), #Nat(4)]),
-                            #Array([#Nat(5), #Nat(6), #Nat(7), #Nat(8)]),
-                            #Array([#Nat(9), #Nat(10), #Nat(11)]),
-                        ])
-                    ]),
-                    Candid.decode(to_candid (arr3), [], null) == #ok([
-                        #Array([
-                            #Array([#Array([#Text("hello"), #Text("world")]), #Array([#Text("foo"), #Text("bar")])]),
-                            #Array([#Array([#Text("hello"), #Text("world")]), #Array([#Text("foo"), #Text("bar")])]),
-                            #Array([#Array([#Text("hello"), #Text("world")]), #Array([#Text("foo"), #Text("bar")])]),
-                        ])
-                    ]),
-                ]);
+                assert (Candid.decode(to_candid (arr2), [], null) == #ok([#Array([#Array([#Nat(1), #Nat(2), #Nat(3), #Nat(4)]), #Array([#Nat(5), #Nat(6), #Nat(7), #Nat(8)]), #Array([#Nat(9), #Nat(10), #Nat(11)])])]));
+                assert (Candid.decode(to_candid (arr3), [], null) == #ok([#Array([#Array([#Array([#Text("hello"), #Text("world")]), #Array([#Text("foo"), #Text("bar")])]), #Array([#Array([#Text("hello"), #Text("world")]), #Array([#Text("foo"), #Text("bar")])]), #Array([#Array([#Text("hello"), #Text("world")]), #Array([#Text("foo"), #Text("bar")])])])]));
             },
         );
         test(
@@ -278,19 +252,18 @@ suite(
                 let motoko_blob = Blob.fromArray([1, 2, 3, 4]);
                 let motoko_array : [Nat8] = [1, 2, 3, 4];
 
-                
                 let bytes_array = to_candid (motoko_blob);
                 let bytes_blob = to_candid (motoko_blob);
 
                 let candid_array = Candid.decode(bytes_array, [], null);
                 let candid_blob = Candid.decode(bytes_blob, [], null);
 
-                assert assertAllTrue([
+                assert (
                     // All [Nat8] types are decoded as #Blob
                     candid_array != #ok([#Array([#Nat8(1), #Nat8(2), #Nat8(3), #Nat8(4)])]),
-                    candid_array == #ok([#Blob(motoko_blob)]),
-                    candid_blob == #ok([#Blob(motoko_blob)]),
-                ]);
+                );
+                assert (candid_array == #ok([#Blob(motoko_blob)]));
+                assert (candid_blob == #ok([#Blob(motoko_blob)]));
             },
         );
         test(
@@ -322,13 +295,11 @@ suite(
                 let record_candid = Candid.decode(record_blob, ["record", "site"], null);
                 let array_candid = Candid.decode(array_blob, ["array"], null);
 
-                assert assertAllTrue([
-                    text_candid == #ok([#Variant("text", #Text("hello"))]),
-                    nat_candid == #ok([#Variant("nat", #Nat(123))]),
-                    bool_candid == #ok([#Variant("bool", #Bool(true))]),
-                    record_candid == #ok([#Variant("record", #Record([("site", #Text("github"))]))]),
-                    array_candid == #ok([#Variant("array", #Array([#Nat(1), #Nat(2), #Nat(3)]))]),
-                ]);
+                assert (text_candid == #ok([#Variant("text", #Text("hello"))]));
+                assert (nat_candid == #ok([#Variant("nat", #Nat(123))]));
+                assert (bool_candid == #ok([#Variant("bool", #Bool(true))]));
+                assert (record_candid == #ok([#Variant("record", #Record([("site", #Text("github"))]))]));
+                assert (array_candid == #ok([#Variant("array", #Array([#Nat(1), #Nat(2), #Nat(3)]))]));
 
             },
         );
@@ -585,14 +556,14 @@ suite(
                 let arr2_encoded : ?[[Nat]] = from_candid (arr2_blob);
                 let arr3_encoded : ?[[[Text]]] = from_candid (arr3_blob);
 
-                assert assertAllTrue([
-                    arr2_encoded == ?[[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11]],
+                assert (arr2_encoded == ?[[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11]]);
+                assert (
                     arr3_encoded == ?[
                         [["hello", "world"], ["foo", "bar"]],
                         [["hello", "world"], ["foo", "bar"]],
                         [["hello", "world"], ["foo", "bar"]],
-                    ],
-                ]);
+                    ]
+                );
             },
         );
         test(
@@ -612,12 +583,10 @@ suite(
                 let bytes_1 : ?[Nat8] = from_candid (serialized_1);
                 let bytes_2 : ?[Nat8] = from_candid (serialized_1);
 
-                assert assertAllTrue([
-                    blob_1 == ?motoko_blob,
-                    blob_2 == ?motoko_blob,
-                    bytes_1 == ?[1, 2, 3, 4],
-                    bytes_2 == ?[1, 2, 3, 4],
-                ]);
+                assert (blob_1 == ?motoko_blob);
+                assert (blob_2 == ?motoko_blob);
+                assert (bytes_1 == ?[1, 2, 3, 4]);
+                assert (bytes_2 == ?[1, 2, 3, 4]);
             },
         );
         test(
@@ -650,15 +619,11 @@ suite(
                 let record_val : ?Variant = from_candid (record_blob);
                 let array_val : ?Variant = from_candid (array_blob);
 
-                assert assertAllTrue([
-                    text_val == ? #text("hello"),
-                    nat_val == ? #nat(123),
-                    bool_val == ? #bool(true),
-                    record_val == ? #record({
-                        site = "github";
-                    }),
-                    array_val == ? #array([1, 2, 3]),
-                ]);
+                assert (text_val == ?#text("hello"));
+                assert (nat_val == ?#nat(123));
+                assert (bool_val == ?#bool(true));
+                assert (record_val == ?#record({ site = "github" }));
+                assert (array_val == ?#array([1, 2, 3]));
             },
         );
     },
@@ -670,86 +635,67 @@ suite(
         test(
             "parse \"quoted text\" to #Text",
             func() {
-                assert assertAllTrue([
-                    Candid.fromText("( \"\" )") == [#Text("")],
-                    Candid.fromText("( \"hello\" )") == [#Text("hello")],
-                    Candid.fromText("(\"hello world\")") == [#Text("hello world")],
-                    Candid.fromText("(\"1_000_000\")") == [#Text("1_000_000")],
-                ]);
+                assert (Candid.fromText("( \"\" )") == [#Text("")]);
+                assert (Candid.fromText("( \"hello\" )") == [#Text("hello")]);
+                assert (Candid.fromText("(\"hello world\")") == [#Text("hello world")]);
+                assert (Candid.fromText("(\"1_000_000\")") == [#Text("1_000_000")]);
             },
         );
         test(
             "parse blob type",
             func() {
-                assert assertAllTrue([
-                    Candid.fromText("(blob \"\")") == [#Blob(Blob.fromArray([]))],
-                    Candid.fromText("(blob \"\\AB\\CD\\EF\")") == [#Blob(Blob.fromArray([0xAB, 0xCD, 0xEF]))],
-                    Candid.fromText("(blob \"\\CA\\FF\\FE\")") == [#Blob(Blob.fromArray([0xCA, 0xFF, 0xFE]))],
-                ]);
+                assert (Candid.fromText("(blob \"\")") == [#Blob(Blob.fromArray([]))]);
+                assert (Candid.fromText("(blob \"\\AB\\CD\\EF\")") == [#Blob(Blob.fromArray([0xAB, 0xCD, 0xEF]))]);
+                assert (Candid.fromText("(blob \"\\CA\\FF\\FE\")") == [#Blob(Blob.fromArray([0xCA, 0xFF, 0xFE]))]);
             },
         );
         test(
             "should parse principal type",
             func() {
-                assert assertAllTrue([
-                    Candid.fromText("(principal \"aaaaa-aa\")") == [#Principal(Principal.fromText("aaaaa-aa"))],
-                    Candid.fromText("(principal \"w7x7r-cok77-xa\")") == [#Principal(Principal.fromText("w7x7r-cok77-xa"))],
-                ]);
+                assert (Candid.fromText("(principal \"aaaaa-aa\")") == [#Principal(Principal.fromText("aaaaa-aa"))]);
+                assert (Candid.fromText("(principal \"w7x7r-cok77-xa\")") == [#Principal(Principal.fromText("w7x7r-cok77-xa"))]);
             },
         );
         test(
             "Positive integers to #Nat",
             func() {
-                assert assertAllTrue([
-                    Candid.fromText("(  1000)") == [#Nat(1000)],
-                    Candid.fromText("(+2000)") == [#Nat(2000)],
-                ]);
+                assert (Candid.fromText("(  1000)") == [#Nat(1000)]);
+                assert (Candid.fromText("(+2000)") == [#Nat(2000)]);
             },
         );
         test(
             "Negative integers to #Int",
             func() {
-                assert assertAllTrue([
-                    Candid.fromText("(-3000)") == [#Int(-3000)],
-                    Candid.fromText("(-4000)") == [#Int(-4000)],
-                ]);
+                assert (Candid.fromText("(-3000)") == [#Int(-3000)]);
+                assert (Candid.fromText("(-4000)") == [#Int(-4000)]);
             },
         );
         test(
             "should parse Int/Nats with leading zeroes",
             func() {
-                assert assertAllTrue([
-                    Candid.fromText("(001)") == [#Nat(1)],
-                    Candid.fromText("((+00123))") == [#Nat(123)],
-                    Candid.fromText("(-0123)") == [#Int(-0123)],
-                ]);
+                assert (Candid.fromText("(001)") == [#Nat(1)]);
+                assert (Candid.fromText("((+00123))") == [#Nat(123)]);
+                assert (Candid.fromText("(-0123)") == [#Int(-0123)]);
             },
         );
         test(
             "should parse Int/Nat with underscores",
             func() {
-                assert assertAllTrue([
-                    Candid.fromText("(   1_000)") == [#Nat(1000)],
-                    Candid.fromText("(+1_000_000)") == [#Nat(1000000)],
-
-                    Candid.fromText("(-1_000   )") == [#Int(-1000)],
-                    Candid.fromText("((-1_000_000))") == [#Int(-1000000)],
-                ]);
+                assert (Candid.fromText("(   1_000)") == [#Nat(1000)]);
+                assert (Candid.fromText("(+1_000_000)") == [#Nat(1000000)]);
+                assert (Candid.fromText("(-1_000   )") == [#Int(-1000)]);
+                assert (Candid.fromText("((-1_000_000))") == [#Int(-1000000)]);
             },
         );
         test(
             "should parse Int/Nat in hex format",
             func() {
-                assert assertAllTrue([
-                    Candid.fromText("(0x10)") == [#Nat(16)],
-                    Candid.fromText("(0xdead_beef)") == [#Nat(3_735_928_559)],
-                    Candid.fromText("(0xDEAD_BEEF)") == [#Nat(3_735_928_559)],
-
-                    Candid.fromText("(+0xa1_b2)") == [#Nat(41_394)],
-                    Candid.fromText("(-0xA1_B2)") == [#Int(-41_394)],
-
-                    Candid.fromText("(-0xABC_def)") == [#Int(-11_259_375)],
-                ]);
+                assert (Candid.fromText("(0x10)") == [#Nat(16)]);
+                assert (Candid.fromText("(0xdead_beef)") == [#Nat(3_735_928_559)]);
+                assert (Candid.fromText("(0xDEAD_BEEF)") == [#Nat(3_735_928_559)]);
+                assert (Candid.fromText("(+0xa1_b2)") == [#Nat(41_394)]);
+                assert (Candid.fromText("(-0xA1_B2)") == [#Int(-41_394)]);
+                assert (Candid.fromText("(-0xABC_def)") == [#Int(-11_259_375)]);
             },
         );
         test(
@@ -761,53 +707,53 @@ suite(
         test(
             "should parse 'opt' type",
             func() {
-                assert assertAllTrue([
-                    Candid.fromText("(opt 100)") == [#Option(#Nat(100))],
-                    Candid.fromText("(opt null)") == [#Option(#Null)],
-                    Candid.fromText("(opt (-0xdead_beef))") == [#Option(#Int(-3_735_928_559))],
-                    Candid.fromText("(opt \"hello\")") == [#Option(#Text("hello"))],
-                    Candid.fromText("(opt true)") == [#Option(#Bool(true))],
-                    Candid.fromText("(opt (blob \"\\AB\\CD\\EF\\12\"))") == [#Option(#Blob(Blob.fromArray([0xAB, 0xCD, 0xEF, 0x12])))],
-                    Candid.fromText("(opt (principal \"w7x7r-cok77-xa\"))") == [#Option(#Principal(Principal.fromText("w7x7r-cok77-xa")))],
-                ]);
+                assert (Candid.fromText("(opt 100)") == [#Option(#Nat(100))]);
+                assert (Candid.fromText("(opt null)") == [#Option(#Null)]);
+                assert (Candid.fromText("(opt (-0xdead_beef))") == [#Option(#Int(-3_735_928_559))]);
+                assert (Candid.fromText("(opt \"hello\")") == [#Option(#Text("hello"))]);
+                assert (Candid.fromText("(opt true)") == [#Option(#Bool(true))]);
+                assert (Candid.fromText("(opt (blob \"\\AB\\CD\\EF\\12\"))") == [#Option(#Blob(Blob.fromArray([0xAB, 0xCD, 0xEF, 0x12])))]);
+                assert (Candid.fromText("(opt (principal \"w7x7r-cok77-xa\"))") == [#Option(#Principal(Principal.fromText("w7x7r-cok77-xa")))]);
             },
         );
 
         test(
             "parse record type",
             func() {
-                assert assertAllTrue([
-                    Candid.fromText("(record {})") == [#Record([])],
-                    Candid.fromText("(record { first_name = \"John\"; second_name = \"Doe\" })") == [#Record([("first_name", #Text("John")), ("second_name", #Text("Doe"))])],
-                    Candid.fromText("(record { \"name with spaces\" = 42; \"unicode, too: ☃\" = true; })") == [#Record([("name with spaces", #Nat(42)), ("unicode, too: ☃", #Bool(true))])],
+                assert (Candid.fromText("(record {})") == [#Record([])]);
+                assert (Candid.fromText("(record { first_name = \"John\"; second_name = \"Doe\" })") == [#Record([("first_name", #Text("John")), ("second_name", #Text("Doe"))])]);
+                assert (Candid.fromText("(record { \"name with spaces\" = 42; \"unicode, too: ☃\" = true; })") == [#Record([("name with spaces", #Nat(42)), ("unicode, too: ☃", #Bool(true))])]);
+                assert (
                     // nested record
                     Candid.fromText("(record { first_name = \"John\"; second_name = \"Doe\"; address = record { street = \"Main Street\"; city = \"New York\"; } })") == [#Record([("first_name", #Text("John")), ("second_name", #Text("Doe")), ("address", #Record([("street", #Text("Main Street")), ("city", #Text("New York"))]))])],
-                ]);
+                );
             },
         );
         test(
             "parser variant type",
             func() {
-                assert assertAllTrue([
-                    Candid.fromText("(variant { ok = \"hello\" })") == [#Variant(("ok", #Text("hello")))],
-
+                assert (Candid.fromText("(variant { ok = \"hello\" })") == [#Variant(("ok", #Text("hello")))]);
+                assert (
                     // variant without a value
                     Candid.fromText("(variant { \"ok\" })") == [#Variant(("ok", #Null))],
-
+                );
+                assert (
                     // variant with unicode key
                     Candid.fromText("(variant { \"unicode, too: ☃\" = \"hello\" })") == [#Variant(("unicode, too: ☃", #Text("hello")))],
-                    Candid.fromText("(variant { \"☃\" })") == [#Variant(("☃", #Null))],
-
+                );
+                assert (Candid.fromText("(variant { \"☃\" })") == [#Variant(("☃", #Null))]);
+                assert (
                     // variant with record value
                     Candid.fromText("(variant { ok = record { \"first name\" = \"John\"; second_name = \"Doe\" } })") == [#Variant(("ok", #Record([("first name", #Text("John")), ("second_name", #Text("Doe"))])))],
-
+                );
+                assert (
                     // variant with array value
                     Candid.fromText("(variant { ok = vec { 100; 200; 0xAB } })") == [#Variant(("ok", #Array([#Nat(100), #Nat(200), #Nat(0xAB)])))],
-
+                );
+                assert (
                     // variant with variant value
                     Candid.fromText("(variant { ok = variant { status = \"active\" } })") == [#Variant(("ok", #Variant(("status", #Text("active")))))],
-
-                ]);
+                );
             },
         );
 
@@ -820,50 +766,40 @@ suite(
         test(
             "Nat8",
             func() {
-                assert assertAllTrue([
-                    Candid.fromText("(100 : nat8)") == [#Nat8(100 : Nat8)],
-                    Candid.fromText("(00123:nat8)") == [#Nat8(123 : Nat8)],
-                    Candid.fromText("(1_2_3 : nat8)") == [#Nat8(123 : Nat8)],
-                    Candid.fromText("(0xA1 : nat8)") == [#Nat8(161 : Nat8)],
-                ]);
+                assert (Candid.fromText("(100 : nat8)") == [#Nat8(100 : Nat8)]);
+                assert (Candid.fromText("(00123:nat8)") == [#Nat8(123 : Nat8)]);
+                assert (Candid.fromText("(1_2_3 : nat8)") == [#Nat8(123 : Nat8)]);
+                assert (Candid.fromText("(0xA1 : nat8)") == [#Nat8(161 : Nat8)]);
             },
         );
         test(
             "Nat16",
             func() {
-                assert assertAllTrue([
-                    Candid.fromText("((1000 : nat16))") == [#Nat16(1000 : Nat16)],
-                    Candid.fromText("(0061234 : nat16)") == [#Nat16(61234 : Nat16)],
-                    Candid.fromText("(32_892 : nat16)") == [#Nat16(32_892 : Nat16)],
-                    Candid.fromText("(0xBEEF : nat16)") == [#Nat16(48_879 : Nat16)],
-                ]);
+                assert (Candid.fromText("((1000 : nat16))") == [#Nat16(1000 : Nat16)]);
+                assert (Candid.fromText("(0061234 : nat16)") == [#Nat16(61234 : Nat16)]);
+                assert (Candid.fromText("(32_892 : nat16)") == [#Nat16(32_892 : Nat16)]);
+                assert (Candid.fromText("(0xBEEF : nat16)") == [#Nat16(48_879 : Nat16)]);
             },
         );
         test(
             "Nat32",
             func() {
-                assert assertAllTrue([
-                    Candid.fromText("((1_000_000 : nat32))") == [#Nat32(1_000_000 : Nat32)],
-                    Candid.fromText("(0xdead_beef : nat32)") == [#Nat32(3_735_928_559 : Nat32)],
-                ]);
+                assert (Candid.fromText("((1_000_000 : nat32))") == [#Nat32(1_000_000 : Nat32)]);
+                assert (Candid.fromText("(0xdead_beef : nat32)") == [#Nat32(3_735_928_559 : Nat32)]);
             },
         );
         test(
             "Nat64",
             func() {
-                assert assertAllTrue([
-                    Candid.fromText("((100_000_000_000 : nat64))") == [#Nat64(100_000_000_000 : Nat64)],
-                    Candid.fromText("(0xdead_beef_1234 : nat64)") == [#Nat64(244_837_814_047_284 : Nat64)],
-                ]);
+                assert (Candid.fromText("((100_000_000_000 : nat64))") == [#Nat64(100_000_000_000 : Nat64)]);
+                assert (Candid.fromText("(0xdead_beef_1234 : nat64)") == [#Nat64(244_837_814_047_284 : Nat64)]);
             },
         );
         test(
             "Nat",
             func() {
-                assert assertAllTrue([
-                    Candid.fromText("((100_000_000_000 : nat))") == [#Nat(100_000_000_000)],
-                    Candid.fromText("(0xdead_beef_1234 : nat)") == [#Nat(244_837_814_047_284)],
-                ]);
+                assert (Candid.fromText("((100_000_000_000 : nat))") == [#Nat(100_000_000_000)]);
+                assert (Candid.fromText("(0xdead_beef_1234 : nat)") == [#Nat(244_837_814_047_284)]);
             },
         );
     },
@@ -874,50 +810,40 @@ suite(
         test(
             "Int8",
             func() {
-                assert assertAllTrue([
-                    Candid.fromText("((+100 : int8))") == [#Int8(100 : Int8)],
-                    Candid.fromText("(-00123:int8)") == [#Int8(-123 : Int8)],
-                    Candid.fromText("(-1_2_3 : int8)") == [#Int8(-123 : Int8)],
-                    Candid.fromText("(-0x7A : int8)") == [#Int8(-122 : Int8)],
-                ]);
+                assert (Candid.fromText("((+100 : int8))") == [#Int8(100 : Int8)]);
+                assert (Candid.fromText("(-00123:int8)") == [#Int8(-123 : Int8)]);
+                assert (Candid.fromText("(-1_2_3 : int8)") == [#Int8(-123 : Int8)]);
+                assert (Candid.fromText("(-0x7A : int8)") == [#Int8(-122 : Int8)]);
             },
         );
         test(
             "Int16",
             func() {
-                assert assertAllTrue([
-                    Candid.fromText("((+1000 : int16))") == [#Int16(1000 : Int16)],
-                    Candid.fromText("(+0031234 : int16)") == [#Int16(31234 : Int16)],
-                    Candid.fromText("(-31_234 : int16)") == [#Int16(-31_234 : Int16)],
-                    Candid.fromText("(-0x7A_BC : int16)") == [#Int16(-31_420 : Int16)],
-                ]);
+                assert (Candid.fromText("((+1000 : int16))") == [#Int16(1000 : Int16)]);
+                assert (Candid.fromText("(+0031234 : int16)") == [#Int16(31234 : Int16)]);
+                assert (Candid.fromText("(-31_234 : int16)") == [#Int16(-31_234 : Int16)]);
+                assert (Candid.fromText("(-0x7A_BC : int16)") == [#Int16(-31_420 : Int16)]);
             },
         );
         test(
             "Int32",
             func() {
-                assert assertAllTrue([
-                    Candid.fromText("((+1_000_000 : int32))") == [#Int32(1_000_000 : Int32)],
-                    Candid.fromText("(-0xbad_beef : int32)") == [#Int32(-195_935_983 : Int32)],
-                ]);
+                assert (Candid.fromText("((+1_000_000 : int32))") == [#Int32(1_000_000 : Int32)]);
+                assert (Candid.fromText("(-0xbad_beef : int32)") == [#Int32(-195_935_983 : Int32)]);
             },
         );
         test(
             "Int64",
             func() {
-                assert assertAllTrue([
-                    Candid.fromText("(+100_000_000_000 : int64)") == [#Int64(100_000_000_000 : Int64)],
-                    Candid.fromText("((-0xdead_beef_1234 : int64))") == [#Int64(-244_837_814_047_284 : Int64)],
-                ]);
+                assert (Candid.fromText("(+100_000_000_000 : int64)") == [#Int64(100_000_000_000 : Int64)]);
+                assert (Candid.fromText("((-0xdead_beef_1234 : int64))") == [#Int64(-244_837_814_047_284 : Int64)]);
             },
         );
         test(
             "Int",
             func() {
-                assert assertAllTrue([
-                    Candid.fromText("(+100_000_000_000 : int)") == [#Int(100_000_000_000)],
-                    Candid.fromText("((-0xdead_beef_1234 : int))") == [#Int(-244_837_814_047_284)],
-                ]);
+                assert (Candid.fromText("(+100_000_000_000 : int)") == [#Int(100_000_000_000)]);
+                assert (Candid.fromText("((-0xdead_beef_1234 : int))") == [#Int(-244_837_814_047_284)]);
             },
         );
     },
@@ -929,24 +855,19 @@ suite(
         test(
             "parse different element types",
             func() {
-                assert assertAllTrue([
-                    Candid.fromText("(vec {})") == [#Array([])],
-                    Candid.fromText("(vec { 100; 200; 0xAB })") == [#Array([#Nat(100), #Nat(200), #Nat(0xAB)])],
-                    Candid.fromText("(vec { \"hello\"; \"world\"; })") == [#Array([#Text("hello"), #Text("world")])],
-                    Candid.fromText("(vec { true; false })") == [#Array([#Bool(true), #Bool(false)])],
-                    Candid.fromText("(vec { blob \"\\AB\\CD\"; blob \"\\EF\\12\" })") == [#Array([#Blob(Blob.fromArray([0xAB, 0xCD])), #Blob(Blob.fromArray([0xEF, 0x12]))])],
-                    Candid.fromText("(vec { principal \"w7x7r-cok77-xa\"; principal \"aaaaa-aa\"; })") == [#Array([#Principal(Principal.fromText("w7x7r-cok77-xa")), #Principal(Principal.fromText("aaaaa-aa"))])],
-                ]);
+                assert (Candid.fromText("(vec {})") == [#Array([])]);
+                assert (Candid.fromText("(vec { 100; 200; 0xAB })") == [#Array([#Nat(100), #Nat(200), #Nat(0xAB)])]);
+                assert (Candid.fromText("(vec { \"hello\"; \"world\"; })") == [#Array([#Text("hello"), #Text("world")])]);
+                assert (Candid.fromText("(vec { true; false })") == [#Array([#Bool(true), #Bool(false)])]);
+                assert (Candid.fromText("(vec { blob \"\\AB\\CD\"; blob \"\\EF\\12\" })") == [#Array([#Blob(Blob.fromArray([0xAB, 0xCD])), #Blob(Blob.fromArray([0xEF, 0x12]))])]);
+                assert (Candid.fromText("(vec { principal \"w7x7r-cok77-xa\"; principal \"aaaaa-aa\"; })") == [#Array([#Principal(Principal.fromText("w7x7r-cok77-xa")), #Principal(Principal.fromText("aaaaa-aa"))])]);
             },
         );
         test(
             "parse nested array",
             func() {
-                assert assertAllTrue([
-                    Candid.fromText("(vec { vec { 100; 200; 0xAB }; vec { 100; 200; 0xAB } })") == [#Array([#Array([#Nat(100), #Nat(200), #Nat(0xAB)]), #Array([#Nat(100), #Nat(200), #Nat(0xAB)])])],
-
-                    Candid.fromText("(vec { vec { vec { 100; 200; 0xAB }; vec { 100; 200; 0xAB } }; vec { vec { 100; 200; 0xAB }; vec { 100; 200; 0xAB } } })") == [#Array([#Array([#Array([#Nat(100), #Nat(200), #Nat(0xAB)]), #Array([#Nat(100), #Nat(200), #Nat(0xAB)])]), #Array([#Array([#Nat(100), #Nat(200), #Nat(0xAB)]), #Array([#Nat(100), #Nat(200), #Nat(0xAB)])])])],
-                ]);
+                assert (Candid.fromText("(vec { vec { 100; 200; 0xAB }; vec { 100; 200; 0xAB } })") == [#Array([#Array([#Nat(100), #Nat(200), #Nat(0xAB)]), #Array([#Nat(100), #Nat(200), #Nat(0xAB)])])]);
+                assert (Candid.fromText("(vec { vec { vec { 100; 200; 0xAB }; vec { 100; 200; 0xAB } }; vec { vec { 100; 200; 0xAB }; vec { 100; 200; 0xAB } } })") == [#Array([#Array([#Array([#Nat(100), #Nat(200), #Nat(0xAB)]), #Array([#Nat(100), #Nat(200), #Nat(0xAB)])]), #Array([#Array([#Nat(100), #Nat(200), #Nat(0xAB)]), #Array([#Nat(100), #Nat(200), #Nat(0xAB)])])])]);
             },
         );
     },

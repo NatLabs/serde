@@ -2,218 +2,201 @@
 import Debug "mo:base/Debug";
 import Iter "mo:base/Iter";
 
-import ActorSpec "./utils/ActorSpec";
+import { test; suite } "mo:test";
 
 import UrlEncoded "../src/UrlEncoded";
-
-let {
-    assertTrue;
-    assertFalse;
-    assertAllTrue;
-    describe;
-    it;
-    skip;
-    pending;
-    run;
-} = ActorSpec;
 
 type User = {
     name : Text;
     msg : Text;
 };
 
-let success = run([
-    describe(
-        "UrlEncoded Pairs",
-        [
-            describe(
-                "fromText to motoko",
-                [
-                    it(
-                        "single record",
-                        do {
+suite(
+    "UrlEncoded Pairs",
+    func() {
+        suite(
+            "fromText to motoko",
+            func() {
+                test(
+                    "single record",
+                    func() {
 
-                            let blob = switch(UrlEncoded.fromText("msg=Hello World&name=John", null)){
-                                case (#ok(b)) b;
-                                case (#err(errorMsg)) Debug.trap(errorMsg);
-                            };
+                        let blob = switch (UrlEncoded.fromText("msg=Hello World&name=John", null)) {
+                            case (#ok(b)) b;
+                            case (#err(errorMsg)) Debug.trap(errorMsg);
+                        };
 
-                            let res : ?User = from_candid (blob);
+                        let res : ?User = from_candid (blob);
 
-                            assertTrue(
-                                res == ?{
-                                    name = "John";
-                                    msg = "Hello World";
-                                }
-                            );
-                        },
-                    ),
-                    it(
-                        "pairs with empty values",
-                        do {
+                        assert (
+                            res == ?{
+                                name = "John";
+                                msg = "Hello World";
+                            }
+                        );
+                    },
+                );
+                test(
+                    "pairs with empty values",
+                    func() {
 
-                            let #ok(unknown_blob) = UrlEncoded.fromText("msg=Hello&name=", null);
-                            let #ok(known_blob) = UrlEncoded.fromText("msg=Hello&name=John", null);
+                        let #ok(unknown_blob) = UrlEncoded.fromText("msg=Hello&name=", null);
+                        let #ok(known_blob) = UrlEncoded.fromText("msg=Hello&name=John", null);
 
-                            type UserOptionalName = {
-                                name : ?Text;
-                                msg : Text;
-                            };
+                        type UserOptionalName = {
+                            name : ?Text;
+                            msg : Text;
+                        };
 
-                            let unknown_user : ?UserOptionalName = from_candid (unknown_blob);
-                            let known_user : ?UserOptionalName = from_candid (known_blob);
+                        let unknown_user : ?UserOptionalName = from_candid (unknown_blob);
+                        let known_user : ?UserOptionalName = from_candid (known_blob);
 
-                            assertAllTrue([
-                                unknown_user == ?{
-                                    name = null;
-                                    msg = "Hello";
-                                },
-                                known_user == ?{
-                                    name = ?"John";
-                                    msg = "Hello";
-                                },
-                            ]);
-                        },
-                    ),
-                    it(
-                        "record with array",
-                        do {
+                        assert (
+                            unknown_user == ?{
+                                name = null;
+                                msg = "Hello";
+                            }
+                        );
+                        assert (
+                            known_user == ?{
+                                name = ?"John";
+                                msg = "Hello";
+                            }
+                        );
+                    },
+                );
+                test(
+                    "record with array",
+                    func() {
 
-                            let text = "users[0][name]=John&users[0][msg]=Hello World&users[1][name]=Jane&users[1][msg]=testing";
-                            let #ok(blob) = UrlEncoded.fromText(text, null);
+                        let text = "users[0][name]=John&users[0][msg]=Hello World&users[1][name]=Jane&users[1][msg]=testing";
+                        let #ok(blob) = UrlEncoded.fromText(text, null);
 
-                            let res : ?{ users : [User] } = from_candid (blob);
-                            assertTrue(
-                                res == ?{
-                                    users = [
-                                        {
-                                            name = "John";
-                                            msg = "Hello World";
-                                        },
-                                        {
-                                            name = "Jane";
-                                            msg = "testing";
-                                        },
-                                    ];
-                                }
-                            );
-                        },
-                    ),
-                    it(
-                        "variant type",
-                        do {
-                            type Variant = {
-                                #text : Text;
-                                #nat : Nat;
-                                #int : Int;
-                                #float : Float;
-                                #bool : Bool;
-                                #record : { site : Text };
-                                #user : User;
-                                #array : [Nat];
-                            };
-
-                            let text = "variant[#text]=hello";
-                            let nat = "variant[#nat]=123";
-                            let int = "variant[#int]=-123";
-                            let float = "variant[#float]=-1.23";
-                            let bool = "variant[#bool]=true";
-                            let record = "variant[#record][site]=github";
-                            let user = "variant[#user][name]=John&variant[#user][msg]=Hello World";
-                            let array = "variant[#array][0]=1&variant[#array][1]=2&variant[#array][2]=3";
-
-                            let #ok(text_blob) = UrlEncoded.fromText(text, null);
-                            let #ok(nat_blob) = UrlEncoded.fromText(nat, null);
-                            let #ok(int_blob) = UrlEncoded.fromText(int, null);
-                            let #ok(float_blob) = UrlEncoded.fromText(float, null);
-                            let #ok(bool_blob) = UrlEncoded.fromText(bool, null);
-                            let #ok(record_blob) = UrlEncoded.fromText(record, null);
-                            let #ok(user_blob) = UrlEncoded.fromText(user, null);
-                            let #ok(array_blob) = UrlEncoded.fromText(array, null);
-
-                            let text_val : ?{ variant : Variant } = from_candid (text_blob);
-                            let nat_val : ?{ variant : Variant } = from_candid (nat_blob);
-                            let int_val : ?{ variant : Variant } = from_candid (int_blob);
-                            let float_val : ?{ variant : Variant } = from_candid (float_blob);
-                            let bool_val : ?{ variant : Variant } = from_candid (bool_blob);
-                            let record_val : ?{ variant : Variant } = from_candid (record_blob);
-                            let user_val : ?{ variant : Variant } = from_candid (user_blob);
-                            let array_val : ?{ variant : Variant } = from_candid (array_blob);
-
-                            assertAllTrue([
-                                text_val == ?{ variant = #text("hello") },
-                                nat_val == ?{ variant = #nat(123) },
-                                int_val == ?{ variant = #int(-123) },
-
-                                float_val == ?{ variant = #float(-1.23) },
-                                bool_val == ?{ variant = #bool(true) },
-                                record_val == ?{
-                                    variant = #record({ site = "github" });
-                                },
-                                user_val == ?{
-                                    variant = #user({
+                        let res : ?{ users : [User] } = from_candid (blob);
+                        assert (
+                            res == ?{
+                                users = [
+                                    {
                                         name = "John";
                                         msg = "Hello World";
-                                    });
-                                },
-                                array_val == ?{ variant = #array([1, 2, 3]) },
+                                    },
+                                    {
+                                        name = "Jane";
+                                        msg = "testing";
+                                    },
+                                ];
+                            }
+                        );
+                    },
+                );
+                test(
+                    "variant type",
+                    func() {
+                        type Variant = {
+                            #text : Text;
+                            #nat : Nat;
+                            #int : Int;
+                            #float : Float;
+                            #bool : Bool;
+                            #record : { site : Text };
+                            #user : User;
+                            #array : [Nat];
+                        };
 
-                            ]);
-                        },
-                    ),
-                ],
-            ),
-            describe(
-                "motoko toText",
-                [
-                    it(
-                        "single record",
-                        do {
+                        let text = "variant[#text]=hello";
+                        let nat = "variant[#nat]=123";
+                        let int = "variant[#int]=-123";
+                        let float = "variant[#float]=-1.23";
+                        let bool = "variant[#bool]=true";
+                        let record = "variant[#record][site]=github";
+                        let user = "variant[#user][name]=John&variant[#user][msg]=Hello World";
+                        let array = "variant[#array][0]=1&variant[#array][1]=2&variant[#array][2]=3";
 
-                            let info : User = {
-                                msg = "Hello World";
-                                name = "John";
-                            };
+                        let #ok(text_blob) = UrlEncoded.fromText(text, null);
+                        let #ok(nat_blob) = UrlEncoded.fromText(nat, null);
+                        let #ok(int_blob) = UrlEncoded.fromText(int, null);
+                        let #ok(float_blob) = UrlEncoded.fromText(float, null);
+                        let #ok(bool_blob) = UrlEncoded.fromText(bool, null);
+                        let #ok(record_blob) = UrlEncoded.fromText(record, null);
+                        let #ok(user_blob) = UrlEncoded.fromText(user, null);
+                        let #ok(array_blob) = UrlEncoded.fromText(array, null);
 
-                            let blob = to_candid (info);
-                            let text = UrlEncoded.toText(blob, ["name", "msg"], null);
-                            Debug.print("single record: " #debug_show(text));
-                            assertTrue(text == #ok("msg=Hello World&name=John"));
-                        },
-                    ),
-                    it(
-                        "record with array",
-                        do {
-                            let users = [
-                                {
+                        let text_val : ?{ variant : Variant } = from_candid (text_blob);
+                        let nat_val : ?{ variant : Variant } = from_candid (nat_blob);
+                        let int_val : ?{ variant : Variant } = from_candid (int_blob);
+                        let float_val : ?{ variant : Variant } = from_candid (float_blob);
+                        let bool_val : ?{ variant : Variant } = from_candid (bool_blob);
+                        let record_val : ?{ variant : Variant } = from_candid (record_blob);
+                        let user_val : ?{ variant : Variant } = from_candid (user_blob);
+                        let array_val : ?{ variant : Variant } = from_candid (array_blob);
+
+                        assert (text_val == ?{ variant = #text("hello") });
+                        assert (nat_val == ?{ variant = #nat(123) });
+                        assert (int_val == ?{ variant = #int(-123) });
+                        assert (float_val == ?{ variant = #float(-1.23) });
+                        assert (bool_val == ?{ variant = #bool(true) });
+                        assert (
+                            record_val == ?{
+                                variant = #record({ site = "github" });
+                            }
+                        );
+                        assert (
+                            user_val == ?{
+                                variant = #user({
                                     name = "John";
                                     msg = "Hello World";
-                                },
-                                {
-                                    name = "Jane";
-                                    msg = "testing";
-                                },
-                            ];
+                                });
+                            }
+                        );
+                        assert (array_val == ?{ variant = #array([1, 2, 3]) });
+                    },
+                );
+            },
+        );
+        suite(
+            "motoko toText",
+            func() {
+                test(
+                    "single record",
+                    func() {
 
-                            let blob = to_candid ({ users });
+                        let info : User = {
+                            msg = "Hello World";
+                            name = "John";
+                        };
 
-                            let text = UrlEncoded.toText(blob, ["users", "name", "msg"], null);
+                        let blob = to_candid (info);
+                        let text = UrlEncoded.toText(blob, ["name", "msg"], null);
+                        Debug.print("single record: " #debug_show (text));
+                        assert (text == #ok("msg=Hello World&name=John"));
+                    },
+                );
+                test(
+                    "record with array",
+                    func() {
+                        let users = [
+                            {
+                                name = "John";
+                                msg = "Hello World";
+                            },
+                            {
+                                name = "Jane";
+                                msg = "testing";
+                            },
+                        ];
 
-                            Debug.print("record with array: " #debug_show(text));
+                        let blob = to_candid ({ users });
 
-                            assertTrue(
-                                text == #ok("users[0][msg]=Hello World&users[0][name]=John&users[1][msg]=testing&users[1][name]=Jane")
-                            );
-                        },
-                    ),
-                ],
-            ),
-        ],
-    ),
-]);
+                        let text = UrlEncoded.toText(blob, ["users", "name", "msg"], null);
 
-if (success == false) {
-    Debug.trap("\1b[46;41mTests failed\1b[0m");
-} else {
-    Debug.print("\1b[23;42;3m Success!\1b[0m");
-};
+                        Debug.print("record with array: " #debug_show (text));
+
+                        assert (
+                            text == #ok("users[0][msg]=Hello World&users[0][name]=John&users[1][msg]=testing&users[1][name]=Jane")
+                        );
+                    },
+                );
+            },
+        );
+    },
+);

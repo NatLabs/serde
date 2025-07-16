@@ -1,6 +1,6 @@
 name: Makefile CI
 
-on: 
+on:
   push:
     branches:
       - main
@@ -14,32 +14,23 @@ jobs:
 
     name: Build and test
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 18
-
+          node-version: 20
       - name: Cache Node modules
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: ~/.npm
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-node-
 
-      - name: Cache mops packages
-        uses: actions/cache@v3
-        with:
-          key: mops-packages-${{ hashFiles('mops.toml') }}
-          path: |
-            ~/.cache/mops
-            ~/mops
-
       - name: Install dfx
         uses: dfinity/setup-dfx@main
       - name: Confirm successful installation
         run: dfx --version
-    
+
       - name: Install dfx cache
         run: dfx cache install
 
@@ -48,12 +39,14 @@ jobs:
           npm --yes -g i ic-mops
           mops i
           mops toolchain init
+          mops toolchain use moc latest
+          mops toolchain use wasmtime 14.0.4
 
           # set moc path for dfx to use
           echo "DFX_MOC_PATH=$(mops toolchain bin moc)" >> $GITHUB_ENV
-    
+
       # - name: Detect warnings
-        # run: make check
+      #   run: make check
 
       - name: Run Tests
-        run: mops test
+        run: make test
