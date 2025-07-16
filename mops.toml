@@ -26,5 +26,5 @@ fuzz = "1.0.0"
 rep-indy-hash = "0.1.1"
 
 [toolchain]
-wasmtime = "34.0.1"
+wasmtime = "33.0.1"
 moc = "0.14.14"

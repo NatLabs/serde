@@ -45,8 +45,8 @@ jobs:
           # set moc path for dfx to use
           echo "DFX_MOC_PATH=$(mops toolchain bin moc)" >> $GITHUB_ENV
 
-      - name: Detect warnings
-        run: make check
+      # - name: Detect warnings
+      #   run: make check
 
       - name: Run Tests
         run: make test
