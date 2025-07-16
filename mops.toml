@@ -7,13 +7,13 @@ keywords = ["json", "candid", "cbor", "urlencoded", "serialization"]
 license = "MIT"
 
 [dependencies]
-base = "0.14.12"
+base = "0.14.14"
 itertools = "0.2.2"
 candid = "1.1.1"
-xtended-numbers = "0.3.1"
+xtended-numbers = "0.4.0"
 json-float = "https://github.com/NatLabs/json.mo#float@f3c8e7d418a7a8f2d6c0d7e2d276a0a82c2046ff"
 parser-combinators = "https://github.com/aviate-labs/parser-combinators.mo#v0.1.2@6a331bf78e9dcd7623977f06c8e561fd1a8c0103"
-cbor = "1.0.0"
+cbor = "2.0.0"
 map = "9.0.1"
 sha2 = "0.1.4"
 fuzz = "1.0.0"
@@ -26,5 +26,5 @@ fuzz = "1.0.0"
 rep-indy-hash = "0.1.1"
 
 [toolchain]
-wasmtime = "14.0.4"
-moc = "0.14.9"
+wasmtime = "34.0.1"
+moc = "0.14.14"
