@@ -575,29 +575,32 @@ module {
     };
 
     func decode_signed_leb_64(bytes : [Nat8], state : [var Nat]) : Int {
-        var n64 : Nat64 = 0;
+        var result : Nat64 = 0;
         var shift : Nat64 = 0;
-
         var byte : Nat8 = 0;
+        var i = 0;
 
-        label decoding_leb loop {
+        label analyzing loop {
             byte := read(bytes, state);
+            i += 1;
 
-            n64 |= (Nat64.fromNat(Nat8.toNat(byte & 0x7f)) << shift);
+            // Add this byte's 7 bits to the result
+            result |= Nat64.fromNat(Nat8.toNat(byte & 0x7F)) << shift;
             shift += 7;
 
-        } while (byte & 0x80 != 0);
+            // If continuation bit is not set, we're done reading bytes
+            if ((byte & 0x80) == 0) {
+                break analyzing;
+            };
+        };
 
-        // sign bit is 2nd highest bit in the last byte
-        let sign_bit_mask : Nat8 = 0x40;
-        let is_negative = (sign_bit_mask & byte) != 0;
+        // Sign extend if this is a negative number
+        if (byte & 0x40 != 0 and shift < 64) {
+            // Fill the rest with 1s (sign extension)
+            result |= ^((Nat64.fromNat(1) << shift) - 1);
+        };
 
-        if (not is_negative) return Nat64.toNat(n64);
-
-        let mask = (1 << shift) - 1;
-        let two_complement = (^(n64 - 1));
-
-        return -(Nat64.toNat(mask & two_complement));
+        Int64.toInt(Int64.fromNat64(result));
     };
 
     func decode_candid_values(bytes : [Nat8], candid_types : [CandidType], state : [var Nat], options : T.Options, recursive_map : Map<Nat, CandidType>) : Result<[Candid], Text> {

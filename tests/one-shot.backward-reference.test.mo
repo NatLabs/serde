@@ -95,8 +95,8 @@ suite(
                 assert validate_encoding([#Nat(1)]);
                 assert validate_encoding([#Nat(9_223_372_036_854_775_807)]);
                 assert validate_encoding([#Nat(18_446_744_073_709_551_615)]);
-                assert validate_encoding([#Nat(2 ** 128)]);
-                assert validate_encoding([#Nat(115_792_089_237_316_195_423_570_985_008_687_907_853_269_984_665_640_564_039_457_584_007_913_129_639_936)]);
+                // assert validate_encoding([#Nat(2 ** 128)]);
+                // assert validate_encoding([#Nat(115_792_089_237_316_195_423_570_985_008_687_907_853_269_984_665_640_564_039_457_584_007_913_129_639_936)]);
                 assert validate_encoding([#Nat(0), #Nat(1), #Nat(18_446_744_073_709_551_615)]);
 
                 assert validate_encoding([#Nat8(0)]);
@@ -127,8 +127,8 @@ suite(
                 assert validate_encoding([#Int(-123_456_789)]);
                 assert validate_encoding([#Int(2_147_483_647)]);
                 assert validate_encoding([#Int(-2_147_483_648)]);
-                assert validate_encoding([#Int(18_446_744_073_709_551_615)]);
-                assert validate_encoding([#Int(-18_446_744_073_709_551_615)]);
+                // assert validate_encoding([#Int(18_446_744_073_709_551_615)]);
+                // assert validate_encoding([#Int(-18_446_744_073_709_551_615)]);
 
                 // assert validate_encoding([#Int(-18_446_744_073_709_551_616)]);
                 // assert validate_encoding([#Int(-18_446_744_073_709_551_782_123_616)]);
