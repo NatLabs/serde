@@ -5,8 +5,8 @@ import Nat16 "mo:base/Nat16";
 import Nat32 "mo:base/Nat32";
 import Nat64 "mo:base/Nat64";
 
-import C "mo:parser-combinators/Combinators";
-import P "mo:parser-combinators/Parser";
+import C "../../../../submodules/parser-combinators.mo/src/Combinators";
+import P "../../../../submodules/parser-combinators.mo/src/Parser";
 
 import Candid "../../Types";
 import { ignoreSpace } "Common";
@@ -48,11 +48,11 @@ module {
                                 C.String.string("nat16"),
                                 C.String.string("nat8"),
                                 C.String.string("nat"),
-                            ]),
+                            ])
                         ),
-                    ),
+                    )
                 ),
-            ),
+            )
         );
     };
 };

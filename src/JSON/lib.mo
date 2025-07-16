@@ -1,6 +1,6 @@
 /// A module for converting between JSON and Motoko values.
 
-import JSON "mo:json-float/JSON";
+import JSON "../../submodules/json.mo/src/JSON";
 
 import Candid "../Candid";
 import FromText "FromText";

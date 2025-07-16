@@ -4,8 +4,8 @@ import Float "mo:base/Float";
 import List "mo:base/List";
 import Nat32 "mo:base/Nat32";
 
-import C "mo:parser-combinators/Combinators";
-import P "mo:parser-combinators/Parser";
+import C "../../submodules/parser-combinators.mo/src/Combinators";
+import P "../../submodules/parser-combinators.mo/src/Parser";
 
 import Candid "../Candid";
 
@@ -170,7 +170,7 @@ module {
             0,
             func(n : Nat, c : Char) : Nat {
                 let digit = Nat32.toNat(
-                    Char.toNat32(c) - Char.toNat32('0'),
+                    Char.toNat32(c) - Char.toNat32('0')
                 );
 
                 (10 * n) + digit;

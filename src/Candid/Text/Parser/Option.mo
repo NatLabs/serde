@@ -1,7 +1,7 @@
 import List "mo:base/List";
 
-import C "mo:parser-combinators/Combinators";
-import P "mo:parser-combinators/Parser";
+import C "../../../../submodules/parser-combinators.mo/src/Combinators";
+import P "../../../../submodules/parser-combinators.mo/src/Parser";
 
 import Candid "../../Types";
 
@@ -19,12 +19,12 @@ module {
                 C.right(
                     C.String.string("opt"),
                     ignoreSpace(
-                        P.delay(candidParser),
+                        P.delay(candidParser)
                     ),
-                ),
+                )
             ),
             func(candid : Candid) : Candid {
-                #Option(candid)
+                #Option(candid);
             },
         );
     };

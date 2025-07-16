@@ -1,8 +1,8 @@
 import Iter "mo:base/Iter";
 import List "mo:base/List";
 
-import C "mo:parser-combinators/Combinators";
-import P "mo:parser-combinators/Parser";
+import C "../../../../submodules/parser-combinators.mo/src/Combinators";
+import P "../../../../submodules/parser-combinators.mo/src/Parser";
 
 import Candid "../../Types";
 import { ignoreSpace; toText } "Common";
@@ -31,8 +31,8 @@ module {
                                 ignoreSpace(C.String.string("}")),
                             ),
                             ignoreSpace(C.String.string("}")),
-                        ])
-                    ),
+                        ]),
+                    )
                 ),
             ),
             func(xs : List<(Text, Candid)>) : Candid {
@@ -42,31 +42,31 @@ module {
         );
     };
 
-    public func fieldParser<Candid>(valueParser: () -> Parser<Char, Candid>): Parser<Char, (Text, Candid)>{
+    public func fieldParser<Candid>(valueParser : () -> Parser<Char, Candid>) : Parser<Char, (Text, Candid)> {
         C.seq(
             ignoreSpace(
                 C.left(
                     keyParser(),
                     ignoreSpace(C.Character.char('=')),
-                ),
+                )
             ),
             ignoreSpace(P.delay(valueParser)),
         );
 
     };
 
-    public func keyParser(): Parser<Char, Text>{
+    public func keyParser() : Parser<Char, Text> {
         C.oneOf([
             C.map(
                 C.many1(
                     C.choose(
                         C.Character.alphanum(),
                         C.Character.char('_'),
-                    ),
+                    )
                 ),
                 toText,
             ),
-            parseText()
+            parseText(),
         ]);
     };
 };

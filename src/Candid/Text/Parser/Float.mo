@@ -1,15 +1,15 @@
 import Float "mo:base/Float";
 import List "mo:base/List";
 
-import C "mo:parser-combinators/Combinators";
-import P "mo:parser-combinators/Parser";
+import C "../../../../submodules/parser-combinators.mo/src/Combinators";
+import P "../../../../submodules/parser-combinators.mo/src/Parser";
 
 import Candid "../../Types";
 
 import { listToNat } "Common";
 import { parseInt } "Int";
 
-module{
+module {
     type Candid = Candid.Candid;
     type List<A> = List.List<A>;
 
@@ -51,4 +51,4 @@ module{
             ),
         );
     };
-}
+};

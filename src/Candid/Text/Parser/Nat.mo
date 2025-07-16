@@ -2,8 +2,8 @@ import Iter "mo:base/Iter";
 import List "mo:base/List";
 import Nat64 "mo:base/Nat64";
 
-import C "mo:parser-combinators/Combinators";
-import P "mo:parser-combinators/Parser";
+import C "../../../../submodules/parser-combinators.mo/src/Combinators";
+import P "../../../../submodules/parser-combinators.mo/src/Parser";
 import NatX "mo:xtended-numbers/NatX";
 
 import Candid "../../Types";
@@ -35,7 +35,7 @@ module {
     func parseNatWithUnderscore() : Parser<Char, Nat> {
         C.map(
             ignoreSpace(
-                removeUnderscore(C.Character.digit()),
+                removeUnderscore(C.Character.digit())
             ),
             listToNat,
         );

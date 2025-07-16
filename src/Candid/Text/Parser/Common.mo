@@ -4,8 +4,8 @@ import List "mo:base/List";
 import Nat32 "mo:base/Nat32";
 import Text "mo:base/Text";
 
-import C "mo:parser-combinators/Combinators";
-import P "mo:parser-combinators/Parser";
+import C "../../../../submodules/parser-combinators.mo/src/Combinators";
+import P "../../../../submodules/parser-combinators.mo/src/Parser";
 import NatX "mo:xtended-numbers/NatX";
 
 import Candid "../../Types";
@@ -31,7 +31,7 @@ module {
                 C.sepBy1<Char, List<A>, Char>(
                     C.many1(parser),
                     C.Character.char('_'),
-                ),
+                )
             ),
             func(nested_lists : List<List<A>>) : List<A> {
                 List.flatten(nested_lists);
@@ -41,7 +41,7 @@ module {
 
     public func any<T>() : Parser<T, T> {
         C.sat<T>(
-            func(c : T) : Bool { true },
+            func(c : T) : Bool { true }
         );
     };
 
@@ -49,7 +49,7 @@ module {
         C.sat(
             func(x : Char) : Bool {
                 '0' <= x and x <= '9' or 'a' <= x and x <= 'f' or 'A' <= x and x <= 'F';
-            },
+            }
         );
     };
 
@@ -109,7 +109,7 @@ module {
             0,
             func(n : Nat, c : Char) : Nat {
                 let digit = Nat32.toNat(
-                    Char.toNat32(c) - Char.toNat32('0'),
+                    Char.toNat32(c) - Char.toNat32('0')
                 );
 
                 (10 * n) + digit;

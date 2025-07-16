@@ -2,8 +2,8 @@ import Blob "mo:base/Blob";
 import Iter "mo:base/Iter";
 import List "mo:base/List";
 
-import C "mo:parser-combinators/Combinators";
-import P "mo:parser-combinators/Parser";
+import C "../../../../submodules/parser-combinators.mo/src/Combinators";
+import P "../../../../submodules/parser-combinators.mo/src/Parser";
 
 import Candid "../../Types";
 import { ignoreSpace; hexChar; fromHex } "Common";
@@ -37,7 +37,7 @@ module {
                             C.String.string(""), // escapes char: '\'
                         ),
                         C.String.string("\""),
-                    ),
+                    )
                 ),
             ),
             func(chars : List<Nat8>) : Candid {

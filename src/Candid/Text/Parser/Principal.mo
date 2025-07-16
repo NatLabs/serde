@@ -1,8 +1,8 @@
 import List "mo:base/List";
 import Principal "mo:base/Principal";
 
-import C "mo:parser-combinators/Combinators";
-import P "mo:parser-combinators/Parser";
+import C "../../../../submodules/parser-combinators.mo/src/Combinators";
+import P "../../../../submodules/parser-combinators.mo/src/Parser";
 
 import Candid "../../Types";
 import { ignoreSpace; toText } "Common";
@@ -24,10 +24,10 @@ module {
                             C.oneOf([
                                 C.Character.alphanum(),
                                 C.Character.char('-'),
-                            ]),
+                            ])
                         ),
                         C.String.string("\""),
-                    ),
+                    )
                 ),
             ),
             func(chars : List<Char>) : Candid {

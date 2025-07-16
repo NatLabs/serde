@@ -5,8 +5,8 @@ import Int16 "mo:base/Int16";
 import Int32 "mo:base/Int32";
 import Int64 "mo:base/Int64";
 
-import C "mo:parser-combinators/Combinators";
-import P "mo:parser-combinators/Parser";
+import C "../../../../submodules/parser-combinators.mo/src/Combinators";
+import P "../../../../submodules/parser-combinators.mo/src/Parser";
 
 import Candid "../../Types";
 import { ignoreSpace } "Common";
@@ -37,11 +37,11 @@ module {
     func parseIntX() : Parser<Char, (Int, Text)> {
         C.seq(
             ignoreSpace(
-                parseInt(),
+                parseInt()
             ),
             C.right(
                 ignoreSpace(
-                    C.Character.char(':'),
+                    C.Character.char(':')
                 ),
                 ignoreSpace(
                     C.oneOf([
@@ -50,7 +50,7 @@ module {
                         C.String.string("int16"),
                         C.String.string("int8"),
                         C.String.string("int"),
-                    ]),
+                    ])
                 ),
             ),
         );

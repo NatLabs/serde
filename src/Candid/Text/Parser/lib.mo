@@ -4,8 +4,8 @@ import Iter "mo:base/Iter";
 import List "mo:base/List";
 import TrieMap "mo:base/TrieMap";
 
-import C "mo:parser-combinators/Combinators";
-import P "mo:parser-combinators/Parser";
+import C "../../../../submodules/parser-combinators.mo/src/Combinators";
+import P "../../../../submodules/parser-combinators.mo/src/Parser";
 
 import Candid "../../Types";
 
@@ -91,7 +91,7 @@ module CandidParser {
             principalParser(),
             floatParser(),
             nullParser(),
-            bracketParser(candidParser)
+            bracketParser(candidParser),
         ];
 
         C.oneOf([
@@ -113,6 +113,6 @@ module CandidParser {
             ignoreSpace(C.String.string("(")),
             ignoreSpace(P.delay(parser)),
             ignoreSpace(C.String.string(")")),
-        )
+        );
     };
 };
