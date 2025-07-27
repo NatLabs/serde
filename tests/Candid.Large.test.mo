@@ -5,6 +5,7 @@ import Prelude "mo:base/Prelude";
 import Text "mo:base/Text";
 import Char "mo:base/Char";
 import Buffer "mo:base/Buffer";
+import Nat64 "mo:base/Nat64";
 
 import Fuzz "mo:fuzz";
 import Itertools "mo:itertools/Iter";
@@ -16,7 +17,23 @@ import CandidDecoder "../src/Candid/Blob/Decoder";
 import LegacyCandidDecoder "../src/Candid/Blob/Decoder";
 import LegacyCandidEncoder "../src/Candid/Blob/Encoder";
 
-let fuzz = Fuzz.fromSeed(0x7eadbeef);
+func createGenerator(seed : Nat) : { next() : Nat } {
+    // Pure bitwise xorshift64 - no multiplication or addition!
+    var state : Nat64 = Nat64.fromNat(seed);
+    if (state == 0) state := 1; // Avoid zero state
+
+    {
+        next = func() : Nat {
+            // Only XOR and bit shifts - fastest possible
+            state ^= state << 13 : Nat64;
+            state ^= state >> 7 : Nat64;
+            state ^= state << 17 : Nat64;
+            Nat64.toNat(state);
+        };
+    };
+};
+
+let fuzz = Fuzz.create(createGenerator(42));
 
 let limit = 1_000;
 

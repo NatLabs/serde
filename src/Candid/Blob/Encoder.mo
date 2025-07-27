@@ -110,7 +110,7 @@ module {
 
         let compound_type_buffer = Buffer.Buffer<Nat8>(200);
         let primitive_type_buffer = Buffer.Buffer<Nat8>(200);
-        let value_buffer = Buffer.Buffer<Nat8>(200);
+        let value_buffer = Buffer.Buffer<Nat8>(400);
 
         let counter = [var 0];
 
@@ -188,20 +188,20 @@ module {
 
     func check_is_tuple(candid_types : [(Text, Any)]) : Bool {
         let n = candid_types.size(); // 0-based index
-        var sum_of_n : Int = (n * (n + 1)) / 2;
+        var sum_of_n : Int = 0;
 
         var i = 0;
         label tuple_check while (i < candid_types.size()) {
             let record_key = candid_types[i].0;
 
             if (Utils.text_is_number(record_key)) {
-                sum_of_n -= (Utils.text_to_nat(record_key) + 1);
+                sum_of_n += (Utils.text_to_nat(record_key) + 1);
             } else break tuple_check;
 
             i += 1;
         };
 
-        sum_of_n == 0;
+        sum_of_n == (n * (n + 1)) / 2;
     };
 
     func tuple_type_to_record(tuple_types : [CandidType]) : [(Text, CandidType)] {
@@ -934,7 +934,7 @@ module {
             };
 
             case (#Record(record_types) or #Map(record_types), #Record(record_entries) or #Map(record_entries)) {
-                assert record_entries.size() == record_types.size();
+                assert record_types.size() >= record_entries.size();
 
                 let is_tuple = check_is_tuple(record_types);
 

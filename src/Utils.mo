@@ -33,10 +33,22 @@ module {
         };
     };
 
-    public func array_slice<A>(arr : [A], start : Nat, end : Nat) : [A] {
+    public type ArrayLike<A> = {
+        size : () -> Nat;
+        get : (Nat) -> A;
+    };
+
+    public func array_slice<A>(arr : ArrayLike<A>, start : Nat, end : Nat) : [A] {
         Array.tabulate<A>(
             end - start,
-            func(i : Nat) = arr[start + i],
+            func(i : Nat) = arr.get(start + i),
+        );
+    };
+
+    public func blob_slice(blob : Blob, start : Nat, end : Nat) : [Nat8] {
+        Array.tabulate<Nat8>(
+            end - start,
+            func(i : Nat) = blob.get(start + i),
         );
     };
 

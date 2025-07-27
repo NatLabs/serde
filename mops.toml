@@ -7,7 +7,7 @@ keywords = ["json", "candid", "cbor", "urlencoded", "serialization"]
 license = "MIT"
 
 [dependencies]
-base = "0.14.14"
+base = "0.14.13"
 itertools = "0.2.2"
 candid = "1.1.1"
 xtended-numbers = "0.4.0"
@@ -26,4 +26,4 @@ rep-indy-hash = "0.1.1"
 
 [toolchain]
 wasmtime = "33.0.1"
-moc = "0.14.14"
+moc = "0.14.13"
