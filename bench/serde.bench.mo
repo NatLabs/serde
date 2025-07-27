@@ -25,6 +25,7 @@ module {
             "Serde: One Shot",
             "Serde: One Shot sans type inference",
             "Motoko (to_candid(), from_candid())",
+            "Serde: Single Type Instance",
 
         ]);
 
@@ -232,6 +233,31 @@ module {
                         let candid = candid_buffer.get(i);
                         let res = CandidEncoderFR.one_shot(candid, null);
                         let #ok(blob) = res;
+                    };
+                };
+
+                case ("Serde: Single Type Instance", "decode()") {
+                    let options = {
+                        Serde.Candid.defaultOptions with types = ?FormattedStoreItem
+                    };
+                    let serializer = Serde.Candid.TypedSerializer.fromBlob(candify_store_item.to_blob(buffer.get(0)), StoreItemKeys, ?options);
+
+                    for (i in Itertools.range(0, limit)) {
+                        let item = buffer.get(i);
+                        let candid_blob = candify_store_item.to_blob(item);
+
+                        let #ok(candid) = Serde.Candid.TypedSerializer.decode(serializer, candid_blob);
+                        // candid_buffer.add(candid);
+                    };
+                };
+
+                case ("Serde: Single Type Instance", "encode()") {
+
+                    let serializer = Serde.Candid.TypedSerializer.new(FormattedStoreItem, null);
+
+                    for (i in Itertools.range(0, limit)) {
+                        let candid = candid_buffer.get(i);
+                        let res = Serde.Candid.TypedSerializer.encode(serializer, candid);
                     };
                 };
 

@@ -4,6 +4,7 @@ import Debug "mo:base/Debug";
 import Iter "mo:base/Iter";
 import Nat "mo:base/Nat";
 import Principal "mo:base/Principal";
+import Result "mo:base/Result";
 
 import { test; suite } "mo:test";
 
@@ -11,7 +12,21 @@ import Serde "../src";
 import Candid "../src/Candid";
 import Encoder "../src/Candid/Blob/Encoder";
 
+import CandidTestUtils "CandidTestUtils";
+
 type Candid = Candid.Candid;
+
+func encode(vals : [Candid], options : ?Candid.Options) : Result.Result<Blob, Text> {
+  Candid.encode(vals, options);
+};
+
+func encodeOne(val : Candid, options : ?Candid.Options) : Result.Result<Blob, Text> {
+  Candid.encodeOne(val, options);
+};
+
+func decode(blob : Blob, keys : [Text], options : ?Candid.Options) : Result.Result<[Candid], Text> {
+  Candid.decode(blob, keys, options);
+};
 
 suite(
   "Candid decode()",
@@ -99,7 +114,15 @@ suite(
 
         let records : [Record] = [null_record, empty_record, admin_record, user_record, base_record];
         let blob = to_candid (records);
-        let #ok(candid) = Candid.decode(blob, Serde.concatKeys([PermissionKeys, UserKeys, RecordKeys]), null);
+
+        let RecordsType : Candid.CandidType = #Array(
+          #Record([
+            ("group", #Text),
+            ("users", #Option(#Array(#Record([("name", #Text), ("age", #Nat), ("permission", #Variant([("read", #Array(#Text)), ("write", #Array(#Text)), ("read_all", #Null), ("write_all", #Null), ("admin", #Null)]))])))),
+          ])
+        );
+
+        let #ok(candid) = CandidTestUtils.decode_with_types([RecordsType], Serde.concatKeys([PermissionKeys, UserKeys, RecordKeys]), blob, null) else return assert false;
 
         let expected = [#Array([#Record([("group", #Text("null")), ("users", #Null)]), #Record([("group", #Text("empty")), ("users", #Option(#Array([])))]), #Record([("group", #Text("admins")), ("users", #Option(#Array([#Record([("age", #Nat(32)), ("permission", #Variant("admin", #Null)), ("name", #Text("John"))])])))]), #Record([("group", #Text("users")), ("users", #Option(#Array([#Record([("age", #Nat(28)), ("permission", #Variant("read_all", #Null)), ("name", #Text("Ali"))]), #Record([("age", #Nat(40)), ("permission", #Variant("write_all", #Null)), ("name", #Text("James"))])])))]), #Record([("group", #Text("base")), ("users", #Option(#Array([#Record([("age", #Nat(32)), ("permission", #Variant("read", #Array([#Text("posts"), #Text("comments")]))), ("name", #Text("Henry"))]), #Record([("age", #Nat(32)), ("permission", #Variant("write", #Array([#Text("posts"), #Text("comments")]))), ("name", #Text("Steven"))])])))])])];
 
@@ -135,14 +158,20 @@ suite(
         };
 
         let record_blob = to_candid (record);
-        let candid = Candid.decode(record_blob, ["first", "second", "name", "age"], null);
 
-        assert candid == #ok([
+        let RecordType : Candid.CandidType = #Record([
+          ("first", #Record([("name", #Text), ("age", #Nat)])),
+          ("second", #Record([("name", #Text), ("age", #Nat)])),
+        ]);
+
+        let #ok(candid) = CandidTestUtils.decode_with_types([RecordType], ["first", "second", "name", "age"], record_blob, null) else return assert false;
+
+        assert candid == [
           #Record([
             ("first", #Record([("age", #Nat(23)), ("name", #Text("James"))])),
             ("second", #Record([("age", #Nat(32)), ("name", #Text("Steven"))])),
           ]),
-        ]);
+        ];
 
       },
     );
@@ -191,9 +220,19 @@ suite(
           Candid.defaultOptions with
           renameKeys = [("arr", "array"), ("name", "username")];
         };
-        let candid = Candid.decode(blob, ["name", "arr"], ?options);
 
-        assert candid == #ok([
+        Debug.print("blob: " # debug_show blob);
+        Debug.print("keys: " # debug_show ["name", "arr"]);
+
+        // Test regular decode first
+        let regular_decode_result = Candid.decode(blob, ["name", "arr"], ?options);
+        Debug.print("regular decode result: " # debug_show regular_decode_result);
+
+        let ArrayType : Candid.CandidType = #Array(#Record([("name", #Text), ("arr", #Array(#Nat))]));
+
+        let #ok(candid) = CandidTestUtils.decode_with_types([ArrayType], ["name", "arr"], blob, ?options) else return assert false;
+
+        assert candid == [
           #Array([
             #Record([
               ("array", #Array([#Nat(1), #Nat(2), #Nat(3), #Nat(4)])),
@@ -208,7 +247,7 @@ suite(
               ("username", #Text("rust")),
             ]),
           ])
-        ]);
+        ];
       },
     );
     test(
@@ -216,9 +255,12 @@ suite(
       func() {
         let motoko = { name = "candid" };
         let blob = to_candid (motoko);
-        let candid = Candid.decode(blob, ["name"], null);
 
-        assert candid == #ok([#Record([("name", #Text("candid"))])]);
+        let RecordType : Candid.CandidType = #Record([("name", #Text)]);
+
+        let #ok(candid) = CandidTestUtils.decode_with_types([RecordType], ["name"], blob, null) else return assert false;
+
+        assert candid == [#Record([("name", #Text("candid"))])];
       },
     );
     test(
@@ -226,9 +268,12 @@ suite(
       func() {
         let arr = [1, 2, 3, 4];
         let blob = to_candid (arr);
-        let candid = Candid.decode(blob, [], null);
 
-        assert candid == #ok([#Array([#Nat(1), #Nat(2), #Nat(3), #Nat(4)])]);
+        let ArrayType : Candid.CandidType = #Array(#Nat);
+
+        let #ok(candid) = CandidTestUtils.decode_with_types([ArrayType], [], blob, null) else return assert false;
+
+        assert candid == [#Array([#Nat(1), #Nat(2), #Nat(3), #Nat(4)])];
       },
     );
     test(
@@ -242,8 +287,14 @@ suite(
           [["hello", "world"], ["foo", "bar"]],
         ];
 
-        assert (Candid.decode(to_candid (arr2), [], null) == #ok([#Array([#Array([#Nat(1), #Nat(2), #Nat(3), #Nat(4)]), #Array([#Nat(5), #Nat(6), #Nat(7), #Nat(8)]), #Array([#Nat(9), #Nat(10), #Nat(11)])])]));
-        assert (Candid.decode(to_candid (arr3), [], null) == #ok([#Array([#Array([#Array([#Text("hello"), #Text("world")]), #Array([#Text("foo"), #Text("bar")])]), #Array([#Array([#Text("hello"), #Text("world")]), #Array([#Text("foo"), #Text("bar")])]), #Array([#Array([#Text("hello"), #Text("world")]), #Array([#Text("foo"), #Text("bar")])])])]));
+        let Arr2Type : Candid.CandidType = #Array(#Array(#Nat));
+        let Arr3Type : Candid.CandidType = #Array(#Array(#Array(#Text)));
+
+        let #ok(arr2_candid) = CandidTestUtils.decode_with_types([Arr2Type], [], to_candid (arr2), null) else return assert false;
+        let #ok(arr3_candid) = CandidTestUtils.decode_with_types([Arr3Type], [], to_candid (arr3), null) else return assert false;
+
+        assert (arr2_candid == [#Array([#Array([#Nat(1), #Nat(2), #Nat(3), #Nat(4)]), #Array([#Nat(5), #Nat(6), #Nat(7), #Nat(8)]), #Array([#Nat(9), #Nat(10), #Nat(11)])])]);
+        assert (arr3_candid == [#Array([#Array([#Array([#Text("hello"), #Text("world")]), #Array([#Text("foo"), #Text("bar")])]), #Array([#Array([#Text("hello"), #Text("world")]), #Array([#Text("foo"), #Text("bar")])]), #Array([#Array([#Text("hello"), #Text("world")]), #Array([#Text("foo"), #Text("bar")])])])]);
       },
     );
     test(
@@ -255,15 +306,17 @@ suite(
         let bytes_array = to_candid (motoko_blob);
         let bytes_blob = to_candid (motoko_blob);
 
-        let candid_array = Candid.decode(bytes_array, [], null);
-        let candid_blob = Candid.decode(bytes_blob, [], null);
+        let BlobType : Candid.CandidType = #Blob;
+
+        let #ok(candid_array) = CandidTestUtils.decode_with_types([BlobType], [], bytes_array, null) else return assert false;
+        let #ok(candid_blob) = CandidTestUtils.decode_with_types([BlobType], [], bytes_blob, null) else return assert false;
 
         assert (
           // All [Nat8] types are decoded as #Blob
-          candid_array != #ok([#Array([#Nat8(1), #Nat8(2), #Nat8(3), #Nat8(4)])]),
+          candid_array != [#Array([#Nat8(1), #Nat8(2), #Nat8(3), #Nat8(4)])],
         );
-        assert (candid_array == #ok([#Blob(motoko_blob)]));
-        assert (candid_blob == #ok([#Blob(motoko_blob)]));
+        assert (candid_array == [#Blob(motoko_blob)]);
+        assert (candid_blob == [#Blob(motoko_blob)]);
       },
     );
     test(
@@ -289,17 +342,25 @@ suite(
         let record_blob = to_candid (record);
         let array_blob = to_candid (array);
 
-        let text_candid = Candid.decode(text_blob, ["text"], null);
-        let nat_candid = Candid.decode(nat_blob, ["nat"], null);
-        let bool_candid = Candid.decode(bool_blob, ["bool"], null);
-        let record_candid = Candid.decode(record_blob, ["record", "site"], null);
-        let array_candid = Candid.decode(array_blob, ["array"], null);
+        let VariantType : Candid.CandidType = #Variant([
+          ("text", #Text),
+          ("nat", #Nat),
+          ("bool", #Bool),
+          ("record", #Record([("site", #Text)])),
+          ("array", #Array(#Nat)),
+        ]);
 
-        assert (text_candid == #ok([#Variant("text", #Text("hello"))]));
-        assert (nat_candid == #ok([#Variant("nat", #Nat(123))]));
-        assert (bool_candid == #ok([#Variant("bool", #Bool(true))]));
-        assert (record_candid == #ok([#Variant("record", #Record([("site", #Text("github"))]))]));
-        assert (array_candid == #ok([#Variant("array", #Array([#Nat(1), #Nat(2), #Nat(3)]))]));
+        let #ok(text_candid) = CandidTestUtils.decode_with_types([VariantType], ["text"], text_blob, null) else return assert false;
+        let #ok(nat_candid) = CandidTestUtils.decode_with_types([VariantType], ["nat"], nat_blob, null) else return assert false;
+        let #ok(bool_candid) = CandidTestUtils.decode_with_types([VariantType], ["bool"], bool_blob, null) else return assert false;
+        let #ok(record_candid) = CandidTestUtils.decode_with_types([VariantType], ["record", "site"], record_blob, null) else return assert false;
+        let #ok(array_candid) = CandidTestUtils.decode_with_types([VariantType], ["array"], array_blob, null) else return assert false;
+
+        assert (text_candid == [#Variant("text", #Text("hello"))]);
+        assert (nat_candid == [#Variant("nat", #Nat(123))]);
+        assert (bool_candid == [#Variant("bool", #Bool(true))]);
+        assert (record_candid == [#Variant("record", #Record([("site", #Text("github"))]))]);
+        assert (array_candid == [#Variant("array", #Array([#Nat(1), #Nat(2), #Nat(3)]))]);
 
       },
     );
@@ -335,9 +396,12 @@ suite(
         ];
 
         let blob = to_candid (users);
-        let candid = Candid.decode(blob, record_keys, null);
+
+        let UsersType : Candid.CandidType = #Array(#Record([("name", #Text), ("age", #Nat8), ("email", #Option(#Text)), ("registered", #Bool)]));
+
+        let #ok(candid) = CandidTestUtils.decode_with_types([UsersType], record_keys, blob, null) else return assert false;
         Debug.print("candid" # debug_show candid);
-        assert candid == #ok([
+        assert candid == [
           #Array([
             #Record([
               ("age", #Nat8(32)),
@@ -358,7 +422,7 @@ suite(
               ("registered", #Bool(true)),
             ]),
           ]),
-        ]);
+        ];
       },
     );
   },
@@ -475,7 +539,11 @@ suite(
           base_record_candid,
         ]);
 
-        let #ok(blob) = Candid.encodeOne(records, null);
+        let RecordsType : Candid.CandidType = #Array(
+          #Record([("group", #Text), ("users", #Option(#Array(#Record([("age", #Nat), ("name", #Text), ("permission", #Variant([("read", #Array(#Text)), ("write", #Array(#Text)), ("read_all", #Null), ("write_all", #Null), ("admin", #Null)]))]))))])
+        );
+
+        let #ok(blob) = CandidTestUtils.encode_with_types([RecordsType], [records], null) else return assert false;
         let motoko : ?[Record] = from_candid (blob);
 
         assert motoko == ?[
@@ -511,12 +579,16 @@ suite(
           daily_downloads : [Nat];
         };
 
+        let Data : Candid.CandidType = #Array(
+          #Record([("array", #Array(#Nat)), ("name", #Text)])
+        );
+
         let options = {
           Candid.defaultOptions with
           renameKeys = [("array", "daily_downloads"), ("name", "language")];
         };
 
-        let #ok(blob) = Candid.encodeOne(candid, ?options);
+        let #ok(blob) = CandidTestUtils.encode_with_types([Data], [candid], ?options) else return assert false;
         let motoko : ?[Data] = from_candid (blob);
         assert motoko == ?[{ language = "candid"; daily_downloads = [1, 2, 3, 4] }, { language = "motoko"; daily_downloads = [5, 6, 7, 8] }, { language = "rust"; daily_downloads = [9, 10, 11, 12] }];
       },
@@ -529,7 +601,9 @@ suite(
           name : Text;
         };
 
-        let #ok(blob) = Candid.encodeOne(candid, null);
+        let UserType : Candid.CandidType = #Record([("name", #Text)]);
+
+        let #ok(blob) = CandidTestUtils.encode_with_types([UserType], [candid], null) else return assert false;
         let user : ?User = from_candid (blob);
 
         assert user == ?{ name = "candid" };
@@ -550,8 +624,11 @@ suite(
           #Array([#Array([#Text("hello"), #Text("world")]), #Array([#Text("foo"), #Text("bar")])]),
         ]);
 
-        let #ok(arr2_blob) = Candid.encodeOne(arr2, null);
-        let #ok(arr3_blob) = Candid.encodeOne(arr3, null);
+        let Arr2Type : Candid.CandidType = #Array(#Array(#Nat));
+        let Arr3Type : Candid.CandidType = #Array(#Array(#Array(#Text)));
+
+        let #ok(arr2_blob) = CandidTestUtils.encode_with_types([Arr2Type], [arr2], null) else return assert false;
+        let #ok(arr3_blob) = CandidTestUtils.encode_with_types([Arr3Type], [arr3], null) else return assert false;
 
         let arr2_encoded : ?[[Nat]] = from_candid (arr2_blob);
         let arr3_encoded : ?[[[Text]]] = from_candid (arr3_blob);
@@ -574,8 +651,11 @@ suite(
         let candid_1 = #Array([#Nat8(1 : Nat8), #Nat8(2 : Nat8), #Nat8(3 : Nat8), #Nat8(4 : Nat8)]);
         let candid_2 = #Blob(motoko_blob);
 
-        let #ok(serialized_1) = Candid.encodeOne(candid_1, null);
-        let #ok(serialized_2) = Candid.encodeOne(candid_2, null);
+        let BlobType : Candid.CandidType = #Blob;
+        let Nat8ArrayType : Candid.CandidType = #Array(#Nat8);
+
+        let #ok(serialized_1) = CandidTestUtils.encode_with_types([Nat8ArrayType], [candid_1], null) else return assert false;
+        let #ok(serialized_2) = CandidTestUtils.encode_with_types([BlobType], [candid_2], null) else return assert false;
 
         let blob_1 : ?Blob = from_candid (serialized_1);
         let blob_2 : ?Blob = from_candid (serialized_2);
@@ -607,11 +687,13 @@ suite(
         let record = #Variant("record", #Record([("site", #Text("github"))]));
         let array = #Variant("array", #Array([#Nat(1), #Nat(2), #Nat(3)]));
 
-        let #ok(text_blob) = Candid.encodeOne(text, null);
-        let #ok(nat_blob) = Candid.encodeOne(nat, null);
-        let #ok(bool_blob) = Candid.encodeOne(bool, null);
-        let #ok(record_blob) = Candid.encodeOne(record, null);
-        let #ok(array_blob) = Candid.encodeOne(array, null);
+        let VariantType : Candid.CandidType = #Variant([("text", #Text), ("nat", #Nat), ("bool", #Bool), ("record", #Record([("site", #Text)])), ("array", #Array(#Nat))]);
+
+        let #ok(text_blob) = CandidTestUtils.encode_with_types([VariantType], [text], null) else return assert false;
+        let #ok(nat_blob) = CandidTestUtils.encode_with_types([VariantType], [nat], null) else return assert false;
+        let #ok(bool_blob) = CandidTestUtils.encode_with_types([VariantType], [bool], null) else return assert false;
+        let #ok(record_blob) = CandidTestUtils.encode_with_types([VariantType], [record], null) else return assert false;
+        let #ok(array_blob) = CandidTestUtils.encode_with_types([VariantType], [array], null) else return assert false;
 
         let text_val : ?Variant = from_candid (text_blob);
         let nat_val : ?Variant = from_candid (nat_blob);
@@ -888,9 +970,14 @@ suite(
         let motoko = { name = "candid"; age = 32 };
 
         let blob = to_candid (motoko);
-        let #ok(candid) = Candid.decode(blob, ["name", "age"], null); // decode without keys
 
-        let #ok(blob_2) = Candid.encode(candid, null);
+        let UserDecodeType : Candid.CandidType = #Record([("name", #Text), ("age", #Nat)]);
+
+        let #ok(candid) = CandidTestUtils.decode_with_types([UserDecodeType], ["name", "age"], blob, null) else return assert false; // decode without keys
+
+        let UserType : Candid.CandidType = #Record([("name", #Text), ("age", #Nat)]);
+
+        let #ok(blob_2) = CandidTestUtils.encode_with_types([UserType], candid, null) else return assert false;
         let motoko_2 : ?User = from_candid (blob_2);
 
         assert motoko_2 == ?motoko;
@@ -914,7 +1001,9 @@ suite(
           ("details", #Record([("age", #Nat(32)), ("email", #Option(#Text("example@gmail.com"))), ("registered", #Bool(true))])),
         ]);
 
-        let #ok(blob) = Candid.encodeOne(candid, null);
+        let UserType : Candid.CandidType = #Record([("name", #Text), ("details", #Record([("age", #Nat), ("email", #Option(#Text)), ("registered", #Bool)]))]);
+
+        let #ok(blob) = CandidTestUtils.encode_with_types([UserType], [candid], null) else return assert false;
 
         let mo : ?User = from_candid (blob);
         assert mo == ?{

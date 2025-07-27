@@ -3,10 +3,11 @@
 import Array "mo:base/Array";
 import Text "mo:base/Text";
 
-import Encoder "Blob/Encoder";
+import CandidEncoder "Blob/Encoder";
 import Decoder "Blob/Decoder";
 import RepIndyHash "Blob/RepIndyHash";
 import CandidUtils "Blob/CandidUtils";
+import TypedSerializerModule "Blob/TypedSerializer";
 
 import Parser "Text/Parser";
 import ToText "Text/ToText";
@@ -25,10 +26,13 @@ module {
     public type Options = T.Options;
     public let defaultOptions = T.defaultOptions;
 
+    public let TypedSerializer = TypedSerializerModule;
+    public type TypedSerializer = TypedSerializerModule.TypedSerializer;
+
     public type CandidType = T.CandidType;
 
     /// Converts a motoko value to a [Candid](#Candid) value
-    public let { encode; encodeOne } = Encoder;
+    public let { encode; encodeOne } = CandidEncoder;
 
     public let repIndyHash = RepIndyHash.hash;
 
