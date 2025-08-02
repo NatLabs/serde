@@ -845,10 +845,10 @@ module {
                     case (null) {};
                 };
 
-                if (options.use_icrc_3_value_type) {
-                    #Map(record_entries);
-                } else if (is_tuple and record_entries.size() > 0) {
+                if (is_tuple and record_entries.size() > 0) {
                     #Tuple(Array.map<(Text, Candid), Candid>(record_entries, func((_, v) : (Any, Candid)) : Candid = v));
+                } else if (options.use_icrc_3_value_type) {
+                    #Map(record_entries);
                 } else {
                     #Record(record_entries);
                 };
