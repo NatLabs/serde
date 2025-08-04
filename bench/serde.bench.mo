@@ -11,7 +11,6 @@ import Itertools "mo:itertools/Iter";
 
 import Serde "../src";
 import CandidEncoder "../src/Candid/Blob/Encoder";
-import CandidEncoderFR "../src/Candid/Blob/Encoder.ForwardReference";
 import CandidDecoder "../src/Candid/Blob/Decoder";
 
 module {
@@ -24,10 +23,7 @@ module {
         bench.rows([
             "Serde: One Shot",
             "Serde: One Shot sans type inference",
-            // "Serde 'mo:motoko_candid' lib",
             "Motoko (to_candid(), from_candid())",
-
-            // "#Nat"
         ]);
 
         bench.cols([
@@ -243,29 +239,6 @@ module {
                             Serde.Candid.defaultOptions with types = ?FormattedStoreItem
                         };
                         let res = CandidEncoder.one_shot(candid, ?options);
-                        let #ok(blob) = res;
-                    };
-                };
-
-                case ("Serde: One Shot Forward Reference (FR)", "decode()") {};
-                case ("Serde: One Shot Forward Reference (FR)", "encode()") {
-                    for (i in Itertools.range(0, limit)) {
-                        let candid = candid_buffer.get(i);
-                        let res = CandidEncoderFR.one_shot(candid, null);
-                        let #ok(blob) = res;
-                    };
-                };
-
-                case ("Serde: One Shot FR sans type inference", "decode()") {};
-
-                case ("Serde: One Shot FR sans type inference", "encode()") {
-                    for (i in Itertools.range(0, limit)) {
-                        let candid = candid_buffer.get(i);
-
-                        let options = {
-                            Serde.Candid.defaultOptions with types = ?[StoreItem]
-                        };
-                        let res = CandidEncoderFR.one_shot(candid, ?options);
                         let #ok(blob) = res;
                     };
                 };
