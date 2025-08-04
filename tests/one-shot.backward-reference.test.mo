@@ -27,7 +27,7 @@ func validate_encoding(candid_values : [Candid.Candid]) : Bool {
     let #ok(encoded) = CandidEncoder.one_shot(candid_values, null);
 
     let #ok(args) = toArgs(candid_values, empty_map);
-    let expected = Encoder.encode(args);
+    let expected = Encoder.toBytes(args);
 
     Debug.print("(encoded, expected): " # debug_show (encoded, expected));
     return encoded == expected;
@@ -49,7 +49,7 @@ func validate_encoding_with_types(candid_values : [Candid.Candid], types : [Cand
         },
     );
 
-    let expected = Encoder.encode(augmented_args);
+    let expected = Encoder.toBytes(augmented_args);
 
     // Debug.print("(encoded, expected): " # debug_show (encoded, expected));
     return encoded == expected;

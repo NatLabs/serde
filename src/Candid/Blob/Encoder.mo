@@ -1,6 +1,7 @@
 import Array "mo:base/Array";
 import Blob "mo:base/Blob";
 import Buffer "mo:base/Buffer";
+import B "mo:buffer";
 import Debug "mo:base/Debug";
 import Result "mo:base/Result";
 import Nat64 "mo:base/Nat64";
@@ -655,7 +656,7 @@ module {
             case (#Float, #Float(f64)) {
                 ref_primitive_type_buffer.add(T.TypeCode.Float);
                 let floatX : FloatX.FloatX = FloatX.fromFloat(f64, #f64);
-                FloatX.encode(value_buffer, floatX, #lsb);
+                FloatX.toBytesBuffer(B.fromDeprecatedBuffer(value_buffer), floatX, #lsb);
             };
             case (#Bool, #Bool(b)) {
                 ref_primitive_type_buffer.add(T.TypeCode.Bool);

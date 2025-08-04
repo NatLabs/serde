@@ -681,7 +681,7 @@ module {
                     };
                 };
 
-                let float_details = switch (FloatX.decode(bytes_iter, #f64, #lsb)) {
+                let float_details = switch (FloatX.fromBytes(bytes_iter, #f64, #lsb)) {
                     case (?f) f;
                     case (null) return #err("Could not decode float sequence");
                 };
