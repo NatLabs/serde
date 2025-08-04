@@ -47,7 +47,7 @@ module {
             value = transpiled_cbor;
         });
 
-        switch (CBOR_Encoder.encode(cbor_with_self_describe_tag)) {
+        switch (CBOR_Encoder.toBytes(cbor_with_self_describe_tag)) {
             case (#ok(encoded_cbor)) { #ok(Blob.fromArray(encoded_cbor)) };
             case (#err(#invalidValue(errMsg))) {
                 #err("Invalid value error while encoding CBOR: " # errMsg);
@@ -127,7 +127,7 @@ module {
     };
 
     public func toCandid(blob : Blob, options : CandidType.Options) : Result<Candid, Text> {
-        let cbor_res = CBOR_Decoder.decode(blob.vals());
+        let cbor_res = CBOR_Decoder.fromBytes(blob.vals());
 
         let candid_res = switch (cbor_res) {
             case (#ok(cbor)) {
