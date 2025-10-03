@@ -22,18 +22,18 @@ Garbage Collection: ${\color{gray}0\\%}$
 
 |                                     |    decode() |      encode() |
 | :---------------------------------- | ----------: | ------------: |
-| Serde: One Shot                     | 388_511_193 | 1_510_253_429 |
-| Serde: One Shot sans type inference | 491_012_626 | 1_080_441_883 |
-| Motoko (to_candid(), from_candid()) |  34_577_855 |     9_677_578 |
+| Serde: One Shot                     | 370_118_793 | 1_450_772_592 |
+| Serde: One Shot sans type inference | 463_851_227 | 1_055_540_193 |
+| Motoko (to_candid(), from_candid()) |  33_954_865 |     9_628_451 |
 
 
 **Heap**
 
-|                                     |  decode() |   encode() |
-| :---------------------------------- | --------: | ---------: |
-| Serde: One Shot                     | -6.15 MiB |  12.14 MiB |
-| Serde: One Shot sans type inference | -3.45 MiB |   9.85 MiB |
-| Motoko (to_candid(), from_candid()) | 644.5 KiB | 602.83 KiB |
+|                                     |   decode() |  encode() |
+| :---------------------------------- | ---------: | --------: |
+| Serde: One Shot                     |  -6.15 MiB | 12.15 MiB |
+| Serde: One Shot sans type inference |  -3.46 MiB |  9.88 MiB |
+| Motoko (to_candid(), from_candid()) | 644.13 KiB | 602.5 KiB |
 
 
 **Garbage Collection**
@@ -41,7 +41,7 @@ Garbage Collection: ${\color{gray}0\\%}$
 |                                     |  decode() |  encode() |
 | :---------------------------------- | --------: | --------: |
 | Serde: One Shot                     | 28.08 MiB | 59.79 MiB |
-| Serde: One Shot sans type inference | 29.84 MiB | 27.79 MiB |
+| Serde: One Shot sans type inference | 29.85 MiB | 27.79 MiB |
 | Motoko (to_candid(), from_candid()) |       0 B |       0 B |
 
 
