@@ -1,8 +1,8 @@
-import Char "mo:base/Char";
-import Debug "mo:base/Debug";
-import Iter "mo:base/Iter";
-import List "mo:base/List";
-import TrieMap "mo:base/TrieMap";
+import Char "mo:base@0.14.14/Char";
+import Debug "mo:base@0.14.14/Debug";
+import Iter "mo:base@0.14.14/Iter";
+import List "mo:base@0.14.14/List";
+import TrieMap "mo:base@0.14.14/TrieMap";
 
 import C "../../../../submodules/parser-combinators.mo/src/Combinators";
 import P "../../../../submodules/parser-combinators.mo/src/Parser";

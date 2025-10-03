@@ -1,10 +1,10 @@
-import Float "mo:base/Float";
-import Array "mo:base/Array";
-import Text "mo:base/Text";
-import Principal "mo:base/Principal";
-import TrieMap "mo:base/TrieMap";
+import Float "mo:base@0.14.14/Float";
+import Array "mo:base@0.14.14/Array";
+import Text "mo:base@0.14.14/Text";
+import Principal "mo:base@0.14.14/Principal";
+import TrieMap "mo:base@0.14.14/TrieMap";
 
-import Itertools "mo:itertools/Iter";
+import Itertools "mo:itertools@0.2.2/Iter";
 
 import CandidType "../Types";
 

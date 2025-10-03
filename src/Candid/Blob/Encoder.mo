@@ -1,52 +1,39 @@
-import Array "mo:base/Array";
-import Blob "mo:base/Blob";
-import Buffer "mo:base/Buffer";
+import Array "mo:base@0.14.14/Array";
+import Blob "mo:base@0.14.14/Blob";
+import Buffer "mo:base@0.14.14/Buffer";
 import B "mo:buffer";
-import Debug "mo:base/Debug";
-import Result "mo:base/Result";
-import Nat64 "mo:base/Nat64";
-import Int8 "mo:base/Int8";
-import Int32 "mo:base/Int32";
-import Nat8 "mo:base/Nat8";
-import Nat32 "mo:base/Nat32";
-import Nat16 "mo:base/Nat16";
-import Int64 "mo:base/Int64";
-import Nat "mo:base/Nat";
-import Int "mo:base/Int";
-import Iter "mo:base/Iter";
-import Prelude "mo:base/Prelude";
-import Principal "mo:base/Principal";
-import Text "mo:base/Text";
-import Order "mo:base/Order";
-import Option "mo:base/Option";
-import Func "mo:base/Func";
-import Char "mo:base/Char";
-import Int16 "mo:base/Int16";
+import Debug "mo:base@0.14.14/Debug";
+import Result "mo:base@0.14.14/Result";
+import Nat64 "mo:base@0.14.14/Nat64";
+import Int8 "mo:base@0.14.14/Int8";
+import Int32 "mo:base@0.14.14/Int32";
+import Nat8 "mo:base@0.14.14/Nat8";
+import Nat32 "mo:base@0.14.14/Nat32";
+import Nat16 "mo:base@0.14.14/Nat16";
+import Int64 "mo:base@0.14.14/Int64";
+import Nat "mo:base@0.14.14/Nat";
+import Int "mo:base@0.14.14/Int";
+import Iter "mo:base@0.14.14/Iter";
+import Prelude "mo:base@0.14.14/Prelude";
+import Principal "mo:base@0.14.14/Principal";
+import Text "mo:base@0.14.14/Text";
+import Order "mo:base@0.14.14/Order";
+import Option "mo:base@0.14.14/Option";
+import Func "mo:base@0.14.14/Func";
+import Char "mo:base@0.14.14/Char";
+import Int16 "mo:base@0.14.14/Int16";
 
-import Encoder "mo:candid/Encoder";
-import Arg "mo:candid/Arg";
-import Value "mo:candid/Value";
-import Type "mo:candid/Type";
-import Tag "mo:candid/Tag";
-import Itertools "mo:itertools/Iter";
-import PeekableIter "mo:itertools/PeekableIter";
-import Map "mo:map/Map";
+import Itertools "mo:itertools@0.2.2/Iter";
+import PeekableIter "mo:itertools@0.2.2/PeekableIter";
+import Map "mo:map@9.0.1/Map";
 import FloatX "mo:xtended-numbers/FloatX";
 
-import { hashName = hash_record_key } "mo:candid/Tag";
-
 import T "../Types";
-import TrieMap "mo:base/TrieMap";
+import TrieMap "mo:base@0.14.14/TrieMap";
 import Utils "../../Utils";
 import CandidUtils "CandidUtils";
 
 module {
-    type Arg = Arg.Arg;
-    type Type = Type.Type;
-    type Tag = Tag.Tag;
-    type Value = Value.Value;
-    type RecordFieldType = Type.RecordFieldType;
-    type RecordFieldValue = Value.RecordFieldValue;
     type TrieMap<K, V> = TrieMap.TrieMap<K, V>;
     type Result<A, B> = Result.Result<A, B>;
     type Buffer<A> = Buffer.Buffer<A>;
@@ -422,7 +409,7 @@ module {
                     } else {
                         let record_key = get_renamed_key(renaming_map, record_types[i].0);
 
-                        let hash_key = hash_record_key(record_key);
+                        let hash_key = Utils.hash_record_key(record_key);
                         unsigned_leb128(compound_type_buffer, Nat32.toNat(hash_key));
                     };
 
@@ -490,7 +477,7 @@ module {
                     let variant_type = variant_types[i].1;
                     let variant_type_is_compound = is_compound_type(variant_type);
 
-                    let hash_key = hash_record_key(variant_key);
+                    let hash_key = Utils.hash_record_key(variant_key);
                     unsigned_leb128(compound_type_buffer, Nat32.toNat(hash_key));
 
                     if (variant_type_is_compound) {
@@ -996,7 +983,7 @@ module {
                             unsigned_leb128(compound_type_buffer, i);
                         } else {
                             let record_key = get_renamed_key(renaming_map, record_types[i].0);
-                            let hash_key = hash_record_key(record_key);
+                            let hash_key = Utils.hash_record_key(record_key);
                             unsigned_leb128(compound_type_buffer, Nat32.toNat(hash_key));
                         };
 
@@ -1150,7 +1137,7 @@ module {
                         let variant_type = variant_types[i].1;
                         let variant_type_is_compound = is_compound_type(variant_type);
 
-                        let hash_key = hash_record_key(variant_key);
+                        let hash_key = Utils.hash_record_key(variant_key);
                         unsigned_leb128(compound_type_buffer, Nat32.toNat(hash_key));
 
                         if (variant_type_is_compound) {

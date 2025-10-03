@@ -1,18 +1,17 @@
-import Array "mo:base/Array";
-import Buffer "mo:base/Buffer";
-import Result "mo:base/Result";
-import Nat32 "mo:base/Nat32";
-import Nat "mo:base/Nat";
-import Iter "mo:base/Iter";
-import Text "mo:base/Text";
-import Order "mo:base/Order";
+import Array "mo:base@0.14.14/Array";
+import Buffer "mo:base@0.14.14/Buffer";
+import Result "mo:base@0.14.14/Result";
+import Nat32 "mo:base@0.14.14/Nat32";
+import Nat "mo:base@0.14.14/Nat";
+import Iter "mo:base@0.14.14/Iter";
+import Text "mo:base@0.14.14/Text";
+import Order "mo:base@0.14.14/Order";
 
-import Itertools "mo:itertools/Iter";
-import Map "mo:map/Map";
-import { hashName = hash_record_key } "mo:candid/Tag";
+import Itertools "mo:itertools@0.2.2/Iter";
+import Map "mo:map@9.0.1/Map";
 
 import T "../Types";
-import TrieMap "mo:base/TrieMap";
+import TrieMap "mo:base@0.14.14/TrieMap";
 import Utils "../../Utils";
 
 module {
@@ -33,8 +32,8 @@ module {
 
     public func cmp_fields(a : (Text, Any), b : (Text, Any)) : Order {
 
-        let hash_a = hash_record_key(a.0);
-        let hash_b = hash_record_key(b.0);
+        let hash_a = Utils.hash_record_key(a.0);
+        let hash_b = Utils.hash_record_key(b.0);
 
         Nat32.compare(hash_a, hash_b);
     };

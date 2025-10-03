@@ -1,29 +1,27 @@
-import Array "mo:base/Array";
-import Blob "mo:base/Blob";
-import Buffer "mo:base/Buffer";
-import Debug "mo:base/Debug";
-import Result "mo:base/Result";
-import Nat64 "mo:base/Nat64";
-import Int8 "mo:base/Int8";
-import Int32 "mo:base/Int32";
-import Nat8 "mo:base/Nat8";
-import Nat32 "mo:base/Nat32";
-import Int64 "mo:base/Int64";
-import Nat "mo:base/Nat";
-import Int "mo:base/Int";
-import Iter "mo:base/Iter";
-import Principal "mo:base/Principal";
-import Text "mo:base/Text";
-import Order "mo:base/Order";
-import Int16 "mo:base/Int16";
-import TrieMap "mo:base/TrieMap";
-import Option "mo:base/Option";
+import Array "mo:base@0.14.14/Array";
+import Blob "mo:base@0.14.14/Blob";
+import Buffer "mo:base@0.14.14/Buffer";
+import Debug "mo:base@0.14.14/Debug";
+import Result "mo:base@0.14.14/Result";
+import Nat64 "mo:base@0.14.14/Nat64";
+import Int8 "mo:base@0.14.14/Int8";
+import Int32 "mo:base@0.14.14/Int32";
+import Nat8 "mo:base@0.14.14/Nat8";
+import Nat32 "mo:base@0.14.14/Nat32";
+import Int64 "mo:base@0.14.14/Int64";
+import Nat "mo:base@0.14.14/Nat";
+import Int "mo:base@0.14.14/Int";
+import Iter "mo:base@0.14.14/Iter";
+import Principal "mo:base@0.14.14/Principal";
+import Text "mo:base@0.14.14/Text";
+import Order "mo:base@0.14.14/Order";
+import Int16 "mo:base@0.14.14/Int16";
+import TrieMap "mo:base@0.14.14/TrieMap";
+import Option "mo:base@0.14.14/Option";
 
-import Map "mo:map/Map";
-import Set "mo:map/Set";
+import Map "mo:map@9.0.1/Map";
+import Set "mo:map@9.0.1/Set";
 import FloatX "mo:xtended-numbers/FloatX";
-
-import { hashName = hash_record_key } "mo:candid/Tag";
 
 import T "../Types";
 import Utils "../../Utils";
@@ -144,7 +142,7 @@ module {
         var i = 0;
         while (i < record_keys.size()) {
             let key = formatVariantKey(record_keys[i]);
-            let hash = hash_record_key(key);
+            let hash = Utils.hash_record_key(key);
             ignore Map.put(record_key_map, n32hash, hash, key);
             i += 1;
         };
@@ -157,7 +155,7 @@ module {
                 let original_key = formatVariantKey(key_pairs_to_rename[i].0);
                 let new_key = formatVariantKey(key_pairs_to_rename[i].1);
 
-                let hash = hash_record_key(original_key);
+                let hash = Utils.hash_record_key(original_key);
                 ignore Map.put(record_key_map, n32hash, hash, new_key);
 
                 i += 1;

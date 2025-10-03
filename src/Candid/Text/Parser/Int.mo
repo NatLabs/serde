@@ -1,5 +1,5 @@
-import Int "mo:base/Int";
-import List "mo:base/List";
+import Int "mo:base@0.14.14/Int";
+import List "mo:base@0.14.14/List";
 
 import C "../../../../submodules/parser-combinators.mo/src/Combinators";
 import P "../../../../submodules/parser-combinators.mo/src/Parser";

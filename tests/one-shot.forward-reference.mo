@@ -1,19 +1,19 @@
 // @testmode wasi
-import Array "mo:base/Array";
-import Blob "mo:base/Blob";
-import Debug "mo:base/Debug";
-import Iter "mo:base/Iter";
-import Principal "mo:base/Principal";
-import Text "mo:base/Text";
-import TrieMap "mo:base/TrieMap";
-import Option "mo:base/Option";
+import Array "mo:base@0.14.14/Array";
+import Blob "mo:base@0.14.14/Blob";
+import Debug "mo:base@0.14.14/Debug";
+import Iter "mo:base@0.14.14/Iter";
+import Principal "mo:base@0.14.14/Principal";
+import Text "mo:base@0.14.14/Text";
+import TrieMap "mo:base@0.14.14/TrieMap";
+import Option "mo:base@0.14.14/Option";
 
-import Arg "mo:candid/Arg";
-import Decoder "mo:candid/Decoder";
-import Encoder "mo:candid/Encoder";
-import Type "mo:candid/Type";
-import Value "mo:candid/Value";
-import { test; suite } "mo:test";
+import Arg "mo:candid@2.0.0/Arg";
+import Decoder "mo:candid@2.0.0/Decoder";
+import Encoder "mo:candid@2.0.0/Encoder";
+import Type "mo:candid@2.0.0/Type";
+import Value "mo:candid@2.0.0/Value";
+import { test; suite } "mo:test@2.1.1";
 
 import Candid "../src/Candid";
 import CandidEncoder "../src/Candid/Blob/Encoder.ForwardReference";
@@ -56,7 +56,7 @@ func validate_encoding_with_types(candid_values : [Candid.Candid], types : [Cand
     return encoded == expected;
 };
 
-func encode(candid_values : [Candid.Candid],) : Blob {
+func encode(candid_values : [Candid.Candid]) : Blob {
     let #ok(encoded) = CandidEncoder.one_shot(candid_values, null);
     return encoded;
 };
@@ -70,7 +70,6 @@ func equals(encoding : Blob, expected : Blob) : Bool {
     Debug.print("(encoding, expected): " # debug_show (encoding, expected));
     return encoding == expected;
 };
-
 
 func toArgType(candid : CandidType) : (Type.Type) {
     let (arg_type) : (Type.Type) = switch (candid) {
@@ -260,19 +259,19 @@ suite(
             func() {
 
                 encoding := encode([#Array([])]); // transpiles to [#Array(#Empty)]
-                expected := to_candid([] : [None]);
+                expected := to_candid ([] : [None]);
                 assert equals(encoding, expected);
 
                 encoding := encode_with_types([#Array([])], [#Array(#Nat)]);
-                expected := to_candid([] : [Nat]);
+                expected := to_candid ([] : [Nat]);
                 assert equals(encoding, expected);
 
                 encoding := encode([#Array([#Nat(0)])]);
-                expected := to_candid([0] : [Nat]);
+                expected := to_candid ([0] : [Nat]);
                 assert equals(encoding, expected);
 
                 encoding := encode([#Array([#Nat(0), #Nat(1), #Nat(2)])]);
-                expected := to_candid([0, 1, 2] : [Nat]);
+                expected := to_candid ([0, 1, 2] : [Nat]);
                 assert equals(encoding, expected);
 
                 // encoding := encode([#Array([#Option(#Int(6)), #Option(#Int(7)), #Null])]);
@@ -280,15 +279,15 @@ suite(
                 // assert equals(encoding, expected);
 
                 encoding := encode([#Array([#Array([#Nat(0)])])]); // nested array
-                expected := to_candid([[0]] : [[Nat]]);
+                expected := to_candid ([[0]] : [[Nat]]);
                 assert equals(encoding, expected);
 
                 encoding := encode([#Array([#Array([#Array([#Nat(0)]), #Array([#Nat(1)])])])]);
-                expected := to_candid([[[0], [1]]] : [[[Nat]]]);
+                expected := to_candid ([[[0], [1]]] : [[[Nat]]]);
                 assert equals(encoding, expected);
 
                 encoding := encode([#Array([#Array([#Array([#Array([#Nat(0)])])])])]);
-                expected := to_candid([[[[0]]]] : [[[[Nat]]]]);
+                expected := to_candid ([[[[0]]]] : [[[[Nat]]]]);
                 assert equals(encoding, expected);
 
                 // equivalent motoko type -> [?[?[Nat]]]
@@ -318,24 +317,23 @@ suite(
             "record types",
             func() {
                 encoding := encode([#Record([])]);
-                expected := to_candid({});
+                expected := to_candid ({});
                 assert equals(encoding, expected);
 
                 encoding := encode([#Record([("a", #Nat(0))])]);
-                expected := to_candid({a = 0});
+                expected := to_candid ({ a = 0 });
                 assert equals(encoding, expected);
 
                 // the library encoding no longer matches with to_candid's encoding, the sequences are in different order but the result is the same
                 // so the testing method is switched to compare their motoko representations
                 encoding := encode([#Record([("a", #Nat(0)), ("b", #Int(1)), ("c", #Text("random"))])]);
-                expected := to_candid({a = 0; b = (1: Int); c = "random"});
+                expected := to_candid ({ a = 0; b = (1 : Int); c = "random" });
                 assert equals(encoding, expected);
 
                 // encoding := encode([#Record([("a", #Option(#Text("random"))), ("b", #Nat(1))])]);
                 // expected := to_candid({a = ?"random"; b = 1});
                 // assert equals(encoding, expected);
                 // assert from_candid(encoding) : ?({a: ?Text; b: Nat}) == ?({a = ?"random"; b = 1});
-
 
                 // encoding := encode([#Record([("a", #Nat(1)), ("b", #Option(#Text("random")))])]);
                 // expected := to_candid({a = 1; b = ?"random"});
@@ -348,9 +346,12 @@ suite(
                 // assert (from_candid(encoding) : ?(?Text, ({a: Nat; b: ?Text}))) == ?(?"random", {a = 1; b = ?"random"});
 
                 encoding := encode([#Record([("int", #Int(28)), ("nums", #Array([#Nat(0), #Nat(1), #Nat(2), #Nat(3)]))])]);
-                expected := to_candid({nums = [0]; int = (28: Int)});
+                expected := to_candid ({ nums = [0]; int = (28 : Int) });
                 ignore equals(encoding, expected);
-                assert (from_candid(encoding) : ?({nums: [Nat]; int: Int})) == ?({nums = [0, 1, 2, 3]; int = 28});
+                assert (from_candid (encoding) : ?({ nums : [Nat]; int : Int })) == ?({
+                    nums = [0, 1, 2, 3];
+                    int = 28;
+                });
 
                 // encoding := encode([#Record([("nums", #Array([#Nat(0)])), ("opt_text", #Option(#Text("random"))), ("int", #Int(1))])]);
                 // expected := to_candid({nums = [0]; opt_text = ?"random"; int = (1: Int)});
@@ -364,33 +365,38 @@ suite(
 
                 // nested records
                 encoding := encode([#Record([("a", #Record([("b", #Nat(0))]))])]);
-                expected := to_candid({a = {b = 0}});
+                expected := to_candid ({ a = { b = 0 } });
                 ignore equals(encoding, expected);
-                Debug.print(debug_show (from_candid(encoding): ?({a: {b: Nat}})));
-                assert (from_candid(encoding) : ?({a: {b: Nat}})) == ?({a = {b = 0}});
+                Debug.print(debug_show (from_candid (encoding) : ?({ a : { b : Nat } })));
+                assert (from_candid (encoding) : ?({ a : { b : Nat } })) == ?({
+                    a = { b = 0 };
+                });
 
                 encoding := encode([#Record([("c", #Nat(0))]), #Record([("a", #Record([("b", #Record([("c", #Nat(0))]))]))])]);
-                expected := to_candid({c = 0}, {a = {b = {c = 0}}});
+                expected := to_candid ({ c = 0 }, { a = { b = { c = 0 } } });
                 ignore equals(encoding, expected);
-                Debug.print(debug_show (from_candid(encoding): ?({c: Nat}, {a: {b: {c: Nat}}})));
-                assert (from_candid(encoding) : ?({c: Nat}, {a: {b: {c: Nat}}})) == ?({c = 0}, {a = {b = {c = 0}}});
+                Debug.print(debug_show (from_candid (encoding) : ?({ c : Nat }, { a : { b : { c : Nat } } })));
+                assert (from_candid (encoding) : ?({ c : Nat }, { a : { b : { c : Nat } } })) == ?({ c = 0 }, { a = { b = { c = 0 } } });
 
                 encoding := encode([#Record([("a", #Record([("b", #Record([("c", #Record([("d", #Record([("e", #Nat(0))]))]))]))]))])]);
-                expected := to_candid({a = {b = {c = {d = {e = 0}}}}});
+                expected := to_candid ({ a = { b = { c = { d = { e = 0 } } } } });
                 ignore equals(encoding, expected);
-                Debug.print(debug_show (from_candid(encoding) : ?({a: {b: {c: {d: {e: Nat}}}}})));
-                assert (from_candid(encoding) : ?({a: {b: {c: {d: {e: Nat}}}}})) == ?({a = {b = {c = {d = {e = 0}}}}});
+                Debug.print(debug_show (from_candid (encoding) : ?({ a : { b : { c : { d : { e : Nat } } } } })));
+                assert (from_candid (encoding) : ?({ a : { b : { c : { d : { e : Nat } } } } })) == ?({
+                    a = { b = { c = { d = { e = 0 } } } };
+                });
 
                 encoding := encode([
                     #Record([
                         ("a", #Array([#Record([("a", #Nat(1))]), #Record([("a", #Nat(2))])])),
                     ])
                 ]);
-                expected := to_candid({a = [{a = 1}, {a = 2}] });
+                expected := to_candid ({ a = [{ a = 1 }, { a = 2 }] });
                 ignore equals(encoding, expected);
-                Debug.print(debug_show (from_candid(encoding) : ?({a: [{a: Nat}]})));
-                assert (from_candid(encoding) : ?({a: [{a: Nat}]})) == ?({a = [{a = 1}, {a = 2}]});
-
+                Debug.print(debug_show (from_candid (encoding) : ?({ a : [{ a : Nat }] })));
+                assert (from_candid (encoding) : ?({ a : [{ a : Nat }] })) == ?({
+                    a = [{ a = 1 }, { a = 2 }];
+                });
 
                 // encoding := encode([
                 //     #Record([
@@ -455,7 +461,6 @@ suite(
         //         // // assert validate_encoding_with_types([#Variant("nat", #Nat(21))], [#Variant([("nat", #Nat), ("opt_int", #Option(#Int)), ("texts", #Array(#Text)),
         //         // // ("record", #Record([("a", #Nat)]))
         //         // // ])]);
-
 
         //     },
         // );

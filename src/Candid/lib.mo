@@ -1,7 +1,7 @@
 /// A representation of the Candid format with variants for all possible types.
 
-import Array "mo:base/Array";
-import Text "mo:base/Text";
+import Array "mo:base@0.14.14/Array";
+import Text "mo:base@0.14.14/Text";
 
 import Encoder "Blob/Encoder";
 import Decoder "Blob/Decoder";
@@ -15,7 +15,7 @@ import T "Types";
 import Utils "../Utils";
 import ICRC3Value "ICRC3Value";
 
-import Map "mo:map/Map";
+import Map "mo:map@9.0.1/Map";
 
 module {
     let { thash } = Map;

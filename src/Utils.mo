@@ -1,27 +1,44 @@
-import Array "mo:base/Array";
-import Char "mo:base/Char";
-import Order "mo:base/Order";
-import Float "mo:base/Float";
-import Text "mo:base/Text";
-import Iter "mo:base/Iter";
-import Nat64 "mo:base/Nat64";
-import Nat8 "mo:base/Nat8";
-import Int "mo:base/Int";
-import Buffer "mo:base/Buffer";
-import Result "mo:base/Result";
-import Int64 "mo:base/Int64";
+import Array "mo:base@0.14.14/Array";
+import Char "mo:base@0.14.14/Char";
+import Order "mo:base@0.14.14/Order";
+import Float "mo:base@0.14.14/Float";
+import Text "mo:base@0.14.14/Text";
+import Iter "mo:base@0.14.14/Iter";
+import Nat64 "mo:base@0.14.14/Nat64";
+import Nat32 "mo:base@0.14.14/Nat32";
+import Nat8 "mo:base@0.14.14/Nat8";
+import Int "mo:base@0.14.14/Int";
+import Buffer "mo:base@0.14.14/Buffer";
+import Result "mo:base@0.14.14/Result";
+import Int64 "mo:base@0.14.14/Int64";
+import Blob "mo:base@0.14.14/Blob";
 
-import Prelude "mo:base/Prelude";
-import Nat32 "mo:base/Nat32";
-import Debug "mo:base/Debug";
-import Itertools "mo:itertools/Iter";
+import Prelude "mo:base@0.14.14/Prelude";
+import Debug "mo:base@0.14.14/Debug";
+import Itertools "mo:itertools@0.2.2/Iter";
 
-import ByteUtils "mo:byte-utils";
+import ByteUtils "mo:byte-utils@0.1.1";
 module {
 
     type Iter<A> = Iter.Iter<A>;
     type Buffer<A> = Buffer.Buffer<A>;
     type Result<A, B> = Result.Result<A, B>;
+
+    /// Function copied from mo:candid@2.0.0/Tag: https://github.com/edjCase/motoko_candid/blob/d038b7bd953fb8826ae66a5f34bf06dcc29b2e0f/src/Tag.mo#L14-L30
+    ///
+    /// Computes the hash of a given record field key.
+    ///
+    public func hash_record_key(name : Text) : Nat32 {
+        // hash(name) = ( Sum_(i=0..k) utf8(name)[i] * 223^(k-i) ) mod 2^32 where k = |utf8(name)|-1
+        let bytes : [Nat8] = Blob.toArray(Text.encodeUtf8(name));
+        Array.foldLeft<Nat8, Nat32>(
+            bytes,
+            0,
+            func(accum : Nat32, byte : Nat8) : Nat32 {
+                (accum *% 223) +% Nat32.fromNat(Nat8.toNat(byte));
+            },
+        );
+    };
 
     public func reverse_order<A>(fn : (A, A) -> Order.Order) : (A, A) -> Order.Order {
         func(a : A, b : A) : Order.Order {

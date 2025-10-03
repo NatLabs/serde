@@ -1,14 +1,14 @@
 // @testmode wasi
-import Iter "mo:base/Iter";
-import Debug "mo:base/Debug";
-import Prelude "mo:base/Prelude";
-import Text "mo:base/Text";
-import Char "mo:base/Char";
-import Buffer "mo:base/Buffer";
+import Iter "mo:base@0.14.14/Iter";
+import Debug "mo:base@0.14.14/Debug";
+import Prelude "mo:base@0.14.14/Prelude";
+import Text "mo:base@0.14.14/Text";
+import Char "mo:base@0.14.14/Char";
+import Buffer "mo:base@0.14.14/Buffer";
 
-import Fuzz "mo:fuzz";
-import Itertools "mo:itertools/Iter";
-import { test; suite } "mo:test";
+import Fuzz "mo:fuzz@1.0.0";
+import Itertools "mo:itertools@0.2.2/Iter";
+import { test; suite } "mo:test@2.1.1";
 
 import Serde "../src";
 import CandidEncoder "../src/Candid/Blob/Encoder";

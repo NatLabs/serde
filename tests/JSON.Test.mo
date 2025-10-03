@@ -1,10 +1,10 @@
 // @testmode wasi
-import Blob "mo:base/Blob";
-import Debug "mo:base/Debug";
-import Iter "mo:base/Iter";
-import Nat "mo:base/Nat";
+import Blob "mo:base@0.14.14/Blob";
+import Debug "mo:base@0.14.14/Debug";
+import Iter "mo:base@0.14.14/Iter";
+import Nat "mo:base@0.14.14/Nat";
 
-import { test; suite } "mo:test";
+import { test; suite } "mo:test@2.1.1";
 
 import { Candid; JSON } "../src";
 

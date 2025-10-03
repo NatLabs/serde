@@ -1,16 +1,16 @@
 // @testmode wasi
-import Blob "mo:base/Blob";
-import Debug "mo:base/Debug";
-import Iter "mo:base/Iter";
-import Nat "mo:base/Nat";
-import Principal "mo:base/Principal";
+import Blob "mo:base@0.14.14/Blob";
+import Debug "mo:base@0.14.14/Debug";
+import Iter "mo:base@0.14.14/Iter";
+import Nat "mo:base@0.14.14/Nat";
+import Principal "mo:base@0.14.14/Principal";
 
-import { test; suite } "mo:test";
+import { test; suite } "mo:test@2.1.1";
 
 import Serde "../src";
 import Candid "../src/Candid";
 import Encoder "../src/Candid/Blob/Encoder";
-import Fuzz "mo:fuzz";
+import Fuzz "mo:fuzz@1.0.0";
 
 let fuzz = Fuzz.fromSeed(0x12345678);
 let limit = 10_000;

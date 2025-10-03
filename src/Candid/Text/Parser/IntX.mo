@@ -1,9 +1,9 @@
-import Debug "mo:base/Debug";
-import List "mo:base/List";
-import Int8 "mo:base/Int8";
-import Int16 "mo:base/Int16";
-import Int32 "mo:base/Int32";
-import Int64 "mo:base/Int64";
+import Debug "mo:base@0.14.14/Debug";
+import List "mo:base@0.14.14/List";
+import Int8 "mo:base@0.14.14/Int8";
+import Int16 "mo:base@0.14.14/Int16";
+import Int32 "mo:base@0.14.14/Int32";
+import Int64 "mo:base@0.14.14/Int64";
 
 import C "../../../../submodules/parser-combinators.mo/src/Combinators";
 import P "../../../../submodules/parser-combinators.mo/src/Parser";

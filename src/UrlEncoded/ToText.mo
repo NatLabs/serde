@@ -1,14 +1,14 @@
-import Result "mo:base/Result";
-import Nat "mo:base/Nat";
-import Nat32 "mo:base/Nat32";
-import Text "mo:base/Text";
-import TrieMap "mo:base/TrieMap";
-import Iter "mo:base/Iter";
-import Float "mo:base/Float";
-import Principal "mo:base/Principal";
-import Debug "mo:base/Debug";
+import Result "mo:base@0.14.14/Result";
+import Nat "mo:base@0.14.14/Nat";
+import Nat32 "mo:base@0.14.14/Nat32";
+import Text "mo:base@0.14.14/Text";
+import TrieMap "mo:base@0.14.14/TrieMap";
+import Iter "mo:base@0.14.14/Iter";
+import Float "mo:base@0.14.14/Float";
+import Principal "mo:base@0.14.14/Principal";
+import Debug "mo:base@0.14.14/Debug";
 
-import itertools "mo:itertools/Iter";
+import itertools "mo:itertools@0.2.2/Iter";
 
 import Candid "../Candid";
 import U "../Utils";

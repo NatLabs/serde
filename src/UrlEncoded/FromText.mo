@@ -1,16 +1,16 @@
-import Array "mo:base/Array";
-import Blob "mo:base/Blob";
-import Buffer "mo:base/Buffer";
-import Char "mo:base/Char";
-import Debug "mo:base/Debug";
-import Result "mo:base/Result";
-import TrieMap "mo:base/TrieMap";
-import Nat "mo:base/Nat";
-import Text "mo:base/Text";
-import Iter "mo:base/Iter";
-import Option "mo:base/Option";
+import Array "mo:base@0.14.14/Array";
+import Blob "mo:base@0.14.14/Blob";
+import Buffer "mo:base@0.14.14/Buffer";
+import Char "mo:base@0.14.14/Char";
+import Debug "mo:base@0.14.14/Debug";
+import Result "mo:base@0.14.14/Result";
+import TrieMap "mo:base@0.14.14/TrieMap";
+import Nat "mo:base@0.14.14/Nat";
+import Text "mo:base@0.14.14/Text";
+import Iter "mo:base@0.14.14/Iter";
+import Option "mo:base@0.14.14/Option";
 
-import Itertools "mo:itertools/Iter";
+import Itertools "mo:itertools@0.2.2/Iter";
 
 import Candid "../Candid";
 import T "../Candid/Types";
@@ -38,7 +38,7 @@ module {
     func newMap() : NestedTrieMap = TrieMap.TrieMap(Text.equal, Text.hash);
 
     /// Converts a Url-Encoded Text to a serialized Candid Record
-    public func fromText(text : Text, options: ?T.Options) : Result<Blob, Text> {
+    public func fromText(text : Text, options : ?T.Options) : Result<Blob, Text> {
         let res = toCandid(text, Option.get(options, T.defaultOptions));
         let #ok(candid) = res else return Utils.send_error(res);
 
@@ -46,7 +46,7 @@ module {
     };
 
     /// Converts a Url-Encoded Text to a Candid Record
-    public func toCandid(text : Text, options: T.Options) : Result<Candid, Text> {
+    public func toCandid(text : Text, options : T.Options) : Result<Candid, Text> {
         let triemap_res = entriesToTrieMap(text, options);
 
         let #ok(triemap) = triemap_res else return Utils.send_error(triemap_res);
@@ -84,7 +84,7 @@ module {
     //     },
     // }
     // --------------------------------------------------
-    func entriesToTrieMap(text : Text, options: T.Options) : Result<NestedTrieMap, Text> {
+    func entriesToTrieMap(text : Text, options : T.Options) : Result<NestedTrieMap, Text> {
         let entries : [Text] = Array.sort(
             Iter.toArray(Text.split(text, #char '&')),
             Text.compare,
@@ -108,7 +108,7 @@ module {
                 Itertools.findIndex(
                     key.chars(),
                     func(c : Char) : Bool = c == '[',
-                ),
+                )
             ) {
                 case (?index) {
                     let first_field = subText(key, 0, index);
@@ -179,7 +179,7 @@ module {
     // }
     // --------------------------------------------------
 
-    func trieMapToCandid(triemap : NestedTrieMap, options: T.Options) : Result<Candid, Text> {
+    func trieMapToCandid(triemap : NestedTrieMap, options : T.Options) : Result<Candid, Text> {
         var i = 0;
         let isArray = Itertools.all(
             Iter.sort(triemap.keys(), Text.compare),
@@ -193,9 +193,9 @@ module {
         if (isArray) {
             let buffer = Buffer.Buffer<Candid>(triemap.size());
 
-            for (i in Itertools.range(0, triemap.size())){
+            for (i in Itertools.range(0, triemap.size())) {
 
-                switch(triemap.get(Nat.toText(i))) {
+                switch (triemap.get(Nat.toText(i))) {
                     case (?(#text(text))) {
                         let candid = parseValue(text);
                         buffer.add(candid);
@@ -219,7 +219,7 @@ module {
         if (triemap.size() == 1) {
             let (variant_key, value) = switch (triemap.entries().next()) {
                 case (?(k, v)) { (k, v) };
-                case (_)       { Debug.trap("Variant might be improperly formatted"); };
+                case (_) { Debug.trap("Variant might be improperly formatted") };
             };
 
             let isVariant = Text.startsWith(variant_key, #text "#");
@@ -240,8 +240,8 @@ module {
 
         let buffer = Buffer.Buffer<(Text, Candid)>(triemap.size());
 
-        for ((key, field) in triemap.entries()){
-            switch (field){
+        for ((key, field) in triemap.entries()) {
+            switch (field) {
                 case (#text(text)) {
                     let candid = parseValue(text);
                     buffer.add((key, candid));

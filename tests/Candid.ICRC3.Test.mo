@@ -1,12 +1,12 @@
 // @testmode wasi
-import Array "mo:base/Array";
-import Blob "mo:base/Blob";
-import Debug "mo:base/Debug";
-import Iter "mo:base/Iter";
-import Principal "mo:base/Principal";
-import Text "mo:base/Text";
+import Array "mo:base@0.14.14/Array";
+import Blob "mo:base@0.14.14/Blob";
+import Debug "mo:base@0.14.14/Debug";
+import Iter "mo:base@0.14.14/Iter";
+import Principal "mo:base@0.14.14/Principal";
+import Text "mo:base@0.14.14/Text";
 
-import { test; suite } "mo:test";
+import { test; suite } "mo:test@2.1.1";
 
 import Serde "../src";
 
