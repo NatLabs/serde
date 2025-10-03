@@ -1,6 +1,6 @@
 [package]
 name = "serde"
-version = "3.3.2"
+version = "3.3.3"
 description = "A serialisation and deserialisation library for Motoko."
 repository = "https://github.com/NatLabs/serde"
 keywords = ["json", "candid", "cbor", "urlencoded", "serialization"]
@@ -13,7 +13,7 @@ license = "MIT"
 'cbor@4.0.0' = "4.0.0"
 'map@9.0.1' = "9.0.1"
 'sha2@0.1.6' = "0.1.6"
-'byte-utils@0.1.1' = "../ByteUtils"
+'byte-utils@0.1.2' = "0.1.2"
 "base@0.7.3" = "0.7.3"
 
 [dev-dependencies]
