@@ -1,6 +1,6 @@
 // @testmode wasi
-import Debug "mo:base/Debug";
-import Iter "mo:base/Iter";
+import Debug "mo:base@0.14.14/Debug";
+import Iter "mo:base@0.14.14/Iter";
 
 import { test; suite } "mo:test";
 

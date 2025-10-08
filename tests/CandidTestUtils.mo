@@ -1,11 +1,11 @@
 // @testmode wasi
-import Blob "mo:base/Blob";
-import Debug "mo:base/Debug";
-import Iter "mo:base/Iter";
-import Nat "mo:base/Nat";
-import Principal "mo:base/Principal";
-import Result "mo:base/Result";
-import Option "mo:base/Option";
+import Blob "mo:base@0.14.14/Blob";
+import Debug "mo:base@0.14.14/Debug";
+import Iter "mo:base@0.14.14/Iter";
+import Nat "mo:base@0.14.14/Nat";
+import Principal "mo:base@0.14.14/Principal";
+import Result "mo:base@0.14.14/Result";
+import Option "mo:base@0.14.14/Option";
 
 import { test; suite } "mo:test";
 
@@ -39,7 +39,7 @@ module {
 
         if (encoder_instance_blob != single_function_encoding) {
 
-            let single_function_encoding = switch (Candid.encode(vals, ?{ options with types = ?Candid.formatCandidType(types, ?options.renameKeys) })) {
+            let single_function_encoding_with_types = switch (Candid.encode(vals, ?{ options with types = ?Candid.formatCandidType(types, ?options.renameKeys) })) {
                 case (#ok(blob)) blob;
                 case (#err(err)) {
                     Debug.print("encode function failed: " # err);
@@ -47,11 +47,11 @@ module {
                 };
             };
 
-            if (encoder_instance_blob != single_function_encoding) {
+            if (encoder_instance_blob != single_function_encoding_with_types) {
                 Debug.print("Encoded blob does not match the original encoding:");
-                Debug.print("Single function: " # debug_show (Blob.toArray(single_function_encoding)));
+                Debug.print("Single function: " # debug_show (Blob.toArray(single_function_encoding_with_types)));
                 Debug.print("Encoder instance: " # debug_show (Blob.toArray(encoder_instance_blob)));
-                return #err("Encoded blob does not match the original encoding: " # debug_show ({ single_function_encoding; encoder_instance_blob }));
+                return #err("Encoded blob does not match the original encoding: " # debug_show ({ single_function_encoding_with_types; encoder_instance_blob }));
             };
         };
 
@@ -83,8 +83,8 @@ module {
 
         if (decoder_instance_vals != single_function_decoding) {
             Debug.print("Decoded values do not match the original decoding:");
-            Debug.print("Single function: " # debug_show (single_function_decoding));
-            Debug.print("Decoder instance: " # debug_show (decoder_instance_vals));
+            Debug.print("Candid.decode() function: " # debug_show (single_function_decoding));
+            Debug.print("TypedSerializer instance: " # debug_show (decoder_instance_vals));
             return #err("Decoded values do not match the original decoding: " # debug_show ({ single_function_decoding; decoder_instance_vals }));
         };
 

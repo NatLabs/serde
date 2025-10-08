@@ -1,29 +1,27 @@
-import Array "mo:base/Array";
-import Blob "mo:base/Blob";
-import Buffer "mo:base/Buffer";
-import Debug "mo:base/Debug";
-import Result "mo:base/Result";
-import Nat64 "mo:base/Nat64";
-import Int8 "mo:base/Int8";
-import Int32 "mo:base/Int32";
-import Nat8 "mo:base/Nat8";
-import Nat32 "mo:base/Nat32";
-import Int64 "mo:base/Int64";
-import Nat "mo:base/Nat";
-import Int "mo:base/Int";
-import Iter "mo:base/Iter";
-import Principal "mo:base/Principal";
-import Text "mo:base/Text";
-import Order "mo:base/Order";
-import Int16 "mo:base/Int16";
-import TrieMap "mo:base/TrieMap";
-import Option "mo:base/Option";
+import Array "mo:base@0.14.14/Array";
+import Blob "mo:base@0.14.14/Blob";
+import Buffer "mo:base@0.14.14/Buffer";
+import Debug "mo:base@0.14.14/Debug";
+import Result "mo:base@0.14.14/Result";
+import Nat64 "mo:base@0.14.14/Nat64";
+import Int8 "mo:base@0.14.14/Int8";
+import Int32 "mo:base@0.14.14/Int32";
+import Nat8 "mo:base@0.14.14/Nat8";
+import Nat32 "mo:base@0.14.14/Nat32";
+import Int64 "mo:base@0.14.14/Int64";
+import Nat "mo:base@0.14.14/Nat";
+import Int "mo:base@0.14.14/Int";
+import Iter "mo:base@0.14.14/Iter";
+import Principal "mo:base@0.14.14/Principal";
+import Text "mo:base@0.14.14/Text";
+import Order "mo:base@0.14.14/Order";
+import Int16 "mo:base@0.14.14/Int16";
+import TrieMap "mo:base@0.14.14/TrieMap";
+import Option "mo:base@0.14.14/Option";
 
-import Map "mo:map/Map";
-import Set "mo:map/Set";
-import ByteUtils "mo:byte-utils";
-
-import { hashName = hash_record_key } "mo:candid/Tag";
+import Map "mo:map@9.0.1/Map";
+import Set "mo:map@9.0.1/Set";
+import ByteUtils "mo:byte-utils@0.1.2";
 
 import T "../Types";
 import Utils "../../Utils";
@@ -143,7 +141,7 @@ module {
         var i = 0;
         while (i < record_keys.size()) {
             let key = formatVariantKey(record_keys[i]);
-            let hash = hash_record_key(key);
+            let hash = Utils.hash_record_key(key);
             ignore Map.put(record_key_map, n32hash, hash, key);
             i += 1;
         };
@@ -156,8 +154,8 @@ module {
                 let original_key = formatVariantKey(key_pairs_to_rename[i].0);
                 let new_key = formatVariantKey(key_pairs_to_rename[i].1);
 
-                let hash = hash_record_key(original_key);
-                ignore Map.put(record_key_map, n32hash, hash, new_key);
+                let hash = Utils.hash_record_key(original_key);
+                // ignore Map.put(record_key_map, n32hash, hash, new_key);
 
                 i += 1;
             };
@@ -515,10 +513,6 @@ module {
 
         let is_types_set = Option.isSome(options.types);
 
-        if (options.blob_contains_only_values and not is_types_set) {
-            return #err("if 'options.blob_contains_only_values' is set, you need to also pass in the types");
-        };
-
         var candid_types = Option.get(options.types, []);
 
         let state : [var Nat] = [var 0];
@@ -537,7 +531,7 @@ module {
             let compound_types = extract_compound_types(bytes, state, total_compound_types, record_key_map);
             candid_types := build_types(bytes, state, compound_types, recursive_types_map);
 
-        } else if (not options.blob_contains_only_values) {
+        } else {
             // types are set but 'blob_contains_only_values' is not set,
             // then skip type section and locate start of values section
             let total_compound_types = decode_leb128(bytes, state);
@@ -546,8 +540,10 @@ module {
 
         };
 
+        let renaming_map = Map.fromIter<Text, Text>(options.renameKeys.vals(), Map.thash);
+
         // extract values with Candid variant Types
-        decode_candid_values(bytes, candid_types, state, options, recursive_types_map);
+        decode_candid_values(bytes, candid_types, state, options, renaming_map, recursive_types_map);
     };
 
     let C = {
@@ -645,13 +641,20 @@ module {
         Nat64.toNat(n64);
     };
 
-    public func decode_candid_values(bytes : Blob, candid_types : [CandidType], state : [var Nat], options : T.Options, recursive_map : Map<Nat, CandidType>) : Result<[Candid], Text> {
+    public func decode_candid_values(
+        bytes : Blob,
+        candid_types : [CandidType],
+        state : [var Nat],
+        options : T.Options,
+        renaming_map : Map<Text, Text>,
+        recursive_map : Map<Nat, CandidType>,
+    ) : Result<[Candid], Text> {
         var error : ?Text = null;
 
         let candid_values = Array.tabulate(
             candid_types.size(),
             func(i : Nat) : Candid {
-                switch (decode_value(bytes, state, options, recursive_map, candid_types[i])) {
+                switch (decode_value(bytes, state, options, renaming_map, recursive_map, candid_types[i])) {
                     case (#ok(candid_value)) candid_value;
                     case (#err(msg)) {
                         error := ?msg;
@@ -669,12 +672,25 @@ module {
         #ok(candid_values);
     };
 
-    func decode_value(bytes : Blob, state : [var Nat], options : T.Options, recursive_map : Map<Nat, CandidType>, candid_type : CandidType) : Result<Candid, Text> {
+    func decode_value(
+        bytes : Blob,
+        state : [var Nat],
+        options : T.Options,
+        renaming_map : Map<Text, Text>,
+        recursive_map : Map<Nat, CandidType>,
+        candid_type : CandidType,
+    ) : Result<Candid, Text> {
         let iter = createByteIterator(bytes, state);
-        decode_value_from_iter(iter, options, recursive_map, candid_type);
+        decode_value_from_iter(iter, options, renaming_map, recursive_map, candid_type);
     };
 
-    func decode_value_from_iter(iter : Iter.Iter<Nat8>, options : T.Options, recursive_map : Map<Nat, CandidType>, candid_type : CandidType) : Result<Candid, Text> {
+    func decode_value_from_iter(
+        iter : Iter.Iter<Nat8>,
+        options : T.Options,
+        renaming_map : Map<Text, Text>,
+        recursive_map : Map<Nat, CandidType>,
+        candid_type : CandidType,
+    ) : Result<Candid, Text> {
         // Debug.print("Decoding candid type: " # debug_show (candid_type));
 
         let value : Candid = switch (candid_type) {
@@ -739,7 +755,7 @@ module {
 
                 if (is_null) return #ok(#Null);
 
-                let nested_value = switch (decode_value_from_iter(iter, options, recursive_map, opt_type)) {
+                let nested_value = switch (decode_value_from_iter(iter, options, renaming_map, recursive_map, opt_type)) {
                     case (#ok(value)) value;
                     case (#err(err_msg)) return #err(err_msg);
                 };
@@ -755,7 +771,7 @@ module {
                 let values = Array.tabulate(
                     size,
                     func(_ : Nat) : Nat8 {
-                        switch (decode_value_from_iter(iter, options, recursive_map, #Nat8)) {
+                        switch (decode_value_from_iter(iter, options, renaming_map, recursive_map, #Nat8)) {
                             case (#ok(#Nat8(value))) value;
                             case (#ok(unexpected_type)) {
                                 error := ?("Expected #Nat8 value in blob type, instead got " # debug_show (unexpected_type));
@@ -779,7 +795,7 @@ module {
                 #Blob(blob);
             };
             case (#Blob(_)) {
-                return decode_value_from_iter(iter, options, recursive_map, #Array(#Nat8));
+                return decode_value_from_iter(iter, options, renaming_map, recursive_map, #Array(#Nat8));
             };
 
             case (#Array(arr_type)) {
@@ -788,7 +804,7 @@ module {
                 let values = Array.tabulate(
                     size,
                     func(_ : Nat) : Candid {
-                        switch (decode_value_from_iter(iter, options, recursive_map, arr_type)) {
+                        switch (decode_value_from_iter(iter, options, renaming_map, recursive_map, arr_type)) {
                             case (#ok(value)) value;
                             case (#err(err_msg)) {
                                 error := ?err_msg;
@@ -826,7 +842,7 @@ module {
 
                         let record_type = record_types[i].1;
 
-                        let value = switch (decode_value_from_iter(iter, options, recursive_map, record_type)) {
+                        let value = switch (decode_value_from_iter(iter, options, renaming_map, recursive_map, record_type)) {
                             case (#ok(value)) value;
                             case (#err(msg)) {
                                 error := ?(msg);
@@ -834,7 +850,7 @@ module {
                             };
                         };
 
-                        (record_key, value);
+                        (get_renamed_key(renaming_map, record_key), value);
                     },
                 );
 
@@ -856,6 +872,7 @@ module {
             case (#Tuple(tuple_types)) return decode_value_from_iter(
                 iter,
                 options,
+                renaming_map,
                 recursive_map,
                 #Record(Array.tabulate<(Text, CandidType)>(tuple_types.size(), func(i : Nat) : (Text, CandidType) = (debug_show (i), tuple_types[i]))),
             );
@@ -867,7 +884,7 @@ module {
 
                 var error : ?Text = null;
 
-                let value = switch (decode_value_from_iter(iter, options, recursive_map, variant_type)) {
+                let value = switch (decode_value_from_iter(iter, options, renaming_map, recursive_map, variant_type)) {
                     case (#ok(value)) value;
                     case (#err(msg)) {
                         error := ?(msg);
@@ -875,7 +892,7 @@ module {
                     };
                 };
 
-                #Variant(variant_key, value);
+                #Variant(get_renamed_key(renaming_map, variant_key), value);
             };
             case (#Recursive(pos)) {
                 let recursive_type = switch (Map.get(recursive_map, nhash, pos)) {
@@ -883,13 +900,20 @@ module {
                     case (_) Debug.trap("Recursive type not found");
                 };
 
-                return decode_value_from_iter(iter, options, recursive_map, recursive_type);
+                return decode_value_from_iter(iter, options, renaming_map, recursive_map, recursive_type);
             };
 
             case (val) Debug.trap(debug_show (val) # " decoding is not supported");
         };
 
         #ok(value);
+    };
+
+    func get_renamed_key(renaming_map : Map<Text, Text>, key : Text) : Text {
+        Option.get(
+            Map.get(renaming_map, Map.thash, key),
+            key,
+        );
     };
 
     func formatVariantKey(key : Text) : Text {

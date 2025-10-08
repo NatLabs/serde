@@ -6,7 +6,7 @@
 
 ```motoko
 import JSON "mo:json/JSON";
-import Debug "mo:base/Debug";
+import Debug "mo:base@0.14.14/Debug";
 
 let obj : JSON.JSON = #Object([]);
 Debug.print(JSON.show(obj));
@@ -28,7 +28,7 @@ Debug.print(JSON.show(#Object([
 
 ```motoko
 import JSON "mo:json/JSON";
-import Debug "mo:base/Debug";
+import Debug "mo:base@0.14.14/Debug";
 
 Debug.print(JSON.show(#Object([("amount", #Float(32.4829))])));
 // {"amount": "32.48"}

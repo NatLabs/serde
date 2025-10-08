@@ -1,17 +1,16 @@
-import Iter "mo:base/Iter";
-import Debug "mo:base/Debug";
-import Prelude "mo:base/Prelude";
-import Text "mo:base/Text";
-import Char "mo:base/Char";
-import Buffer "mo:base/Buffer";
+import Iter "mo:base@0.14.14/Iter";
+import Debug "mo:base@0.14.14/Debug";
+import Prelude "mo:base@0.14.14/Prelude";
+import Text "mo:base@0.14.14/Text";
+import Char "mo:base@0.14.14/Char";
+import Buffer "mo:base@0.14.14/Buffer";
 
 import Bench "mo:bench";
 import Fuzz "mo:fuzz";
-import Itertools "mo:itertools/Iter";
+import Itertools "mo:itertools@0.2.2/Iter";
 
 import Serde "../src";
 import CandidEncoder "../src/Candid/Blob/Encoder";
-import CandidEncoderFR "../src/Candid/Blob/Encoder.ForwardReference";
 import CandidDecoder "../src/Candid/Blob/Decoder";
 
 module {
@@ -25,7 +24,7 @@ module {
             "Serde: One Shot",
             "Serde: One Shot sans type inference",
             "Motoko (to_candid(), from_candid())",
-            "Serde: Single Type Instance",
+            "Serde: Single Type Serializer",
 
         ]);
 
@@ -227,16 +226,7 @@ module {
                     };
                 };
 
-                case ("Serde: One Shot Forward Reference (FR)", "decode()") {};
-                case ("Serde: One Shot Forward Reference (FR)", "encode()") {
-                    for (i in Itertools.range(0, limit)) {
-                        let candid = candid_buffer.get(i);
-                        let res = CandidEncoderFR.one_shot(candid, null);
-                        let #ok(blob) = res;
-                    };
-                };
-
-                case ("Serde: Single Type Instance", "decode()") {
+                case ("Serde: Single Type Serializer", "decode()") {
                     let options = {
                         Serde.Candid.defaultOptions with types = ?FormattedStoreItem
                     };
@@ -251,7 +241,7 @@ module {
                     };
                 };
 
-                case ("Serde: Single Type Instance", "encode()") {
+                case ("Serde: Single Type Serializer", "encode()") {
 
                     let serializer = Serde.Candid.TypedSerializer.new(FormattedStoreItem, null);
 

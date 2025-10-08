@@ -1,28 +1,28 @@
-import Array "mo:base/Array";
-import Blob "mo:base/Blob";
-import Buffer "mo:base/Buffer";
-import Result "mo:base/Result";
-import Nat64 "mo:base/Nat64";
-import Nat8 "mo:base/Nat8";
-import Nat32 "mo:base/Nat32";
-import Nat "mo:base/Nat";
-import Iter "mo:base/Iter";
-import Text "mo:base/Text";
-import Order "mo:base/Order";
-import TrieMap "mo:base/TrieMap";
-import Option "mo:base/Option";
-import Debug "mo:base/Debug";
+import Array "mo:base@0.14.14/Array";
+import Blob "mo:base@0.14.14/Blob";
+import Buffer "mo:base@0.14.14/Buffer";
+import Result "mo:base@0.14.14/Result";
+import Nat64 "mo:base@0.14.14/Nat64";
+import Nat8 "mo:base@0.14.14/Nat8";
+import Nat32 "mo:base@0.14.14/Nat32";
+import Nat "mo:base@0.14.14/Nat";
+import Iter "mo:base@0.14.14/Iter";
+import Text "mo:base@0.14.14/Text";
+import Order "mo:base@0.14.14/Order";
+import TrieMap "mo:base@0.14.14/TrieMap";
+import Option "mo:base@0.14.14/Option";
+import Debug "mo:base@0.14.14/Debug";
 
-import Map "mo:map/Map";
-import Set "mo:map/Set";
-import ByteUtils "mo:byte-utils";
-
-import { hashName = hash_record_key } "mo:candid/Tag";
+import Map "mo:map@9.0.1/Map";
+import Set "mo:map@9.0.1/Set";
+import ByteUtils "mo:byte-utils@0.1.2";
 
 import T "../Types";
 import CandidUtils "CandidUtils";
 import Encoder "Encoder";
 import Decoder "Decoder";
+
+import Utils "../../Utils";
 
 module TypedSerializer {
 
@@ -282,6 +282,17 @@ module TypedSerializer {
             );
         };
 
+        // Decoder types are the same as encoder types - renaming happens during value decoding
+        let decoder_candid_types = switch (options.types) {
+            case (?types) types;
+            case (_) Array.map(
+                _candid_types,
+                func(candid_type : CandidType) : CandidType {
+                    CandidUtils.sort_candid_type(candid_type);
+                },
+            );
+        };
+
         // Decoder types: types with renamed fields for decoding
 
         // Collect record keys from all encoder_candid_types entries
@@ -300,7 +311,7 @@ module TypedSerializer {
 
         while (i < record_keys.size()) {
             let key = formatVariantKey(record_keys[i]);
-            let hash = hash_record_key(key);
+            let hash = Utils.hash_record_key(key);
             ignore Map.put(record_key_map, n32hash, hash, key);
             i += 1;
         };
@@ -313,7 +324,7 @@ module TypedSerializer {
                 let original_key = formatVariantKey(key_pairs_to_rename[j].0);
                 let new_key = formatVariantKey(key_pairs_to_rename[j].1);
 
-                let hash = hash_record_key(original_key);
+                let hash = Utils.hash_record_key(original_key);
                 ignore Map.put(record_key_map, n32hash, hash, new_key);
 
                 j += 1;
@@ -322,9 +333,6 @@ module TypedSerializer {
 
         // Use encoder types for the encoded type header
         let encoded_type_header = create_encoded_type_header(encoder_candid_types, options, renaming_map);
-
-        // Decoder types are the same as encoder types - renaming happens during value decoding
-        let decoder_candid_types = encoder_candid_types;
 
         {
             encoded_type_header;
@@ -347,7 +355,7 @@ module TypedSerializer {
         var i = 0;
         while (i < record_keys.size()) {
             let key = formatVariantKey(record_keys[i]);
-            let hash = hash_record_key(key);
+            let hash = Utils.hash_record_key(key);
             ignore Map.put(record_key_map, n32hash, hash, key);
             i += 1;
         };
@@ -362,8 +370,7 @@ module TypedSerializer {
                 let original_key = formatVariantKey(key_pairs_to_rename[j].0);
                 let new_key = formatVariantKey(key_pairs_to_rename[j].1);
 
-                let hash = hash_record_key(original_key);
-                ignore Map.put(record_key_map, n32hash, hash, new_key);
+                let hash = Utils.hash_record_key(original_key);
 
                 ignore Map.put(renaming_map, thash, original_key, new_key);
 
@@ -453,7 +460,7 @@ module TypedSerializer {
         state[C.BYTES_INDEX] := self.encoded_type_header.size();
 
         // Use precomputed types and recursive types map for decoding values
-        Decoder.decode_candid_values(bytes, self.decoder_candid_types, state, self.options, self.recursive_types_map);
+        Decoder.decode_candid_values(bytes, self.decoder_candid_types, state, self.options, self.renaming_map, self.recursive_types_map);
     };
 
 };

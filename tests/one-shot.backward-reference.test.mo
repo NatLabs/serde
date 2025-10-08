@@ -1,16 +1,16 @@
-import Array "mo:base/Array";
-import Blob "mo:base/Blob";
-import Debug "mo:base/Debug";
-import Iter "mo:base/Iter";
-import Principal "mo:base/Principal";
-import Text "mo:base/Text";
-import TrieMap "mo:base/TrieMap";
+import Array "mo:base@0.14.14/Array";
+import Blob "mo:base@0.14.14/Blob";
+import Debug "mo:base@0.14.14/Debug";
+import Iter "mo:base@0.14.14/Iter";
+import Principal "mo:base@0.14.14/Principal";
+import Text "mo:base@0.14.14/Text";
+import TrieMap "mo:base@0.14.14/TrieMap";
 
-import Arg "mo:candid/Arg";
-import Decoder "mo:candid/Decoder";
-import Encoder "mo:candid/Encoder";
-import Type "mo:candid/Type";
-import Value "mo:candid/Value";
+import Arg "mo:candid@2.0.0/Arg";
+import Decoder "mo:candid@2.0.0/Decoder";
+import Encoder "mo:candid@2.0.0/Encoder";
+import Type "mo:candid@2.0.0/Type";
+import Value "mo:candid@2.0.0/Value";
 import { test; suite } "mo:test";
 
 import Candid "../src/Candid";
@@ -27,7 +27,7 @@ func validate_encoding(candid_values : [Candid.Candid]) : Bool {
     let #ok(encoded) = CandidEncoder.one_shot(candid_values, null);
 
     let #ok(args) = toArgs(candid_values, empty_map);
-    let expected = Encoder.encode(args);
+    let expected = Encoder.toBytes(args);
 
     Debug.print("(encoded, expected): " # debug_show (encoded, expected));
     return encoded == expected;
@@ -49,7 +49,7 @@ func validate_encoding_with_types(candid_values : [Candid.Candid], types : [Cand
         },
     );
 
-    let expected = Encoder.encode(augmented_args);
+    let expected = Encoder.toBytes(augmented_args);
 
     // Debug.print("(encoded, expected): " # debug_show (encoded, expected));
     return encoded == expected;

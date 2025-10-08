@@ -1,7 +1,7 @@
-import Array "mo:base/Array";
-import Result "mo:base/Result";
-import Text "mo:base/Text";
-import Int "mo:base/Int";
+import Array "mo:base@0.14.14/Array";
+import Result "mo:base@0.14.14/Result";
+import Text "mo:base@0.14.14/Text";
+import Int "mo:base@0.14.14/Int";
 
 import JSON "../../submodules/json.mo/src/JSON";
 

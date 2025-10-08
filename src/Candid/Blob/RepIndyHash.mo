@@ -1,24 +1,24 @@
-import Array "mo:base/Array";
-import Blob "mo:base/Blob";
-import Buffer "mo:base/Buffer";
-import Debug "mo:base/Debug";
-import Nat64 "mo:base/Nat64";
-import Int8 "mo:base/Int8";
-import Int32 "mo:base/Int32";
-import Nat8 "mo:base/Nat8";
-import Nat32 "mo:base/Nat32";
-import Nat16 "mo:base/Nat16";
-import Int64 "mo:base/Int64";
-import Nat "mo:base/Nat";
-import Principal "mo:base/Principal";
-import Text "mo:base/Text";
-import Int16 "mo:base/Int16";
+import Array "mo:base@0.14.14/Array";
+import Blob "mo:base@0.14.14/Blob";
+import Buffer "mo:base@0.14.14/Buffer";
+import Debug "mo:base@0.14.14/Debug";
+import Nat64 "mo:base@0.14.14/Nat64";
+import Int8 "mo:base@0.14.14/Int8";
+import Int32 "mo:base@0.14.14/Int32";
+import Nat8 "mo:base@0.14.14/Nat8";
+import Nat32 "mo:base@0.14.14/Nat32";
+import Nat16 "mo:base@0.14.14/Nat16";
+import Int64 "mo:base@0.14.14/Int64";
+import Nat "mo:base@0.14.14/Nat";
+import Principal "mo:base@0.14.14/Principal";
+import Text "mo:base@0.14.14/Text";
+import Int16 "mo:base@0.14.14/Int16";
 
 import T "../Types";
 import Utils "../../Utils";
-import Sha256 "mo:sha2/Sha256";
+import Sha256 "mo:sha2@0.1.6/Sha256";
 
-import ByteUtils "mo:byte-utils";
+import ByteUtils "mo:byte-utils@0.1.2";
 
 module {
     type Buffer<A> = Buffer.Buffer<A>;

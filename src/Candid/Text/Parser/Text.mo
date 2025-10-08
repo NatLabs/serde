@@ -1,7 +1,7 @@
-import Char "mo:base/Char";
-import Iter "mo:base/Iter";
-import List "mo:base/List";
-import Text "mo:base/Text";
+import Char "mo:base@0.14.14/Char";
+import Iter "mo:base@0.14.14/Iter";
+import List "mo:base@0.14.14/List";
+import Text "mo:base@0.14.14/Text";
 
 import C "../../../../submodules/parser-combinators.mo/src/Combinators";
 import P "../../../../submodules/parser-combinators.mo/src/Parser";

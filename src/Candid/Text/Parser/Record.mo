@@ -1,5 +1,5 @@
-import Iter "mo:base/Iter";
-import List "mo:base/List";
+import Iter "mo:base@0.14.14/Iter";
+import List "mo:base@0.14.14/List";
 
 import C "../../../../submodules/parser-combinators.mo/src/Combinators";
 import P "../../../../submodules/parser-combinators.mo/src/Parser";

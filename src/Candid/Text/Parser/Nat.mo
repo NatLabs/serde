@@ -1,6 +1,6 @@
-import Iter "mo:base/Iter";
-import List "mo:base/List";
-import Nat64 "mo:base/Nat64";
+import Iter "mo:base@0.14.14/Iter";
+import List "mo:base@0.14.14/List";
+import Nat64 "mo:base@0.14.14/Nat64";
 
 import C "../../../../submodules/parser-combinators.mo/src/Combinators";
 import P "../../../../submodules/parser-combinators.mo/src/Parser";

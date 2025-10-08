@@ -1,17 +1,17 @@
-import Buffer "mo:base/Buffer";
-import Blob "mo:base/Blob";
-import Int8 "mo:base/Int8";
-import Int16 "mo:base/Int16";
-import Int32 "mo:base/Int32";
-import Int64 "mo:base/Int64";
-import Option "mo:base/Option";
-import Nat64 "mo:base/Nat64";
-import Result "mo:base/Result";
-import Principal "mo:base/Principal";
+import Buffer "mo:base@0.14.14/Buffer";
+import Blob "mo:base@0.14.14/Blob";
+import Int8 "mo:base@0.14.14/Int8";
+import Int16 "mo:base@0.14.14/Int16";
+import Int32 "mo:base@0.14.14/Int32";
+import Int64 "mo:base@0.14.14/Int64";
+import Option "mo:base@0.14.14/Option";
+import Nat64 "mo:base@0.14.14/Nat64";
+import Result "mo:base@0.14.14/Result";
+import Principal "mo:base@0.14.14/Principal";
 
-import CBOR_Types "mo:cbor/Types";
-import CBOR_Encoder "mo:cbor/Encoder";
-import CBOR_Decoder "mo:cbor/Decoder";
+import CBOR_Types "mo:cbor@4.0.0/Types";
+import CBOR_Encoder "mo:cbor@4.0.0/Encoder";
+import CBOR_Decoder "mo:cbor@4.0.0/Decoder";
 import NatX "mo:xtended-numbers/NatX";
 import FloatX "mo:xtended-numbers/FloatX";
 
@@ -47,7 +47,7 @@ module {
             value = transpiled_cbor;
         });
 
-        switch (CBOR_Encoder.encode(cbor_with_self_describe_tag)) {
+        switch (CBOR_Encoder.toBytes(cbor_with_self_describe_tag)) {
             case (#ok(encoded_cbor)) { #ok(Blob.fromArray(encoded_cbor)) };
             case (#err(#invalidValue(errMsg))) {
                 #err("Invalid value error while encoding CBOR: " # errMsg);
@@ -127,7 +127,7 @@ module {
     };
 
     public func toCandid(blob : Blob, options : CandidType.Options) : Result<Candid, Text> {
-        let cbor_res = CBOR_Decoder.decode(blob.vals());
+        let cbor_res = CBOR_Decoder.fromBytes(blob.vals());
 
         let candid_res = switch (cbor_res) {
             case (#ok(cbor)) {
