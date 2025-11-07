@@ -1,14 +1,14 @@
-import Array "mo:base@0.14.14/Array";
-import Nat8 "mo:base@0.14.14/Nat8";
-import Nat16 "mo:base@0.14.14/Nat16";
-import Nat64 "mo:base@0.14.14/Nat64";
-import Nat32 "mo:base@0.14.14/Nat32";
-import Int8 "mo:base@0.14.14/Int8";
-import Int16 "mo:base@0.14.14/Int16";
-import Int64 "mo:base@0.14.14/Int64";
-import Int32 "mo:base@0.14.14/Int32";
-import Debug "mo:base@0.14.14/Debug";
-import Principal "mo:base@0.14.14/Principal";
+import Array "mo:base@0.16.0/Array";
+import Nat8 "mo:base@0.16.0/Nat8";
+import Nat16 "mo:base@0.16.0/Nat16";
+import Nat64 "mo:base@0.16.0/Nat64";
+import Nat32 "mo:base@0.16.0/Nat32";
+import Int8 "mo:base@0.16.0/Int8";
+import Int16 "mo:base@0.16.0/Int16";
+import Int64 "mo:base@0.16.0/Int64";
+import Int32 "mo:base@0.16.0/Int32";
+import Debug "mo:base@0.16.0/Debug";
+import Principal "mo:base@0.16.0/Principal";
 
 import T "Types";
 

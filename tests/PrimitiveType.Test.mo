@@ -1,9 +1,9 @@
 // @testmode wasi
-import Blob "mo:base@0.14.14/Blob";
-import Debug "mo:base@0.14.14/Debug";
-import Iter "mo:base@0.14.14/Iter";
-import Nat "mo:base@0.14.14/Nat";
-import Principal "mo:base@0.14.14/Principal";
+import Blob "mo:base@0.16.0/Blob";
+import Debug "mo:base@0.16.0/Debug";
+import Iter "mo:base@0.16.0/Iter";
+import Nat "mo:base@0.16.0/Nat";
+import Principal "mo:base@0.16.0/Principal";
 
 import { test; suite } "mo:test";
 
