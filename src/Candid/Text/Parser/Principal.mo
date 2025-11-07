@@ -1,5 +1,5 @@
-import List "mo:base@0.14.14/List";
-import Principal "mo:base@0.14.14/Principal";
+import List "mo:base@0.16.0/List";
+import Principal "mo:base@0.16.0/Principal";
 
 import C "../../../../submodules/parser-combinators.mo/src/Combinators";
 import P "../../../../submodules/parser-combinators.mo/src/Parser";

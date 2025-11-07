@@ -1,7 +1,7 @@
 /// A representation of the Candid format with variants for all possible types.
 
-import Array "mo:base@0.14.14/Array";
-import Text "mo:base@0.14.14/Text";
+import Array "mo:base@0.16.0/Array";
+import Text "mo:base@0.16.0/Text";
 import Map "mo:map@9.0.1/Map";
 
 import CandidEncoder "Blob/Encoder";

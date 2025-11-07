@@ -7,7 +7,7 @@ keywords = ["json", "candid", "cbor", "urlencoded", "serialization"]
 license = "MIT"
 
 [dependencies]
-'base@0.14.14' = "0.14.14"
+'base@0.16.0' = "0.16.0"
 'itertools@0.2.2' = "0.2.2"
 'xtended-numbers@2.0.0' = "2.0.0"
 'cbor@4.0.0' = "4.0.0"
@@ -20,7 +20,7 @@ license = "MIT"
 test = "2.1.1"
 'fuzz' = "1.0.0"
 'rep-indy-hash' = "0.1.1"
-'candid@2.0.0' = "2.0.0"
+'candid' = "2.0.0"
 bench = "1.0.0"
 
 [toolchain]

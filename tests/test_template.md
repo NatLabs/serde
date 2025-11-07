@@ -1,8 +1,8 @@
 Filename: `[Section]/[Function].Test.mo`
 
 ```motoko
-import Debug "mo:base@0.14.14/Debug";
-import Iter "mo:base@0.14.14/Iter";
+import Debug "mo:base@0.16.0/Debug";
+import Iter "mo:base@0.16.0/Iter";
 
 import ActorSpec "../utils/ActorSpec";
 import Algo "../../src";

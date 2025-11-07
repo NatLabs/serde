@@ -1,8 +1,8 @@
-import Char "mo:base@0.14.14/Char";
-import Iter "mo:base@0.14.14/Iter";
-import List "mo:base@0.14.14/List";
-import Nat32 "mo:base@0.14.14/Nat32";
-import Text "mo:base@0.14.14/Text";
+import Char "mo:base@0.16.0/Char";
+import Iter "mo:base@0.16.0/Iter";
+import List "mo:base@0.16.0/List";
+import Nat32 "mo:base@0.16.0/Nat32";
+import Text "mo:base@0.16.0/Text";
 
 import C "../../../../submodules/parser-combinators.mo/src/Combinators";
 import P "../../../../submodules/parser-combinators.mo/src/Parser";
