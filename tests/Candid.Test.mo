@@ -134,17 +134,17 @@ suite(
             func() {
                 type User = {
                     name : Text;
-                    age : Nat;
+                    age : ?Nat;
                 };
 
                 let user_james = {
                     name = "James";
-                    age = 23;
+                    age = ?23;
                 };
 
                 let user_steven = {
                     name = "Steven";
-                    age = 32;
+                    age = null;
                 };
 
                 type Record = {
@@ -160,19 +160,18 @@ suite(
                 let record_blob = to_candid (record);
 
                 let RecordType : Candid.CandidType = #Record([
-                    ("first", #Record([("name", #Text), ("age", #Nat)])),
-                    ("second", #Record([("name", #Text), ("age", #Nat)])),
+                    ("first", #Record([("name", #Text), ("age", #Option(#Nat))])),
+                    ("second", #Record([("name", #Text), ("age", #Option(#Nat))])),
                 ]);
 
                 let #ok(candid) = CandidTestUtils.decode_with_types([RecordType], ["first", "second", "name", "age"], record_blob, null) else return assert false;
 
                 assert candid == [
                     #Record([
-                        ("first", #Record([("age", #Nat(23)), ("name", #Text("James"))])),
-                        ("second", #Record([("age", #Nat(32)), ("name", #Text("Steven"))])),
+                        ("first", #Record([("age", #Option(#Nat(23))), ("name", #Text("James"))])),
+                        ("second", #Record([("age", #Null), ("name", #Text("Steven"))])),
                     ]),
                 ];
-
             },
         );
         test(

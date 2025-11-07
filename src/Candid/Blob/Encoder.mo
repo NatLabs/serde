@@ -385,8 +385,26 @@ module {
                         let field_type = record_types[i].1;
                         let field_type_key = get_renamed_key(renaming_map, record_types[i].0);
                         let field_value = switch (Map.get(record_entry_cache, Map.thash, field_type_key)) {
-                            case (?field_value) field_value;
-                            case (_) Debug.trap("unable to find field key in field types: " # debug_show field_type_key # "in " # debug_show record_entries);
+                            case (?field_value) {
+                                // If field type is optional but value isn't, wrap it
+                                switch (field_type, field_value) {
+                                    case (#Option(inner_type), val) {
+                                        // Check if value is already wrapped in Option
+                                        switch (val) {
+                                            case (#Option(_) or #Null) val; // Already wrapped
+                                            case (_) #Option(val); // Wrap it
+                                        };
+                                    };
+                                    case (_) field_value;
+                                };
+                            };
+                            case (null) {
+                                // Field is missing - if the type is optional, use #Null
+                                switch (field_type) {
+                                    case (#Option(_)) #Null;
+                                    case (_) Debug.trap("unable to find field key in field types: " # debug_show field_type_key # "in " # debug_show record_entries);
+                                };
+                            };
                         };
                         ignore encode_value_only(
                             field_type,
@@ -1200,7 +1218,6 @@ module {
             };
 
             case (#Record(record_types) or #Map(record_types), #Record(record_entries) or #Map(record_entries)) {
-                assert record_types.size() >= record_entries.size();
 
                 let is_tuple = check_is_tuple(record_types);
 
@@ -1224,8 +1241,26 @@ module {
                     let field_type_key = get_renamed_key(renaming_map, record_types[i].0);
 
                     let field_value = switch (Map.get(record_entry_cache, Map.thash, field_type_key)) {
-                        case (?field_value) field_value;
-                        case (_) Debug.trap("unable to find field key in field types: " # debug_show field_type_key # "in " # debug_show record_entries);
+                        case (?field_value) {
+                            // If field type is optional but value isn't, wrap it
+                            switch (field_type, field_value) {
+                                case (#Option(inner_type), val) {
+                                    // Check if value is already wrapped in Option
+                                    switch (val) {
+                                        case (#Option(_) or #Null) val; // Already wrapped
+                                        case (_) #Option(val); // Wrap it
+                                    };
+                                };
+                                case (_) field_value;
+                            };
+                        };
+                        case (null) {
+                            // Field is missing - if the type is optional, use #Null
+                            switch (field_type) {
+                                case (#Option(_)) #Null;
+                                case (_) Debug.trap("unable to find field key in field types: " # debug_show field_type_key # "in " # debug_show record_entries);
+                            };
+                        };
                     };
 
                     let value_type_is_compound = is_compound_type(field_type);
@@ -1741,21 +1776,100 @@ module {
                     case (#Array(_)) {
                         let vec_nodes = Iter.toArray(tmp_bottom_iter);
 
-                        let max = {
-                            var height = 0;
-                            var type_ : CandidType = #Empty;
-                        };
+                        // Special handling for arrays of records - merge fields across all records
+                        let all_records = Buffer.Buffer<[(Text, CandidType)]>(vec_nodes.size());
+                        var has_records = false;
 
                         for (node in vec_nodes.vals()) {
-                            if (max.height < node.height) {
-                                max.height := node.height;
-                                max.type_ := node.type_;
+                            switch (node.type_) {
+                                case (#Record(fields)) {
+                                    has_records := true;
+                                    all_records.add(fields);
+                                };
+                                case (_) {};
                             };
                         };
 
+                        // If we have multiple records, merge their fields
+                        let merged_type = if (has_records and all_records.size() > 1) {
+                            let field_map = Map.new<Text, (CandidType, Nat, Nat)>(); // key -> (type, height, count)
+                            var max_height = 0;
+
+                            for (record_fields in all_records.vals()) {
+                                for ((field_key, field_type) in record_fields.vals()) {
+                                    let field_depth = get_type_depth(field_type);
+                                    max_height := Nat.max(max_height, field_depth);
+
+                                    switch (Map.get(field_map, thash, field_key)) {
+                                        case (?existing) {
+                                            let (existing_type, existing_height, count) = existing;
+
+                                            // Choose better type
+                                            if (is_better_type(field_type, field_depth, existing_type, existing_height)) {
+                                                ignore Map.put(field_map, thash, field_key, (field_type, field_depth, count + 1));
+                                            } else {
+                                                ignore Map.put(field_map, thash, field_key, (existing_type, existing_height, count + 1));
+                                            };
+                                        };
+                                        case (null) {
+                                            ignore Map.put(field_map, thash, field_key, (field_type, field_depth, 1));
+                                        };
+                                    };
+                                };
+                            };
+
+                            // Build merged record type, wrapping optional fields
+                            let merged_fields = Buffer.Buffer<(Text, CandidType)>(Map.size(field_map));
+                            let total_records = all_records.size();
+
+                            for ((field_key, (field_type, field_height, count)) in Map.entries(field_map)) {
+                                // If field doesn't appear in all records, make it optional
+                                let final_type = if (count < total_records) {
+                                    switch (field_type) {
+                                        case (#Option(_)) field_type; // Already optional
+                                        case (_) #Option(field_type); // Make it optional
+                                    };
+                                } else {
+                                    field_type;
+                                };
+                                merged_fields.add((field_key, final_type));
+                            };
+
+                            #Record(Buffer.toArray(merged_fields));
+                        } else {
+                            // Not records or only one record, use normal max selection
+                            let max = {
+                                var height = 0;
+                                var type_ : CandidType = #Empty;
+                            };
+
+                            for (node in vec_nodes.vals()) {
+                                if (max.type_ == #Empty or is_better_type(node.type_, node.height, max.type_, max.height)) {
+                                    max.height := node.height;
+                                    max.type_ := node.type_;
+                                };
+                            };
+
+                            max.type_;
+                        };
+
+                        let final_height = if (has_records and all_records.size() > 1) {
+                            calc_height(parent_node.height, get_type_depth(merged_type));
+                        } else {
+                            let max = {
+                                var height = 0;
+                            };
+                            for (node in vec_nodes.vals()) {
+                                if (node.height > max.height) {
+                                    max.height := node.height;
+                                };
+                            };
+                            calc_height(parent_node.height, max.height);
+                        };
+
                         let best_node : CandidTypeNode = {
-                            type_ = #Array(max.type_);
-                            height = calc_height(parent_node.height, max.height);
+                            type_ = #Array(merged_type);
+                            height = final_height;
                             parent_index;
                             key = parent_key;
                         };
@@ -1834,7 +1948,34 @@ module {
             };
 
             if (variants.size() > 0) {
-                let full_variant_type : CandidType = #Variant(Buffer.toArray(variants));
+                // Merge variant types with the same key, choosing the better (more specific) type
+                let merged_variants = Buffer.Buffer<(Text, CandidType)>(variants.size());
+                let variant_map = Map.new<Text, (CandidType, Nat)>(); // key -> (type, height)
+
+                for ((key, variant_type) in variants.vals()) {
+                    switch (Map.get(variant_map, thash, key)) {
+                        case (?existing) {
+                            let (existing_type, existing_height) = existing;
+                            let variant_depth = get_type_depth(variant_type);
+
+                            // Choose the better type
+                            if (is_better_type(variant_type, variant_depth, existing_type, existing_height)) {
+                                ignore Map.put(variant_map, thash, key, (variant_type, variant_depth));
+                            };
+                        };
+                        case (null) {
+                            let variant_depth = get_type_depth(variant_type);
+                            ignore Map.put(variant_map, thash, key, (variant_type, variant_depth));
+                        };
+                    };
+                };
+
+                // Convert map back to array
+                for ((key, (variant_type, _)) in Map.entries(variant_map)) {
+                    merged_variants.add((key, variant_type));
+                };
+
+                let full_variant_type : CandidType = #Variant(Buffer.toArray(merged_variants));
 
                 for (index in variant_indexes.vals()) {
                     let prev_node = buffer.get(index);
@@ -1864,10 +2005,113 @@ module {
         };
     };
 
-    // for most of the typs we can easily retrieve it from the value, but for an array it becomes a bit tricky
-    // because of optional values we can have seemingly different types in the array
-    // for example type [?Nat] with values [null, ?1], for each values will have a inferred type of [#Option(#Null), #Option(#Nat)]
+    // Calculate the width (number of fields) of a type
+    func get_type_width(type_ : CandidType) : Nat {
+        switch (type_) {
+            case (#Record(fields) or #Map(fields)) fields.size();
+            case (#Variant(variants)) variants.size();
+            case (#Tuple(tuple_types)) tuple_types.size();
+            case (#Array(inner)) 1 + get_type_width(inner);
+            case (#Option(inner)) 1 + get_type_width(inner);
+            case (_) 1;
+        };
+    };
+
+    // Calculate the total depth of a type
+    func get_type_depth(type_ : CandidType) : Nat {
+        switch (type_) {
+            case (#Record(fields) or #Map(fields)) {
+                var max_depth = 0;
+                for ((_, field_type) in fields.vals()) {
+                    let depth = get_type_depth(field_type);
+                    if (depth > max_depth) {
+                        max_depth := depth;
+                    };
+                };
+                1 + max_depth;
+            };
+            case (#Variant(variants)) {
+                var max_depth = 0;
+                for ((_, variant_type) in variants.vals()) {
+                    let depth = get_type_depth(variant_type);
+                    if (depth > max_depth) {
+                        max_depth := depth;
+                    };
+                };
+                1 + max_depth;
+            };
+            case (#Tuple(tuple_types)) {
+                var max_depth = 0;
+                for (tuple_type in tuple_types.vals()) {
+                    let depth = get_type_depth(tuple_type);
+                    if (depth > max_depth) {
+                        max_depth := depth;
+                    };
+                };
+                1 + max_depth;
+            };
+            case (#Array(inner)) 1 + get_type_depth(inner);
+            case (#Option(inner)) 1 + get_type_depth(inner);
+            case (#Empty or #Null) 0;
+            case (_) 1;
+        };
+    };
+
+    // Compare two types to determine which is "better" (more specific)
+    // Returns true if type1 is better than type2
+    func is_better_type(type1 : CandidType, height1 : Nat, type2 : CandidType, height2 : Nat) : Bool {
+        // Special case: prefer non-null/non-empty types over null/empty
+        switch (type1, type2) {
+            case (#Null or #Empty, #Null or #Empty) return false; // Both are null/empty
+            case (#Null or #Empty, _) return false; // type2 is better (non-null)
+            case (_, #Null or #Empty) return true; // type1 is better (non-null)
+            case (_) {}; // Continue with other comparisons
+        };
+
+        // Compare Option types specially
+        switch (type1, type2) {
+            case (#Option(inner1), #Option(inner2)) {
+                // Both are options, compare their inner types
+                let inner1_depth = get_type_depth(inner1);
+                let inner2_depth = get_type_depth(inner2);
+                return is_better_type(inner1, inner1_depth, inner2, inner2_depth);
+            };
+            case (#Option(_), _) {
+                // type1 is optional, type2 is not
+                // Generally prefer the non-optional unless type2 is null/empty
+                return false;
+            };
+            case (_, #Option(_)) {
+                // type2 is optional, type1 is not
+                return true;
+            };
+            case (_) {}; // Neither is Option, continue
+        };
+
+        // Compare by depth (height)
+        if (height1 != height2) {
+            return height1 > height2;
+        };
+
+        // If depths are equal, compare by width
+        let width1 = get_type_width(type1);
+        let width2 = get_type_width(type2);
+
+        if (width1 != width2) {
+            return width1 > width2;
+        };
+
+        // All equal, no preference
+        false;
+    };
+
+    // for most of the types we can easily retrieve it from the value, but for an array it becomes a bit tricky
+    // because of optional values we can have different types in the array
+    // for example type [?Nat] with values [null, ?1], will have a inferred type of [#Option(#Null), #Option(#Nat)]
     // We need a way to choose #Option(#Nat) over #Option(#Null) in this case
+    //
+    // todo: Currently works well when there is a difference in the depth of the types (e.g. #Variant("key1", #Nat) vs #Variant("key2", #Record(...)))
+    // todo: However, it fails when there is a difference only in the width of the types (e.g. #Variant("key1", #Record(a: #Nat)) vs #Variant("key2", #Record(a: #Nat, b: #Option(#Nat))))
 
     func order_candid_types_by_height_bfs(rows : Buffer<[InternalCandidTypeNode]>) {
 

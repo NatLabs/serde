@@ -25,7 +25,6 @@ module {
             "Serde: One Shot sans type inference",
             "Motoko (to_candid(), from_candid())",
             "Serde: Single Type Serializer",
-
         ]);
 
         bench.cols([
