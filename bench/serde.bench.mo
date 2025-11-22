@@ -1,12 +1,12 @@
-import Iter "mo:base@0.14.14/Iter";
-import Debug "mo:base@0.14.14/Debug";
-import Prelude "mo:base@0.14.14/Prelude";
-import Text "mo:base@0.14.14/Text";
-import Char "mo:base@0.14.14/Char";
-import Buffer "mo:base@0.14.14/Buffer";
+import Iter "mo:base@0.16.0/Iter";
+import Debug "mo:base@0.16.0/Debug";
+import Prelude "mo:base@0.16.0/Prelude";
+import Text "mo:base@0.16.0/Text";
+import Char "mo:base@0.16.0/Char";
+import Buffer "mo:base@0.16.0/Buffer";
 
 import Bench "mo:bench";
-import Fuzz "mo:fuzz@1.0.0";
+import Fuzz "mo:fuzz";
 import Itertools "mo:itertools@0.2.2/Iter";
 
 import Serde "../src";
@@ -24,6 +24,7 @@ module {
             "Serde: One Shot",
             "Serde: One Shot sans type inference",
             "Motoko (to_candid(), from_candid())",
+            "Serde: Single Type Serializer",
         ]);
 
         bench.cols([
@@ -181,23 +182,6 @@ module {
                     };
                 };
 
-                // case ("Serde 'mo:motoko_candid' lib", "decode()") {
-                //     for (i in Itertools.range(0, limit)) {
-                //         let item : StoreItem = buffer.get(i);
-                //         let candid_blob = candify_store_item.to_blob(item);
-                //         candid_blobs.add(candid_blob);
-                //         let #ok(candid) = LegacyCandidDecoder.decode(candid_blob, StoreItemKeys, null);
-                //         candid_buffer.add(candid);
-                //     };
-                // };
-                // case ("Serde 'mo:motoko_candid' lib", "encode()") {
-                //     for (i in Itertools.range(0, limit)) {
-                //         let candid = candid_buffer.get(i);
-                //         let res = LegacyCandidEncoder.encode(candid, null);
-                //         let #ok(blob) = res;
-                //     };
-                // };
-
                 case ("Serde: One Shot", "decode()") {
                     for (i in Itertools.range(0, limit)) {
                         let item = buffer.get(i);
@@ -220,8 +204,6 @@ module {
                         let item = buffer.get(i);
                         let candid_blob = candify_store_item.to_blob(item);
 
-                        let FormattedStoreItem = Serde.Candid.formatCandidType([StoreItem], null);
-
                         let options = {
                             Serde.Candid.defaultOptions with types = ?FormattedStoreItem
                         };
@@ -243,14 +225,31 @@ module {
                     };
                 };
 
-                // case ("#Nat", "decode()"){
-                //     for (i in Itertools.range(0, limit)) {
-                //         let item = buffer.get(i);
-                //         let candid_blob = candify_store_item.to_blob(item);
-                //         let #ok(candid) = CandidDecoder.decode(candid_blob, StoreItemKeys, null);
-                //         // candid_buffer.add(candid);
-                //     };
-                // };
+                case ("Serde: Single Type Serializer", "decode()") {
+                    let options = {
+                        Serde.Candid.defaultOptions with types = ?FormattedStoreItem
+                    };
+                    let serializer = Serde.Candid.TypedSerializer.fromBlob(candify_store_item.to_blob(buffer.get(0)), StoreItemKeys, ?options);
+
+                    for (i in Itertools.range(0, limit)) {
+                        let item = buffer.get(i);
+                        let candid_blob = candify_store_item.to_blob(item);
+
+                        let #ok(candid) = Serde.Candid.TypedSerializer.decode(serializer, candid_blob);
+                        // candid_buffer.add(candid);
+                    };
+                };
+
+                case ("Serde: Single Type Serializer", "encode()") {
+
+                    let serializer = Serde.Candid.TypedSerializer.new(FormattedStoreItem, null);
+
+                    for (i in Itertools.range(0, limit)) {
+                        let candid = candid_buffer.get(i);
+                        let res = Serde.Candid.TypedSerializer.encode(serializer, candid);
+                    };
+                };
+
                 case (_, _) {
                     Debug.trap("Should be unreachable:\n row = \"" # debug_show row # "\" and col = \"" # debug_show col # "\"");
                 };

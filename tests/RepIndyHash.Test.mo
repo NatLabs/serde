@@ -1,11 +1,11 @@
-import Blob "mo:base@0.14.14/Blob";
-import Debug "mo:base@0.14.14/Debug";
+import Blob "mo:base@0.16.0/Blob";
+import Debug "mo:base@0.16.0/Debug";
 
-import { test; suite } "mo:test@2.1.1";
+import { test; suite } "mo:test";
 
 import { Candid } "../src";
 
-import RepIndyHash "mo:rep-indy-hash@0.1.1";
+import RepIndyHash "mo:rep-indy-hash";
 
 func validate_hash(candid_record : Candid.Candid, icrc3_value_record : RepIndyHash.Value) : Bool {
     let candid_hash = Candid.repIndyHash(candid_record);
@@ -22,7 +22,6 @@ suite(
             func() {
                 assert validate_hash(#Nat(1), #Nat(1));
                 assert validate_hash(#Nat(22345), #Nat(22345));
-
             },
         );
 

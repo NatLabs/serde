@@ -1,27 +1,27 @@
-import Array "mo:base@0.14.14/Array";
-import Blob "mo:base@0.14.14/Blob";
-import Buffer "mo:base@0.14.14/Buffer";
-import Debug "mo:base@0.14.14/Debug";
-import Result "mo:base@0.14.14/Result";
-import Nat64 "mo:base@0.14.14/Nat64";
-import Int8 "mo:base@0.14.14/Int8";
-import Int32 "mo:base@0.14.14/Int32";
-import Nat8 "mo:base@0.14.14/Nat8";
-import Nat32 "mo:base@0.14.14/Nat32";
-import Int64 "mo:base@0.14.14/Int64";
-import Nat "mo:base@0.14.14/Nat";
-import Int "mo:base@0.14.14/Int";
-import Iter "mo:base@0.14.14/Iter";
-import Principal "mo:base@0.14.14/Principal";
-import Text "mo:base@0.14.14/Text";
-import Order "mo:base@0.14.14/Order";
-import Int16 "mo:base@0.14.14/Int16";
-import TrieMap "mo:base@0.14.14/TrieMap";
-import Option "mo:base@0.14.14/Option";
+import Array "mo:base@0.16.0/Array";
+import Blob "mo:base@0.16.0/Blob";
+import Buffer "mo:base@0.16.0/Buffer";
+import Debug "mo:base@0.16.0/Debug";
+import Result "mo:base@0.16.0/Result";
+import Nat64 "mo:base@0.16.0/Nat64";
+import Int8 "mo:base@0.16.0/Int8";
+import Int32 "mo:base@0.16.0/Int32";
+import Nat8 "mo:base@0.16.0/Nat8";
+import Nat32 "mo:base@0.16.0/Nat32";
+import Int64 "mo:base@0.16.0/Int64";
+import Nat "mo:base@0.16.0/Nat";
+import Int "mo:base@0.16.0/Int";
+import Iter "mo:base@0.16.0/Iter";
+import Principal "mo:base@0.16.0/Principal";
+import Text "mo:base@0.16.0/Text";
+import Order "mo:base@0.16.0/Order";
+import Int16 "mo:base@0.16.0/Int16";
+import TrieMap "mo:base@0.16.0/TrieMap";
+import Option "mo:base@0.16.0/Option";
 
 import Map "mo:map@9.0.1/Map";
 import Set "mo:map@9.0.1/Set";
-import FloatX "mo:xtended-numbers/FloatX";
+import ByteUtils "mo:byte-utils@0.1.2";
 
 import T "../Types";
 import Utils "../../Utils";
@@ -53,7 +53,6 @@ module {
     /// - **blob** -  A blob encoded in the candid format
     /// - **record_keys** - The record keys to use when decoding a record.
     /// - **options** - An optional arguement to specify options for decoding.
-
     public func decode(blob : Blob, record_keys : [Text], options : ?T.Options) : Result<[Candid], Text> {
         one_shot(blob, record_keys, options);
     };
@@ -82,7 +81,7 @@ module {
     };
 
     public func split(blob : Blob, options : ?T.Options) : Result<CandidBlobSequences, Text> {
-        let bytes = Blob.toArray(blob);
+        let bytes = blob;
 
         let state : [var Nat] = [var 0];
 
@@ -104,16 +103,16 @@ module {
 
         let sequences : CandidBlobSequences = {
             magic = Blob.fromArray(magic);
-            compound_types = Blob.fromArray(Utils.array_slice(bytes, compound_types_start_index, types_start_index));
-            types = Blob.fromArray(Utils.array_slice(bytes, types_start_index, values_start_index));
-            values = Blob.fromArray(Utils.array_slice(bytes, values_start_index, bytes.size()));
+            compound_types = Blob.fromArray(Utils.blob_slice(bytes, compound_types_start_index, types_start_index));
+            types = Blob.fromArray(Utils.blob_slice(bytes, types_start_index, values_start_index));
+            values = Blob.fromArray(Utils.blob_slice(bytes, values_start_index, bytes.size()));
         };
 
         #ok(sequences);
     };
 
     public func extract_values_sequence(blob : Blob) : Result<Blob, Text> {
-        let bytes = Blob.toArray(blob);
+        let bytes = blob;
 
         let state : [var Nat] = [var 0];
 
@@ -129,7 +128,7 @@ module {
         skip_types(bytes, state);
 
         let values_start_index = state[C.BYTES_INDEX];
-        let values_sequence = Blob.fromArray(Utils.array_slice(bytes, values_start_index, bytes.size()));
+        let values_sequence = Blob.fromArray(Utils.blob_slice(bytes, values_start_index, bytes.size()));
 
         #ok(values_sequence)
 
@@ -156,7 +155,7 @@ module {
                 let new_key = formatVariantKey(key_pairs_to_rename[i].1);
 
                 let hash = Utils.hash_record_key(original_key);
-                ignore Map.put(record_key_map, n32hash, hash, new_key);
+                // ignore Map.put(record_key_map, n32hash, hash, new_key);
 
                 i += 1;
             };
@@ -166,14 +165,83 @@ module {
         one_shot_decode(blob, record_key_map, Option.get(options, T.defaultOptions));
     };
 
-    func read(bytes : [Nat8], state : [var Nat]) : Nat8 {
-        let byte = bytes[state[C.BYTES_INDEX]];
+    func read(bytes : Blob, state : [var Nat]) : Nat8 {
+        let byte = bytes.get(state[C.BYTES_INDEX]);
         state[C.BYTES_INDEX] += 1;
         byte;
     };
 
-    func peek(bytes : [Nat8], state : [var Nat]) : Nat8 {
-        bytes[state[C.BYTES_INDEX]];
+    func peek(bytes : Blob, state : [var Nat]) : Nat8 {
+        bytes.get(state[C.BYTES_INDEX]);
+    };
+
+    // Helper function to create an iterator from read function
+    func createByteIterator(bytes : Blob, state : [var Nat]) : Iter.Iter<Nat8> {
+        object {
+            public func next() : ?Nat8 {
+                let i = state[C.BYTES_INDEX];
+                if (i < bytes.size()) {
+                    let byte = bytes[i];
+                    state[C.BYTES_INDEX] += 1;
+                    ?byte;
+                } else {
+                    null;
+                };
+            };
+        };
+    };
+
+    // Iterator-based helper functions
+    func read_from_iter(iter : Iter.Iter<Nat8>) : Nat8 {
+        switch (iter.next()) {
+            case (?byte) byte;
+            case (null) Debug.trap("Unexpected end of data stream");
+        };
+    };
+
+    func decode_leb128_from_iter(iter : Iter.Iter<Nat8>) : Nat {
+        var n64 : Nat64 = 0;
+        var shift : Nat64 = 0;
+
+        label decoding_leb loop {
+            let byte = read_from_iter(iter);
+
+            n64 |= (Nat64.fromNat(Nat8.toNat(byte & 0x7f)) << shift);
+
+            if (byte & 0x80 == 0) break decoding_leb;
+            shift += 7;
+        };
+
+        Nat64.toNat(n64);
+    };
+
+    func decode_signed_leb_64_from_iter(iter : Iter.Iter<Nat8>) : Int {
+        var result : Nat64 = 0;
+        var shift : Nat64 = 0;
+        var byte : Nat8 = 0;
+        var i = 0;
+
+        label analyzing loop {
+            byte := read_from_iter(iter);
+            i += 1;
+
+            // Add this byte's 7 bits to the result
+            result |= Nat64.fromNat(Nat8.toNat(byte & 0x7F)) << shift;
+            shift += 7;
+
+            // If continuation bit is not set, we're done reading bytes
+            if ((byte & 0x80) == 0) {
+                break analyzing;
+            };
+        };
+
+        // Sign extend if this is a negative number
+        if (byte & 0x40 != 0 and shift < 64) {
+            // Fill the rest with 1s (sign extension)
+            result |= ^((Nat64.fromNat(1) << shift) - 1);
+        };
+
+        Int64.toInt(Int64.fromNat64(result));
     };
 
     func code_to_primitive_type(code : Nat8) : CandidType {
@@ -218,7 +286,7 @@ module {
         (code >= 0x70 and code <= 0x7f) or (code == 0x6f) or (code == 0x68);
     };
 
-    func extract_compound_types(bytes : [Nat8], state : [var Nat], total_compound_types : Nat, record_key_map : Map<Nat32, Text>) : [ShallowCandidTypes] {
+    public func extract_compound_types(bytes : Blob, state : [var Nat], total_compound_types : Nat, record_key_map : Map<Nat32, Text>) : [ShallowCandidTypes] {
 
         func extract_compound_type(i : Nat) : ShallowCandidTypes {
             let compound_type_code = read(bytes, state);
@@ -281,8 +349,8 @@ module {
         Array.tabulate(total_compound_types, extract_compound_type);
     };
 
-    func build_compound_type(compound_types : [ShallowCandidTypes], start_pos : Nat, recursive_types : Map<Nat, CandidType>) : CandidType {
-        func _build_compound_type(compound_types : [ShallowCandidTypes], start_pos : Nat, visited : Set<Nat>, is_recursive_set : Set<Nat>, recursive_types : Map<Nat, CandidType>) : CandidType {
+    func build_compound_type(compound_types : [ShallowCandidTypes], start_pos : Nat, recursive_types_map : Map<Nat, CandidType>) : CandidType {
+        func _build_compound_type(compound_types : [ShallowCandidTypes], start_pos : Nat, visited : Set<Nat>, is_recursive_set : Set<Nat>, recursive_types_map : Map<Nat, CandidType>) : CandidType {
             var pos = start_pos;
 
             func resolve_field_types((field_key, ref_pos) : (Text, Nat)) : ((Text, CandidType)) {
@@ -290,7 +358,7 @@ module {
                 let resolved_type : CandidType = if (is_code_primitive_type(Nat8.fromNat(ref_pos))) {
                     code_to_primitive_type(Nat8.fromNat(ref_pos));
                 } else {
-                    _build_compound_type(compound_types, ref_pos, visited, is_recursive_set, recursive_types);
+                    _build_compound_type(compound_types, ref_pos, visited, is_recursive_set, recursive_types_map);
                 };
 
                 while (Set.size(visited) > visited_size) {
@@ -300,7 +368,7 @@ module {
                 (field_key, resolved_type);
             };
 
-            switch (Map.get(recursive_types, nhash, pos)) {
+            switch (Map.get(recursive_types_map, nhash, pos)) {
                 case (?candid_type) return candid_type;
                 case (null) {};
             };
@@ -317,7 +385,7 @@ module {
                     let ref_type = if (is_code_primitive_type(Nat8.fromNat(ref_pos))) {
                         code_to_primitive_type(Nat8.fromNat(ref_pos));
                     } else {
-                        _build_compound_type(compound_types, ref_pos, visited, is_recursive_set, recursive_types);
+                        _build_compound_type(compound_types, ref_pos, visited, is_recursive_set, recursive_types_map);
                     };
 
                     #Option(ref_type);
@@ -326,7 +394,7 @@ module {
                     let ref_type = if (is_code_primitive_type(Nat8.fromNat(ref_pos))) {
                         code_to_primitive_type(Nat8.fromNat(ref_pos));
                     } else {
-                        _build_compound_type(compound_types, ref_pos, visited, is_recursive_set, recursive_types);
+                        _build_compound_type(compound_types, ref_pos, visited, is_recursive_set, recursive_types_map);
                     };
                     #Array(ref_type);
                 };
@@ -340,8 +408,8 @@ module {
                 };
             };
 
-            if (Set.has(is_recursive_set, nhash, pos) and not Map.has(recursive_types, nhash, pos)) {
-                ignore Map.put(recursive_types, nhash, pos, resolved_compound_type);
+            if (Set.has(is_recursive_set, nhash, pos) and not Map.has(recursive_types_map, nhash, pos)) {
+                ignore Map.put(recursive_types_map, nhash, pos, resolved_compound_type);
             };
 
             resolved_compound_type;
@@ -350,32 +418,35 @@ module {
         let visited = Set.new<Nat>();
         let is_recursive_set = Set.new<Nat>();
 
-        _build_compound_type(compound_types, start_pos, visited, is_recursive_set, recursive_types);
+        _build_compound_type(compound_types, start_pos, visited, is_recursive_set, recursive_types_map);
     };
 
-    func build_types(bytes : [Nat8], state : [var Nat], compound_types : [ShallowCandidTypes], recursive_types : Map<Nat, CandidType>) : [CandidType] {
+    public func build_types(bytes : Blob, state : [var Nat], compound_types : [ShallowCandidTypes], recursive_types_map : Map<Nat, CandidType>) : [CandidType] {
         let total_candid_types = decode_leb128(bytes, state);
 
         let candid_types = Array.tabulate(
             total_candid_types,
             func(i : Nat) : CandidType {
                 let code = peek(bytes, state);
-                if (is_code_primitive_type(code)) {
+                let candid_type = if (is_code_primitive_type(code)) {
                     ignore read(bytes, state);
                     let primitive_type = code_to_primitive_type(code);
                     primitive_type;
                 } else {
                     let start_pos = decode_leb128(bytes, state);
-                    let compound_type = build_compound_type(compound_types, start_pos, recursive_types);
+                    let compound_type = build_compound_type(compound_types, start_pos, recursive_types_map);
                     compound_type;
                 };
+
+                CandidUtils.sort_candid_type(candid_type);
+
             },
         );
 
-        candid_types;
+        (candid_types);
     };
 
-    func skip_compound_types(bytes : [Nat8], state : [var Nat], total_compound_types : Nat) {
+    public func skip_compound_types(bytes : Blob, state : [var Nat], total_compound_types : Nat) {
         var i = 0;
         while (i < total_compound_types) {
             let compound_type_code = read(bytes, state);
@@ -418,7 +489,7 @@ module {
         };
     };
 
-    func skip_types(bytes : [Nat8], state : [var Nat]) {
+    public func skip_types(bytes : Blob, state : [var Nat]) {
 
         let total_candid_types = decode_leb128(bytes, state);
 
@@ -437,14 +508,10 @@ module {
     };
 
     public func one_shot_decode(candid_blob : Blob, record_key_map : Map<Nat32, Text>, options : T.Options) : Result<[Candid], Text> {
-        let bytes = Blob.toArray(candid_blob);
+        let bytes = candid_blob;
         // let stream = BitBuffer.fromArray(bytes);
 
         let is_types_set = Option.isSome(options.types);
-
-        if (options.blob_contains_only_values and not is_types_set) {
-            return #err("if 'options.blob_contains_only_values' is set, you need to also pass in the types");
-        };
 
         var candid_types = Option.get(options.types, []);
 
@@ -456,15 +523,15 @@ module {
             return #err("Invalid Magic Number");
         };
 
-        let recursive_types = Map.new<Nat, CandidType>();
+        let recursive_types_map = Map.new<Nat, CandidType>();
 
         if (not is_types_set) {
             // extract types from blob
             let total_compound_types = decode_leb128(bytes, state);
             let compound_types = extract_compound_types(bytes, state, total_compound_types, record_key_map);
-            candid_types := build_types(bytes, state, compound_types, recursive_types);
+            candid_types := build_types(bytes, state, compound_types, recursive_types_map);
 
-        } else if (not options.blob_contains_only_values) {
+        } else {
             // types are set but 'blob_contains_only_values' is not set,
             // then skip type section and locate start of values section
             let total_compound_types = decode_leb128(bytes, state);
@@ -473,8 +540,10 @@ module {
 
         };
 
+        let renaming_map = Map.fromIter<Text, Text>(options.renameKeys.vals(), Map.thash);
+
         // extract values with Candid variant Types
-        decode_candid_values(bytes, candid_types, state, options, recursive_types);
+        decode_candid_values(bytes, candid_types, state, options, renaming_map, recursive_types_map);
     };
 
     let C = {
@@ -482,7 +551,7 @@ module {
     };
 
     // https://en.wikipedia.org/wiki/LEB128
-    // func decode_leb128(bytes : [Nat8], state : [var Nat]) : Nat {
+    // func decode_leb128(bytes : Blob, state : [var Nat]) : Nat {
     //     var n64 : Nat64 = 0;
     //     var shift : Nat64 = 0;
 
@@ -512,7 +581,7 @@ module {
 
     // };
     let nat64_bound = 18_446_744_073_709_551_616;
-    // func decode_leb128(bytes : [Nat8], state : [var Nat]) : Nat {
+    // func decode_leb128(bytes : Blob, state : [var Nat]) : Nat {
     //     var n64 : Nat64 = 0;
     //     var shift : Nat64 = 0;
     //     var shifted : Nat = 0;
@@ -556,7 +625,7 @@ module {
     // };
 
     // https://en.wikipedia.org/wiki/LEB128
-    func decode_leb128(bytes : [Nat8], state : [var Nat]) : Nat {
+    func decode_leb128(bytes : Blob, state : [var Nat]) : Nat {
         var n64 : Nat64 = 0;
         var shift : Nat64 = 0;
 
@@ -572,42 +641,20 @@ module {
         Nat64.toNat(n64);
     };
 
-    func decode_signed_leb_64(bytes : [Nat8], state : [var Nat]) : Int {
-        var result : Nat64 = 0;
-        var shift : Nat64 = 0;
-        var byte : Nat8 = 0;
-        var i = 0;
-
-        label analyzing loop {
-            byte := read(bytes, state);
-            i += 1;
-
-            // Add this byte's 7 bits to the result
-            result |= Nat64.fromNat(Nat8.toNat(byte & 0x7F)) << shift;
-            shift += 7;
-
-            // If continuation bit is not set, we're done reading bytes
-            if ((byte & 0x80) == 0) {
-                break analyzing;
-            };
-        };
-
-        // Sign extend if this is a negative number
-        if (byte & 0x40 != 0 and shift < 64) {
-            // Fill the rest with 1s (sign extension)
-            result |= ^((Nat64.fromNat(1) << shift) - 1);
-        };
-
-        Int64.toInt(Int64.fromNat64(result));
-    };
-
-    func decode_candid_values(bytes : [Nat8], candid_types : [CandidType], state : [var Nat], options : T.Options, recursive_map : Map<Nat, CandidType>) : Result<[Candid], Text> {
+    public func decode_candid_values(
+        bytes : Blob,
+        candid_types : [CandidType],
+        state : [var Nat],
+        options : T.Options,
+        renaming_map : Map<Text, Text>,
+        recursive_map : Map<Nat, CandidType>,
+    ) : Result<[Candid], Text> {
         var error : ?Text = null;
 
         let candid_values = Array.tabulate(
             candid_types.size(),
             func(i : Nat) : Candid {
-                switch (decode_value(bytes, state, options, recursive_map, candid_types[i])) {
+                switch (decode_value(bytes, state, options, renaming_map, recursive_map, candid_types[i])) {
                     case (#ok(candid_value)) candid_value;
                     case (#err(msg)) {
                         error := ?msg;
@@ -625,82 +672,54 @@ module {
         #ok(candid_values);
     };
 
-    func decode_value(bytes : [Nat8], state : [var Nat], options : T.Options, recursive_map : Map<Nat, CandidType>, candid_type : CandidType) : Result<Candid, Text> {
-        // Debug.print("Decoding candid type: " # debug_show (candid_type) # " at index: " # debug_show (state[C.BYTES_INDEX]));
+    func decode_value(
+        bytes : Blob,
+        state : [var Nat],
+        options : T.Options,
+        renaming_map : Map<Text, Text>,
+        recursive_map : Map<Nat, CandidType>,
+        candid_type : CandidType,
+    ) : Result<Candid, Text> {
+        let iter = createByteIterator(bytes, state);
+        decode_value_from_iter(iter, options, renaming_map, recursive_map, candid_type);
+    };
+
+    func decode_value_from_iter(
+        iter : Iter.Iter<Nat8>,
+        options : T.Options,
+        renaming_map : Map<Text, Text>,
+        recursive_map : Map<Nat, CandidType>,
+        candid_type : CandidType,
+    ) : Result<Candid, Text> {
+        // Debug.print("Decoding candid type: " # debug_show (candid_type));
 
         let value : Candid = switch (candid_type) {
-            case (#Nat) #Nat(decode_leb128(bytes, state));
-            case (#Nat8) #Nat8(read(bytes, state));
-            case (#Nat16) {
-                let n = Nat8.toNat16(read(bytes, state)) | Nat8.toNat16(read(bytes, state)) << 8;
+            case (#Nat) #Nat(decode_leb128_from_iter(iter));
+            case (#Nat8) #Nat8(read_from_iter(iter));
+            case (#Nat16) #Nat16(ByteUtils.LE.toNat16(iter));
+            case (#Nat32) #Nat32(ByteUtils.LE.toNat32(iter));
+            case (#Nat64) #Nat64(ByteUtils.LE.toNat64(iter));
 
-                #Nat16(n);
-            };
-            case (#Nat32) {
-                let n = Nat32.fromNat(Nat8.toNat(read(bytes, state))) | Nat32.fromNat(Nat8.toNat(read(bytes, state))) << 8 | Nat32.fromNat(Nat8.toNat(read(bytes, state))) << 16 | Nat32.fromNat(Nat8.toNat(read(bytes, state))) << 24;
-
-                #Nat32(n);
-            };
-            case (#Nat64) {
-                let n = Nat64.fromNat(Nat8.toNat(read(bytes, state))) | Nat64.fromNat(Nat8.toNat(read(bytes, state))) << 8 | Nat64.fromNat(Nat8.toNat(read(bytes, state))) << 16 | Nat64.fromNat(Nat8.toNat(read(bytes, state))) << 24 | Nat64.fromNat(Nat8.toNat(read(bytes, state))) << 32 | Nat64.fromNat(Nat8.toNat(read(bytes, state))) << 40 | Nat64.fromNat(Nat8.toNat(read(bytes, state))) << 48 | Nat64.fromNat(Nat8.toNat(read(bytes, state))) << 56;
-
-                #Nat64(n);
-            };
-
-            case (#Int) #Int(decode_signed_leb_64(bytes, state));
-            case (#Int8) #Int8(Int8.fromNat8(read(bytes, state)));
-            case (#Int16) {
-                let n = Nat8.toNat16(read(bytes, state)) | Nat8.toNat16(read(bytes, state)) << 8;
-
-                #Int16(Int16.fromNat16(n));
-            };
-            case (#Int32) {
-                let n = Nat32.fromNat(Nat8.toNat(read(bytes, state))) | Nat32.fromNat(Nat8.toNat(read(bytes, state))) << 8 | Nat32.fromNat(Nat8.toNat(read(bytes, state))) << 16 | Nat32.fromNat(Nat8.toNat(read(bytes, state))) << 24;
-
-                #Int32(Int32.fromNat32(n));
-            };
-            case (#Int64) {
-                let n = Nat64.fromNat(Nat8.toNat(read(bytes, state))) | Nat64.fromNat(Nat8.toNat(read(bytes, state))) << 8 | Nat64.fromNat(Nat8.toNat(read(bytes, state))) << 16 | Nat64.fromNat(Nat8.toNat(read(bytes, state))) << 24 | Nat64.fromNat(Nat8.toNat(read(bytes, state))) << 32 | Nat64.fromNat(Nat8.toNat(read(bytes, state))) << 40 | Nat64.fromNat(Nat8.toNat(read(bytes, state))) << 48 | Nat64.fromNat(Nat8.toNat(read(bytes, state))) << 56;
-
-                #Int64(Int64.fromNat64(n));
-            };
-            case (#Float) {
-                let bytes_iter = object {
-                    public func next() : ?Nat8 {
-                        let i = state[C.BYTES_INDEX];
-
-                        if (i < bytes.size()) {
-                            let byte = bytes[i];
-                            state[C.BYTES_INDEX] += 1;
-                            ?(byte);
-                        } else {
-                            null;
-                        };
-                    };
-                };
-
-                let float_details = switch (FloatX.fromBytes(bytes_iter, #f64, #lsb)) {
-                    case (?f) f;
-                    case (null) return #err("Could not decode float sequence");
-                };
-
-                let n = FloatX.toFloat(float_details);
-                #Float(n);
-            };
+            case (#Int) #Int(decode_signed_leb_64_from_iter(iter));
+            case (#Int8) #Int8(Int8.fromNat8(read_from_iter(iter)));
+            case (#Int16) #Int16(ByteUtils.LE.toInt16(iter));
+            case (#Int32) #Int32(ByteUtils.LE.toInt32(iter));
+            case (#Int64) #Int64(ByteUtils.LE.toInt64(iter));
+            case (#Float) #Float(ByteUtils.LE.toFloat(iter));
 
             case (#Bool) {
-                let byte = read(bytes, state);
+                let byte = read_from_iter(iter);
                 let b = if (byte == 0) false else true;
                 #Bool(b);
             };
             case (#Null) #Null;
             case (#Empty) #Empty;
             case (#Text) {
-                let size = decode_leb128(bytes, state);
+                let size = decode_leb128_from_iter(iter);
                 let text_bytes = Array.tabulate<Nat8>(
                     size,
-                    func(i : Nat) : Nat8 {
-                        read(bytes, state);
+                    func(_ : Nat) : Nat8 {
+                        read_from_iter(iter);
                     },
                 );
 
@@ -713,13 +732,13 @@ module {
                 #Text(text);
             };
             case (#Principal) {
-                assert read(bytes, state) == 0x01; // transparency state. opaque not supported yet.
-                let size = decode_leb128(bytes, state);
+                assert read_from_iter(iter) == 0x01; // transparency state. opaque not supported yet.
+                let size = decode_leb128_from_iter(iter);
 
                 let principal_bytes = Array.tabulate<Nat8>(
                     size,
-                    func(i : Nat) : Nat8 {
-                        read(bytes, state);
+                    func(_ : Nat) : Nat8 {
+                        read_from_iter(iter);
                     },
                 );
 
@@ -732,11 +751,11 @@ module {
             // ====================== Compound Types =======================
 
             case (#Option(opt_type)) {
-                let is_null = read(bytes, state) == 0;
+                let is_null = read_from_iter(iter) == 0;
 
                 if (is_null) return #ok(#Null);
 
-                let nested_value = switch (decode_value(bytes, state, options, recursive_map, opt_type)) {
+                let nested_value = switch (decode_value_from_iter(iter, options, renaming_map, recursive_map, opt_type)) {
                     case (#ok(value)) value;
                     case (#err(err_msg)) return #err(err_msg);
                 };
@@ -746,13 +765,13 @@ module {
             };
 
             case (#Array(#Nat8)) {
-                let size = decode_leb128(bytes, state);
+                let size = decode_leb128_from_iter(iter);
                 var error : ?Text = null;
 
                 let values = Array.tabulate(
                     size,
-                    func(i : Nat) : Nat8 {
-                        switch (decode_value(bytes, state, options, recursive_map, #Nat8)) {
+                    func(_ : Nat) : Nat8 {
+                        switch (decode_value_from_iter(iter, options, renaming_map, recursive_map, #Nat8)) {
                             case (#ok(#Nat8(value))) value;
                             case (#ok(unexpected_type)) {
                                 error := ?("Expected #Nat8 value in blob type, instead got " # debug_show (unexpected_type));
@@ -775,14 +794,17 @@ module {
 
                 #Blob(blob);
             };
+            case (#Blob(_)) {
+                return decode_value_from_iter(iter, options, renaming_map, recursive_map, #Array(#Nat8));
+            };
 
             case (#Array(arr_type)) {
-                let size = decode_leb128(bytes, state);
+                let size = decode_leb128_from_iter(iter);
                 var error : ?Text = null;
                 let values = Array.tabulate(
                     size,
-                    func(i : Nat) : Candid {
-                        switch (decode_value(bytes, state, options, recursive_map, arr_type)) {
+                    func(_ : Nat) : Candid {
+                        switch (decode_value_from_iter(iter, options, renaming_map, recursive_map, arr_type)) {
                             case (#ok(value)) value;
                             case (#err(err_msg)) {
                                 error := ?err_msg;
@@ -820,7 +842,7 @@ module {
 
                         let record_type = record_types[i].1;
 
-                        let value = switch (decode_value(bytes, state, options, recursive_map, record_type)) {
+                        let value = switch (decode_value_from_iter(iter, options, renaming_map, recursive_map, record_type)) {
                             case (#ok(value)) value;
                             case (#err(msg)) {
                                 error := ?(msg);
@@ -828,7 +850,7 @@ module {
                             };
                         };
 
-                        (record_key, value);
+                        (get_renamed_key(renaming_map, record_key), value);
                     },
                 );
 
@@ -839,30 +861,30 @@ module {
                     case (null) {};
                 };
 
-                if (options.use_icrc_3_value_type) {
-                    #Map(record_entries);
-                } else if (is_tuple and record_entries.size() > 0) {
+                if (is_tuple and record_entries.size() > 0) {
                     #Tuple(Array.map<(Text, Candid), Candid>(record_entries, func((_, v) : (Any, Candid)) : Candid = v));
+                } else if (options.use_icrc_3_value_type) {
+                    #Map(record_entries);
                 } else {
                     #Record(record_entries);
                 };
             };
-            case (#Tuple(tuple_types)) return decode_value(
-                bytes,
-                state,
+            case (#Tuple(tuple_types)) return decode_value_from_iter(
+                iter,
                 options,
+                renaming_map,
                 recursive_map,
                 #Record(Array.tabulate<(Text, CandidType)>(tuple_types.size(), func(i : Nat) : (Text, CandidType) = (debug_show (i), tuple_types[i]))),
             );
             case (#Variant(variant_types)) {
-                let variant_index = decode_leb128(bytes, state);
+                let variant_index = decode_leb128_from_iter(iter);
 
                 let variant_key = variant_types[variant_index].0;
                 let variant_type = variant_types[variant_index].1;
 
                 var error : ?Text = null;
 
-                let value = switch (decode_value(bytes, state, options, recursive_map, variant_type)) {
+                let value = switch (decode_value_from_iter(iter, options, renaming_map, recursive_map, variant_type)) {
                     case (#ok(value)) value;
                     case (#err(msg)) {
                         error := ?(msg);
@@ -870,7 +892,7 @@ module {
                     };
                 };
 
-                #Variant(variant_key, value);
+                #Variant(get_renamed_key(renaming_map, variant_key), value);
             };
             case (#Recursive(pos)) {
                 let recursive_type = switch (Map.get(recursive_map, nhash, pos)) {
@@ -878,13 +900,20 @@ module {
                     case (_) Debug.trap("Recursive type not found");
                 };
 
-                return decode_value(bytes, state, options, recursive_map, recursive_type);
+                return decode_value_from_iter(iter, options, renaming_map, recursive_map, recursive_type);
             };
 
-            case (val) Debug.trap(debug_show (val) # "decoding is not supported");
+            case (val) Debug.trap(debug_show (val) # " decoding is not supported");
         };
 
         #ok(value);
+    };
+
+    func get_renamed_key(renaming_map : Map<Text, Text>, key : Text) : Text {
+        Option.get(
+            Map.get(renaming_map, Map.thash, key),
+            key,
+        );
     };
 
     func formatVariantKey(key : Text) : Text {

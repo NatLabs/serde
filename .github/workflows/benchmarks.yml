@@ -46,7 +46,6 @@ jobs:
           npm --yes -g i ic-mops
           mops i
           mops toolchain init
-          mops toolchain use moc latest
 
           # set moc path for dfx to use
           echo "DFX_MOC_PATH=$(mops toolchain bin moc)" >> $GITHUB_ENV
@@ -61,16 +60,15 @@ jobs:
         continue-on-error: true
 
       - name: Checkout out the branch with benchmark results
-        if: github.event_name == 'pull_request'
         uses: actions/checkout@v4
         with:
           ref: benchmark-results
           path: .benchmark-results-branch/
+
       - name: Move Saved Benchmarks
-        if: github.event_name == 'pull_request'
         run: mv .benchmark-results-branch/.bench .bench 2>/dev/null || mkdir -p .bench
 
-      - name: Benchmarks
+      - name: Pull Request Benchmarks
         if: github.event_name == 'pull_request'
         id: benchmarks
         run: |

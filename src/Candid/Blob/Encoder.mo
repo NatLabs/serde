@@ -1,35 +1,35 @@
-import Array "mo:base@0.14.14/Array";
-import Blob "mo:base@0.14.14/Blob";
-import Buffer "mo:base@0.14.14/Buffer";
+import Array "mo:base@0.16.0/Array";
+import Blob "mo:base@0.16.0/Blob";
+import Buffer "mo:base@0.16.0/Buffer";
 import B "mo:buffer";
-import Debug "mo:base@0.14.14/Debug";
-import Result "mo:base@0.14.14/Result";
-import Nat64 "mo:base@0.14.14/Nat64";
-import Int8 "mo:base@0.14.14/Int8";
-import Int32 "mo:base@0.14.14/Int32";
-import Nat8 "mo:base@0.14.14/Nat8";
-import Nat32 "mo:base@0.14.14/Nat32";
-import Nat16 "mo:base@0.14.14/Nat16";
-import Int64 "mo:base@0.14.14/Int64";
-import Nat "mo:base@0.14.14/Nat";
-import Int "mo:base@0.14.14/Int";
-import Iter "mo:base@0.14.14/Iter";
-import Prelude "mo:base@0.14.14/Prelude";
-import Principal "mo:base@0.14.14/Principal";
-import Text "mo:base@0.14.14/Text";
-import Order "mo:base@0.14.14/Order";
-import Option "mo:base@0.14.14/Option";
-import Func "mo:base@0.14.14/Func";
-import Char "mo:base@0.14.14/Char";
-import Int16 "mo:base@0.14.14/Int16";
+import Debug "mo:base@0.16.0/Debug";
+import Result "mo:base@0.16.0/Result";
+import Nat64 "mo:base@0.16.0/Nat64";
+import Int8 "mo:base@0.16.0/Int8";
+import Int32 "mo:base@0.16.0/Int32";
+import Nat8 "mo:base@0.16.0/Nat8";
+import Nat32 "mo:base@0.16.0/Nat32";
+import Nat16 "mo:base@0.16.0/Nat16";
+import Int64 "mo:base@0.16.0/Int64";
+import Nat "mo:base@0.16.0/Nat";
+import Int "mo:base@0.16.0/Int";
+import Iter "mo:base@0.16.0/Iter";
+import Prelude "mo:base@0.16.0/Prelude";
+import Principal "mo:base@0.16.0/Principal";
+import Text "mo:base@0.16.0/Text";
+import Order "mo:base@0.16.0/Order";
+import Option "mo:base@0.16.0/Option";
+import Func "mo:base@0.16.0/Func";
+import Char "mo:base@0.16.0/Char";
+import Int16 "mo:base@0.16.0/Int16";
 
 import Itertools "mo:itertools@0.2.2/Iter";
 import PeekableIter "mo:itertools@0.2.2/PeekableIter";
 import Map "mo:map@9.0.1/Map";
-import FloatX "mo:xtended-numbers/FloatX";
+import ByteUtils "mo:byte-utils@0.1.2";
 
 import T "../Types";
-import TrieMap "mo:base@0.14.14/TrieMap";
+import TrieMap "mo:base@0.16.0/TrieMap";
 import Utils "../../Utils";
 import CandidUtils "CandidUtils";
 
@@ -48,6 +48,21 @@ module {
     let { thash } = Map;
     let { unsigned_leb128; signed_leb128_64 } = Utils;
 
+    // public func encode(candid_values : [Candid], options : ?T.Options) : Result<Blob, Text> {
+    //   let renaming_map = Map.new<Text, Text>();
+    //   for ((k, v) in Option.get(options, T.defaultOptions).renameKeys.vals()) {
+    //     ignore Map.put(renaming_map, thash, k, v);
+    //   };
+    //   let (candid_types) = switch (infer_candid_types(candid_values, renaming_map)) {
+    //     case (#ok(inferred_types)) Array.map(
+    //       inferred_types,
+    //       func(candid_type : CandidType) : CandidType = CandidUtils.format_candid_type(candid_type, renaming_map),
+    //     );
+    //     case (#err(e)) return #err(e);
+    //   };
+    //   let encoder = Encoder.new(candid_types, options);
+    //   Encoder.encode(encoder, candid_values, options);
+    // };
     public func encode(candid_values : [Candid], options : ?T.Options) : Result<Blob, Text> {
         one_shot(candid_values, options);
     };
@@ -97,8 +112,8 @@ module {
         let renaming_map = Map.new<Text, Text>();
 
         let compound_type_buffer = Buffer.Buffer<Nat8>(200);
-        let primitive_type_buffer = Buffer.Buffer<Nat8>(200);
-        let value_buffer = Buffer.Buffer<Nat8>(200);
+        let candid_type_buffer = Buffer.Buffer<Nat8>(200);
+        let value_buffer = Buffer.Buffer<Nat8>(400);
 
         let counter = [var 0];
 
@@ -123,32 +138,39 @@ module {
             candid_types,
             candid_values,
             compound_type_buffer,
-            primitive_type_buffer,
+            candid_type_buffer,
             value_buffer,
             counter,
             renaming_map,
         );
 
-        let candid_buffer = Buffer.fromArray<Nat8>([0x44, 0x49, 0x44, 0x4C]); // 'DIDL' magic bytes
+        let candid_magic_bytes_buffer = Buffer.fromArray<Nat8>([0x44, 0x49, 0x44, 0x4C]); // 'DIDL' magic bytes
 
         // add compound type to the buffer
         let compound_type_size_bytes = Buffer.Buffer<Nat8>(8);
+        // ByteUtils.Buffer.addLEB128_64(compound_type_size_bytes, Nat64.fromNat(counter[C.COUNTER.COMPOUND_TYPE]));
         unsigned_leb128(compound_type_size_bytes, counter[C.COUNTER.COMPOUND_TYPE]);
 
         // add primitive type to the buffer
-        let primitive_type_size_bytes = Buffer.Buffer<Nat8>(8);
-        unsigned_leb128(primitive_type_size_bytes, candid_values.size());
+        let candid_type_size_bytes = Buffer.Buffer<Nat8>(8);
+        // ByteUtils.Buffer.addLEB128_64(candid_type_size_bytes, Nat64.fromNat(candid_values.size()));
+        unsigned_leb128(candid_type_size_bytes, candid_values.size());
 
-        let total_size = candid_buffer.size() + compound_type_size_bytes.size() + compound_type_buffer.size() + primitive_type_size_bytes.size() + primitive_type_buffer.size() + value_buffer.size();
+        let total_size = candid_magic_bytes_buffer.size() + compound_type_size_bytes.size() + compound_type_buffer.size() + candid_type_size_bytes.size() + candid_type_buffer.size() + value_buffer.size();
 
         let sequence = [
-            candid_buffer,
+            candid_magic_bytes_buffer,
             compound_type_size_bytes,
             compound_type_buffer,
-            primitive_type_size_bytes,
-            primitive_type_buffer,
+            candid_type_size_bytes,
+            candid_type_buffer,
             value_buffer,
         ];
+
+        // Print each buffer in the sequence as a Blob
+        // for (buf in sequence.vals()) {
+        //   Debug.print(debug_show Blob.fromArray(Buffer.toArray(buf)));
+        // };
 
         var i = 0;
         var j = 0;
@@ -176,20 +198,20 @@ module {
 
     func check_is_tuple(candid_types : [(Text, Any)]) : Bool {
         let n = candid_types.size(); // 0-based index
-        var sum_of_n : Int = (n * (n + 1)) / 2;
+        var sum_of_n : Int = 0;
 
         var i = 0;
         label tuple_check while (i < candid_types.size()) {
             let record_key = candid_types[i].0;
 
             if (Utils.text_is_number(record_key)) {
-                sum_of_n -= (Utils.text_to_nat(record_key) + 1);
+                sum_of_n += (Utils.text_to_nat(record_key) + 1);
             } else break tuple_check;
 
             i += 1;
         };
 
-        sum_of_n == 0;
+        sum_of_n == (n * (n + 1)) / 2;
     };
 
     func tuple_type_to_record(tuple_types : [CandidType]) : [(Text, CandidType)] {
@@ -214,7 +236,7 @@ module {
         candid_types : [CandidType],
         candid_values : [Candid],
         compound_type_buffer : Buffer<Nat8>,
-        primitive_type_buffer : Buffer<Nat8>,
+        candid_type_buffer : Buffer<Nat8>,
         value_buffer : Buffer<Nat8>,
         counter : [var Nat],
         renaming_map : Map<Text, Text>,
@@ -235,7 +257,7 @@ module {
                 candid_types[i],
                 candid_values[i],
                 compound_type_buffer,
-                primitive_type_buffer,
+                candid_type_buffer,
                 value_buffer,
                 renaming_map,
                 unique_compound_type_map,
@@ -250,6 +272,299 @@ module {
 
     };
 
+    /// Encodes only the value part, without encoding any type information.
+    public func encode_value_only(
+        candid_type : CandidType,
+        candid_value : Candid,
+        value_buffer : Buffer<Nat8>,
+        renaming_map : Map<Text, Text>,
+        unique_compound_type_map : Map<Text, Nat>,
+        recursive_map : Map<Text, Text>,
+        counter : [var Nat],
+        is_nested_child_of_compound_type : Bool,
+    ) : ?Hash {
+        let candid_is_compound_type = switch candid_type {
+            case (#Option(_) or #Array(_) or #Record(_) or #Map(_) or #Tuple(_) or #Variant(_) or #Recursive(_) or #Blob(_)) true;
+            case (_) false;
+        };
+
+        if (candid_is_compound_type) {
+            switch (candid_type, candid_value) {
+                case (#Option(opt_type), #Option(opt_value)) {
+                    if (opt_value == #Null and opt_type != #Null) {
+                        value_buffer.add(0); // no value
+                    } else {
+                        value_buffer.add(1); // has value
+                        ignore encode_value_only(
+                            opt_type,
+                            opt_value,
+                            value_buffer,
+                            renaming_map,
+                            unique_compound_type_map,
+                            recursive_map,
+                            counter,
+                            true,
+                        );
+                    };
+                };
+                case (#Option(opt_type), #Null) {
+                    value_buffer.add(0); // no value
+                };
+                case (#Array(arr_type), #Array(arr_values)) {
+                    unsigned_leb128(value_buffer, arr_values.size());
+                    var i = 0;
+                    while (i < arr_values.size()) {
+                        ignore encode_value_only(
+                            arr_type,
+                            arr_values[i],
+                            value_buffer,
+                            renaming_map,
+                            unique_compound_type_map,
+                            recursive_map,
+                            counter,
+                            true,
+                        );
+                        i += 1;
+                    };
+                };
+                case (#Blob, #Blob(blob)) {
+                    let bytes = Array.map(Blob.toArray(blob), func(n : Nat8) : Candid = #Nat8(n));
+                    ignore encode_value_only(
+                        #Array(#Nat8),
+                        #Array(bytes),
+                        value_buffer,
+                        renaming_map,
+                        unique_compound_type_map,
+                        recursive_map,
+                        counter,
+                        is_nested_child_of_compound_type,
+                    );
+                };
+                case (#Array(#Nat8), #Blob(blob)) {
+                    let bytes = Array.map(Blob.toArray(blob), func(n : Nat8) : Candid = #Nat8(n));
+                    ignore encode_value_only(
+                        #Array(#Nat8),
+                        #Array(bytes),
+                        value_buffer,
+                        renaming_map,
+                        unique_compound_type_map,
+                        recursive_map,
+                        counter,
+                        is_nested_child_of_compound_type,
+                    );
+                };
+                case (#Blob, #Array(bytes)) {
+                    if (bytes.size() > 0) {
+                        switch (bytes[0]) {
+                            case (#Nat8(_)) {};
+                            case (_) return Debug.trap("invalid blob value: expected array of Nat8, got array of " # debug_show bytes[0]);
+                        };
+                    };
+                    ignore encode_value_only(
+                        #Array(#Nat8),
+                        #Array(bytes),
+                        value_buffer,
+                        renaming_map,
+                        unique_compound_type_map,
+                        recursive_map,
+                        counter,
+                        is_nested_child_of_compound_type,
+                    );
+                };
+                case (#Record(record_types) or #Map(record_types), #Record(record_entries) or #Map(record_entries)) {
+
+                    let record_entry_cache : Map.Map<Text, Candid> = Utils.create_map<Text, Candid>(record_entries.size());
+
+                    for ((k, v) in record_entries.vals()) {
+                        let field_value_key = get_renamed_key(renaming_map, k);
+                        ignore Map.put(record_entry_cache, thash, field_value_key, v);
+                    };
+
+                    var i = 0;
+                    while (i < record_types.size()) {
+                        let field_type = record_types[i].1;
+                        let field_type_key = get_renamed_key(renaming_map, record_types[i].0);
+                        let field_value = switch (Map.get(record_entry_cache, Map.thash, field_type_key)) {
+                            case (?field_value) {
+                                // If field type is optional but value isn't, wrap it
+                                switch (field_type, field_value) {
+                                    case (#Option(inner_type), val) {
+                                        // Check if value is already wrapped in Option
+                                        switch (val) {
+                                            case (#Option(_) or #Null) val; // Already wrapped
+                                            case (_) #Option(val); // Wrap it
+                                        };
+                                    };
+                                    case (_) field_value;
+                                };
+                            };
+                            case (null) {
+                                // Field is missing - if the type is optional, use #Null
+                                switch (field_type) {
+                                    case (#Option(_)) #Null;
+                                    case (_) Debug.trap("unable to find field key in field types: " # debug_show field_type_key # "in " # debug_show record_entries);
+                                };
+                            };
+                        };
+                        ignore encode_value_only(
+                            field_type,
+                            field_value,
+                            value_buffer,
+                            renaming_map,
+                            unique_compound_type_map,
+                            recursive_map,
+                            counter,
+                            true,
+                        );
+                        i += 1;
+                    };
+                };
+
+                case (#Tuple(tuple_types), #Tuple(tuple_values)) {
+                    ignore encode_value_only(
+                        #Record(tuple_type_to_record(tuple_types)),
+                        #Record(tuple_value_to_record(tuple_values)),
+                        value_buffer,
+                        renaming_map,
+                        unique_compound_type_map,
+                        recursive_map,
+                        counter,
+                        is_nested_child_of_compound_type,
+                    );
+                };
+                case (#Tuple(tuple_types), #Record(tuple_values)) {
+                    var i = 0;
+                    assert Itertools.all(
+                        tuple_values.vals(),
+                        func((k, v) : (Text, Any)) : Bool {
+                            i += 1;
+                            Utils.text_is_number(k) and Utils.text_to_nat(k) == (i - 1 : Nat);
+                        },
+                    );
+                    ignore encode_value_only(
+                        #Record(tuple_type_to_record(tuple_types)),
+                        #Record(tuple_values),
+                        value_buffer,
+                        renaming_map,
+                        unique_compound_type_map,
+                        recursive_map,
+                        counter,
+                        is_nested_child_of_compound_type,
+                    );
+                };
+                case (#Record(record_types), #Tuple(tuple_values)) {
+                    var i = 0;
+                    assert Itertools.all(
+                        record_types.vals(),
+                        func((k, v) : (Text, Any)) : Bool {
+                            i += 1;
+                            Utils.text_is_number(k) and Utils.text_to_nat(k) == (i - 1 : Nat);
+                        },
+                    );
+                    ignore encode_value_only(
+                        #Record(record_types),
+                        #Record(tuple_value_to_record(tuple_values)),
+                        value_buffer,
+                        renaming_map,
+                        unique_compound_type_map,
+                        recursive_map,
+                        counter,
+                        is_nested_child_of_compound_type,
+                    );
+                };
+                case (#Variant(variant_types), #Variant(variant)) {
+                    let variant_key = get_renamed_key(renaming_map, variant.0);
+                    let variant_value = variant.1;
+                    let variant_index_res = Array.indexOf<(Text, CandidType)>(
+                        (variant_key, #Empty),
+                        variant_types,
+                        func((a, _) : (Text, CandidType), (b, _) : (Text, CandidType)) : Bool = a == b,
+                    );
+                    let variant_index = switch (variant_index_res) {
+                        case (?index) index;
+                        case (_) Debug.trap("unable to find variant key in variant types");
+                    };
+                    unsigned_leb128(value_buffer, variant_index);
+                    ignore encode_value_only(
+                        variant_types[variant_index].1,
+                        variant_value,
+                        value_buffer,
+                        renaming_map,
+                        unique_compound_type_map,
+                        recursive_map,
+                        counter,
+                        true,
+                    );
+                };
+                case (_) Debug.trap("invalid (type, value) pair for encode_value_only: " # debug_show { candid_type; candid_value });
+            };
+
+        } else {
+            // primitive types
+            switch (candid_type, candid_value) {
+                case (#Nat, #Nat(n)) {
+                    unsigned_leb128(value_buffer, n);
+                };
+                case (#Nat8, #Nat8(n)) {
+                    value_buffer.add(n);
+                };
+                case (#Nat16, #Nat16(n)) {
+                    ByteUtils.Buffer.LE.addNat16(value_buffer, n);
+                };
+                case (#Nat32, #Nat32(n)) {
+                    ByteUtils.Buffer.LE.addNat32(value_buffer, n);
+                };
+                case (#Nat64, #Nat64(n)) {
+                    ByteUtils.Buffer.LE.addNat64(value_buffer, n);
+                };
+                case (#Int, #Int(n)) {
+                    signed_leb128_64(value_buffer, n);
+                };
+                case (#Int8, #Int8(i8)) {
+                    value_buffer.add(Int8.toNat8(i8));
+                };
+                case (#Int16, #Int16(i16)) {
+                    ByteUtils.Buffer.LE.addInt16(value_buffer, i16);
+                };
+                case (#Int32, #Int32(i32)) {
+                    ByteUtils.Buffer.LE.addInt32(value_buffer, i32);
+                };
+                case (#Int64, #Int64(i64)) {
+                    ByteUtils.Buffer.LE.addInt64(value_buffer, i64);
+                };
+                case (#Float, #Float(f64)) {
+                    ByteUtils.Buffer.LE.addFloat(value_buffer, f64);
+                };
+                case (#Bool, #Bool(b)) {
+                    value_buffer.add(if (b) (1) else (0));
+                };
+                case (#Null, #Null) {};
+                case (#Empty, #Empty) {};
+                case (#Text, #Text(t)) {
+                    let utf8_blob = Text.encodeUtf8(t);
+                    unsigned_leb128(value_buffer, utf8_blob.size());
+                    var i = 0;
+                    while (i < utf8_blob.size()) {
+                        value_buffer.add(utf8_blob[i]);
+                        i += 1;
+                    };
+                };
+                case (#Principal, #Principal(p)) {
+                    value_buffer.add(0x01); // indicate transparency state
+                    let blob = Principal.toBlob(p);
+                    unsigned_leb128(value_buffer, blob.size());
+                    var i = 0;
+                    while (i < blob.size()) {
+                        value_buffer.add(blob[i]);
+                        i += 1;
+                    };
+                };
+                case (_) Debug.trap("unknown (type, value) pair for encode_value_only: " # debug_show (candid_type, candid_value));
+            };
+        };
+        null;
+    };
+
     func is_compound_type(candid_type : CandidType) : Bool {
         switch (candid_type) {
             case (#Option(_) or #Array(_) or #Record(_) or #Map(_) or #Tuple(_) or #Variant(_) or #Recursive(_) or #Blob(_)) true;
@@ -260,34 +575,34 @@ module {
     func encode_primitive_type_only(
         candid_type : CandidType,
         compound_type_buffer : Buffer<Nat8>,
-        primitive_type_buffer : Buffer<Nat8>,
+        candid_type_buffer : Buffer<Nat8>,
         is_nested_child_of_compound_type : Bool,
     ) {
-        let ref_primitive_type_buffer = if (is_nested_child_of_compound_type) {
+        let ref_candid_type_buffer = if (is_nested_child_of_compound_type) {
             compound_type_buffer;
         } else {
-            primitive_type_buffer;
+            candid_type_buffer;
         };
 
         switch (candid_type) {
-            case (#Nat) ref_primitive_type_buffer.add(T.TypeCode.Nat);
-            case (#Nat8) ref_primitive_type_buffer.add(T.TypeCode.Nat8);
-            case (#Nat16) ref_primitive_type_buffer.add(T.TypeCode.Nat16);
-            case (#Nat32) ref_primitive_type_buffer.add(T.TypeCode.Nat32);
-            case (#Nat64) ref_primitive_type_buffer.add(T.TypeCode.Nat64);
+            case (#Nat) ref_candid_type_buffer.add(T.TypeCode.Nat);
+            case (#Nat8) ref_candid_type_buffer.add(T.TypeCode.Nat8);
+            case (#Nat16) ref_candid_type_buffer.add(T.TypeCode.Nat16);
+            case (#Nat32) ref_candid_type_buffer.add(T.TypeCode.Nat32);
+            case (#Nat64) ref_candid_type_buffer.add(T.TypeCode.Nat64);
 
-            case (#Int) ref_primitive_type_buffer.add(T.TypeCode.Int);
-            case (#Int8) ref_primitive_type_buffer.add(T.TypeCode.Int8);
-            case (#Int16) ref_primitive_type_buffer.add(T.TypeCode.Int16);
-            case (#Int32) ref_primitive_type_buffer.add(T.TypeCode.Int32);
-            case (#Int64) ref_primitive_type_buffer.add(T.TypeCode.Int64);
+            case (#Int) ref_candid_type_buffer.add(T.TypeCode.Int);
+            case (#Int8) ref_candid_type_buffer.add(T.TypeCode.Int8);
+            case (#Int16) ref_candid_type_buffer.add(T.TypeCode.Int16);
+            case (#Int32) ref_candid_type_buffer.add(T.TypeCode.Int32);
+            case (#Int64) ref_candid_type_buffer.add(T.TypeCode.Int64);
 
-            case (#Float) ref_primitive_type_buffer.add(T.TypeCode.Float);
-            case (#Bool) ref_primitive_type_buffer.add(T.TypeCode.Bool);
-            case (#Text) ref_primitive_type_buffer.add(T.TypeCode.Text);
-            case (#Principal) ref_primitive_type_buffer.add(T.TypeCode.Principal);
-            case (#Null) ref_primitive_type_buffer.add(T.TypeCode.Null);
-            case (#Empty) ref_primitive_type_buffer.add(T.TypeCode.Empty);
+            case (#Float) ref_candid_type_buffer.add(T.TypeCode.Float);
+            case (#Bool) ref_candid_type_buffer.add(T.TypeCode.Bool);
+            case (#Text) ref_candid_type_buffer.add(T.TypeCode.Text);
+            case (#Principal) ref_candid_type_buffer.add(T.TypeCode.Principal);
+            case (#Null) ref_candid_type_buffer.add(T.TypeCode.Null);
+            case (#Empty) ref_candid_type_buffer.add(T.TypeCode.Empty);
 
             case (_) Debug.trap("encode_primitive_type_only(): unknown primitive type " # debug_show candid_type);
         };
@@ -296,13 +611,13 @@ module {
     func encode_compound_type_only(
         candid_type : CandidType,
         compound_type_buffer : Buffer<Nat8>,
-        primitive_type_buffer : Buffer<Nat8>,
+        candid_type_buffer : Buffer<Nat8>,
         renaming_map : Map<Text, Text>,
         unique_compound_type_map : Map<Text, Nat>,
         counter : [var Nat],
         is_nested_child_of_compound_type : Bool,
     ) {
-        let type_info = debug_show candid_type;
+        let type_info = get_type_info(candid_type);
         let compound_type_exists = Map.has(unique_compound_type_map, thash, type_info);
         if (compound_type_exists) return;
         // Debug.print("encode_compound_type_only(): " # debug_show type_info);
@@ -317,7 +632,7 @@ module {
                 encode_type_only(
                     opt_type,
                     compound_type_buffer,
-                    primitive_type_buffer,
+                    candid_type_buffer,
                     renaming_map,
                     unique_compound_type_map,
                     counter,
@@ -326,7 +641,7 @@ module {
 
                 if (opt_type_is_compound) {
                     compound_type_buffer.add(T.TypeCode.Option);
-                    let opt_type_info = debug_show opt_type;
+                    let opt_type_info = get_type_info(opt_type);
                     let pos = switch (Map.get(unique_compound_type_map, thash, opt_type_info)) {
                         case (?pos) pos;
                         case (_) Debug.trap("unable to find compound type pos to store in primitive type sequence for " # debug_show (type_info));
@@ -345,7 +660,7 @@ module {
                 encode_type_only(
                     arr_type,
                     compound_type_buffer,
-                    primitive_type_buffer,
+                    candid_type_buffer,
                     renaming_map,
                     unique_compound_type_map,
                     counter,
@@ -354,7 +669,7 @@ module {
 
                 if (arr_type_is_compound) {
                     compound_type_buffer.add(T.TypeCode.Array);
-                    let arr_type_info = debug_show arr_type;
+                    let arr_type_info = get_type_info(arr_type);
                     let pos = switch (Map.get(unique_compound_type_map, thash, arr_type_info)) {
                         case (?pos) pos;
                         case (_) Debug.trap("unable to find compound type pos to store in primitive type sequence for " # debug_show (type_info));
@@ -366,11 +681,11 @@ module {
             case (#Blob) return encode_compound_type_only(
                 #Array(#Nat8),
                 compound_type_buffer,
-                primitive_type_buffer,
+                candid_type_buffer,
                 renaming_map,
                 unique_compound_type_map,
                 counter,
-                true,
+                is_nested_child_of_compound_type,
             );
 
             case (#Record(record_types) or #Map(record_types)) {
@@ -378,14 +693,14 @@ module {
 
                 var i = 0;
                 while (i < record_types.size()) {
-                    let value_type = record_types[i].1;
+                    let field_type = record_types[i].1;
 
-                    let value_type_is_compound = is_compound_type(value_type);
+                    let value_type_is_compound = is_compound_type(field_type);
 
                     if (value_type_is_compound) encode_type_only(
-                        value_type,
+                        field_type,
                         compound_type_buffer,
-                        primitive_type_buffer,
+                        candid_type_buffer,
                         renaming_map,
                         unique_compound_type_map,
                         counter,
@@ -400,9 +715,9 @@ module {
 
                 i := 0;
                 while (i < record_types.size()) {
-                    let value_type = record_types[i].1;
+                    let field_type = record_types[i].1;
 
-                    let value_type_is_compound = is_compound_type(value_type);
+                    let value_type_is_compound = is_compound_type(field_type);
 
                     if (is_tuple) {
                         unsigned_leb128(compound_type_buffer, i);
@@ -414,7 +729,7 @@ module {
                     };
 
                     if (value_type_is_compound) {
-                        let value_type_info = debug_show value_type;
+                        let value_type_info = get_type_info(field_type);
                         let pos = switch (Map.get(unique_compound_type_map, thash, value_type_info)) {
                             case (?pos) pos;
                             case (_) Debug.trap("unable to find compound type pos to store in primitive type sequence for " # debug_show (type_info));
@@ -422,9 +737,9 @@ module {
                         unsigned_leb128(compound_type_buffer, pos);
                     } else {
                         encode_primitive_type_only(
-                            value_type,
+                            field_type,
                             compound_type_buffer,
-                            primitive_type_buffer,
+                            candid_type_buffer,
                             true,
                         );
                     };
@@ -437,7 +752,7 @@ module {
                 return encode_compound_type_only(
                     #Record(tuple_type_to_record(tuple_types)),
                     compound_type_buffer,
-                    primitive_type_buffer,
+                    candid_type_buffer,
                     renaming_map,
                     unique_compound_type_map,
                     counter,
@@ -457,7 +772,7 @@ module {
                         encode_compound_type_only(
                             variant_type,
                             compound_type_buffer,
-                            primitive_type_buffer,
+                            candid_type_buffer,
                             renaming_map,
                             unique_compound_type_map,
                             counter,
@@ -481,7 +796,7 @@ module {
                     unsigned_leb128(compound_type_buffer, Nat32.toNat(hash_key));
 
                     if (variant_type_is_compound) {
-                        let variant_type_info = debug_show variant_type;
+                        let variant_type_info = get_type_info(variant_type);
                         let pos = switch (Map.get(unique_compound_type_map, thash, variant_type_info)) {
                             case (?pos) pos;
                             case (_) Debug.trap("unable to find compound type pos to store in primitive type sequence for " # debug_show (type_info));
@@ -491,7 +806,7 @@ module {
                         encode_primitive_type_only(
                             variant_type,
                             compound_type_buffer,
-                            primitive_type_buffer,
+                            candid_type_buffer,
                             true,
                         );
                     };
@@ -508,10 +823,10 @@ module {
 
     };
 
-    func encode_type_only(
+    public func encode_type_only(
         candid_type : CandidType,
         compound_type_buffer : Buffer<Nat8>,
-        primitive_type_buffer : Buffer<Nat8>,
+        candid_type_buffer : Buffer<Nat8>,
         renaming_map : Map<Text, Text>,
         unique_compound_type_map : Map<Text, Nat>,
         counter : [var Nat],
@@ -521,17 +836,27 @@ module {
             encode_compound_type_only(
                 candid_type,
                 compound_type_buffer,
-                primitive_type_buffer,
+                candid_type_buffer,
                 renaming_map,
                 unique_compound_type_map,
                 counter,
                 is_nested_child_of_compound_type,
             );
+
+            // Add compound type reference to primitive type buffer for top-level types
+            if (not is_nested_child_of_compound_type) {
+                let type_info = get_type_info(candid_type);
+                let pos = switch (Map.get(unique_compound_type_map, thash, type_info)) {
+                    case (?pos) pos;
+                    case (_) Debug.trap("unable to find compound type pos to store in primitive type sequence for " # debug_show (type_info));
+                };
+                unsigned_leb128(candid_type_buffer, pos);
+            };
         } else {
             encode_primitive_type_only(
                 candid_type,
                 compound_type_buffer,
-                primitive_type_buffer,
+                candid_type_buffer,
                 is_nested_child_of_compound_type,
             );
         };
@@ -551,7 +876,7 @@ module {
         candid_type : CandidType,
         candid_value : Candid,
         compound_type_buffer : Buffer<Nat8>,
-        primitive_type_buffer : Buffer<Nat8>,
+        candid_type_buffer : Buffer<Nat8>,
         value_buffer : Buffer<Nat8>,
         renaming_map : Map<Text, Text>,
         unique_compound_type_map : Map<Text, Nat>,
@@ -559,125 +884,96 @@ module {
         is_nested_child_of_compound_type : Bool,
         ignore_type : Bool,
     ) {
-        let ref_primitive_type_buffer = if (ignore_type) {
+        let ref_candid_type_buffer = if (ignore_type) {
             object {
                 public func add(_ : Nat8) {}; // do nothing
             };
         } else if (is_nested_child_of_compound_type) {
             compound_type_buffer;
         } else {
-            primitive_type_buffer;
+            candid_type_buffer;
         };
 
         switch (candid_type, candid_value) {
             case (#Nat, #Nat(n)) {
                 // Debug.print("start encoding Nat: " # debug_show n);
-                ref_primitive_type_buffer.add(T.TypeCode.Nat);
+                ref_candid_type_buffer.add(T.TypeCode.Nat);
                 // Debug.print("encoded type codde");
                 unsigned_leb128(value_buffer, n);
 
             };
             case (#Nat8, #Nat8(n)) {
-                ref_primitive_type_buffer.add(T.TypeCode.Nat8);
+                ref_candid_type_buffer.add(T.TypeCode.Nat8);
                 value_buffer.add(n);
             };
             case (#Nat16, #Nat16(n)) {
-                ref_primitive_type_buffer.add(T.TypeCode.Nat16);
-                value_buffer.add((n & 0xFF) |> Nat16.toNat8(_));
-                value_buffer.add((n >> 8) |> Nat16.toNat8(_));
+                ref_candid_type_buffer.add(T.TypeCode.Nat16);
+                ByteUtils.Buffer.LE.addNat16(value_buffer, n);
             };
             case (#Nat32, #Nat32(n)) {
-                ref_primitive_type_buffer.add(T.TypeCode.Nat32);
-                value_buffer.add((n & 0xFF) |> Nat32.toNat16(_) |> Nat16.toNat8(_));
-                value_buffer.add(((n >> 8) & 0xFF) |> Nat32.toNat16(_) |> Nat16.toNat8(_));
-                value_buffer.add(((n >> 16) & 0xFF) |> Nat32.toNat16(_) |> Nat16.toNat8(_));
-                value_buffer.add((n >> 24) |> Nat32.toNat16(_) |> Nat16.toNat8(_));
+                ref_candid_type_buffer.add(T.TypeCode.Nat32);
+                ByteUtils.Buffer.LE.addNat32(value_buffer, n);
             };
             case (#Nat64, #Nat64(n)) {
-                ref_primitive_type_buffer.add(T.TypeCode.Nat64);
-                value_buffer.add((n & 0xFF) |> Nat64.toNat(_) |> Nat8.fromNat(_));
-                value_buffer.add(((n >> 8) & 0xFF) |> Nat64.toNat(_) |> Nat8.fromNat(_));
-                value_buffer.add(((n >> 16) & 0xFF) |> Nat64.toNat(_) |> Nat8.fromNat(_));
-                value_buffer.add(((n >> 24) & 0xFF) |> Nat64.toNat(_) |> Nat8.fromNat(_));
-                value_buffer.add(((n >> 32) & 0xFF) |> Nat64.toNat(_) |> Nat8.fromNat(_));
-                value_buffer.add(((n >> 40) & 0xFF) |> Nat64.toNat(_) |> Nat8.fromNat(_));
-                value_buffer.add(((n >> 48) & 0xFF) |> Nat64.toNat(_) |> Nat8.fromNat(_));
-                value_buffer.add((n >> 56) |> Nat64.toNat(_) |> Nat8.fromNat(_));
+                ref_candid_type_buffer.add(T.TypeCode.Nat64);
+                ByteUtils.Buffer.LE.addNat64(value_buffer, n);
             };
             case (#Int, #Int(n)) {
-                ref_primitive_type_buffer.add(T.TypeCode.Int);
+                ref_candid_type_buffer.add(T.TypeCode.Int);
                 signed_leb128_64(value_buffer, n);
             };
             case (#Int8, #Int8(i8)) {
-                ref_primitive_type_buffer.add(T.TypeCode.Int8);
+                ref_candid_type_buffer.add(T.TypeCode.Int8);
                 value_buffer.add(Int8.toNat8(i8));
             };
             case (#Int16, #Int16(i16)) {
-                ref_primitive_type_buffer.add(T.TypeCode.Int16);
-                let n16 = Int16.toNat16(i16);
-                value_buffer.add((n16 & 0xFF) |> Nat16.toNat8(_));
-                value_buffer.add((n16 >> 8) |> Nat16.toNat8(_));
+                ref_candid_type_buffer.add(T.TypeCode.Int16);
+                ByteUtils.Buffer.LE.addInt16(value_buffer, i16);
             };
             case (#Int32, #Int32(i32)) {
-                ref_primitive_type_buffer.add(T.TypeCode.Int32);
-                let n = Int32.toNat32(i32);
-
-                value_buffer.add((n & 0xFF) |> Nat32.toNat16(_) |> Nat16.toNat8(_));
-                value_buffer.add(((n >> 8) & 0xFF) |> Nat32.toNat16(_) |> Nat16.toNat8(_));
-                value_buffer.add(((n >> 16) & 0xFF) |> Nat32.toNat16(_) |> Nat16.toNat8(_));
-                value_buffer.add((n >> 24) |> Nat32.toNat16(_) |> Nat16.toNat8(_));
+                ref_candid_type_buffer.add(T.TypeCode.Int32);
+                ByteUtils.Buffer.LE.addInt32(value_buffer, i32);
             };
             case (#Int64, #Int64(i64)) {
-                ref_primitive_type_buffer.add(T.TypeCode.Int64);
-                let n = Int64.toNat64(i64);
-
-                value_buffer.add((n & 0xFF) |> Nat64.toNat(_) |> Nat8.fromNat(_));
-                value_buffer.add(((n >> 8) & 0xFF) |> Nat64.toNat(_) |> Nat8.fromNat(_));
-                value_buffer.add(((n >> 16) & 0xFF) |> Nat64.toNat(_) |> Nat8.fromNat(_));
-                value_buffer.add(((n >> 24) & 0xFF) |> Nat64.toNat(_) |> Nat8.fromNat(_));
-                value_buffer.add(((n >> 32) & 0xFF) |> Nat64.toNat(_) |> Nat8.fromNat(_));
-                value_buffer.add(((n >> 40) & 0xFF) |> Nat64.toNat(_) |> Nat8.fromNat(_));
-                value_buffer.add(((n >> 48) & 0xFF) |> Nat64.toNat(_) |> Nat8.fromNat(_));
-                value_buffer.add((n >> 56) |> Nat64.toNat(_) |> Nat8.fromNat(_));
+                ref_candid_type_buffer.add(T.TypeCode.Int64);
+                ByteUtils.Buffer.LE.addInt64(value_buffer, i64);
             };
             case (#Float, #Float(f64)) {
-                ref_primitive_type_buffer.add(T.TypeCode.Float);
-                let floatX : FloatX.FloatX = FloatX.fromFloat(f64, #f64);
-                FloatX.toBytesBuffer(B.fromDeprecatedBuffer(value_buffer), floatX, #lsb);
+                ref_candid_type_buffer.add(T.TypeCode.Float);
+                ByteUtils.Buffer.LE.addFloat(value_buffer, f64);
             };
             case (#Bool, #Bool(b)) {
-                ref_primitive_type_buffer.add(T.TypeCode.Bool);
+                ref_candid_type_buffer.add(T.TypeCode.Bool);
                 value_buffer.add(if (b) (1) else (0));
             };
             case (#Null, #Null) {
-                ref_primitive_type_buffer.add(T.TypeCode.Null);
+                ref_candid_type_buffer.add(T.TypeCode.Null);
             };
             case (#Empty, #Empty) {
-                ref_primitive_type_buffer.add(T.TypeCode.Empty);
+                ref_candid_type_buffer.add(T.TypeCode.Empty);
             };
             case (#Text, #Text(t)) {
-                ref_primitive_type_buffer.add(T.TypeCode.Text);
-
-                let utf8_bytes = Blob.toArray(Text.encodeUtf8(t));
-                unsigned_leb128(value_buffer, utf8_bytes.size());
+                ref_candid_type_buffer.add(T.TypeCode.Text);
+                let utf8_blob = Text.encodeUtf8(t);
+                unsigned_leb128(value_buffer, utf8_blob.size());
 
                 var i = 0;
-                while (i < utf8_bytes.size()) {
-                    value_buffer.add(utf8_bytes[i]);
+                while (i < utf8_blob.size()) {
+                    value_buffer.add(utf8_blob[i]);
                     i += 1;
                 };
 
             };
             case (#Principal, #Principal(p)) {
-                ref_primitive_type_buffer.add(T.TypeCode.Principal);
+                ref_candid_type_buffer.add(T.TypeCode.Principal);
 
                 value_buffer.add(0x01); // indicate transparency state
-                let bytes = Blob.toArray(Principal.toBlob(p));
-                unsigned_leb128(value_buffer, bytes.size());
+                let blob = Principal.toBlob(p);
+                unsigned_leb128(value_buffer, blob.size());
 
                 var i = 0;
-                while (i < bytes.size()) {
-                    value_buffer.add(bytes[i]);
+                while (i < blob.size()) {
+                    value_buffer.add(blob[i]);
                     i += 1;
                 };
             };
@@ -690,7 +986,7 @@ module {
         candid_type : CandidType,
         candid_value : Candid,
         compound_type_buffer : Buffer<Nat8>,
-        primitive_type_buffer : Buffer<Nat8>,
+        candid_type_buffer : Buffer<Nat8>,
         value_buffer : Buffer<Nat8>,
         renaming_map : Map<Text, Text>,
         unique_compound_type_map : Map<Text, Nat>,
@@ -733,7 +1029,7 @@ module {
                     if (not type_exists) encode_type_only(
                         opt_type,
                         compound_type_buffer,
-                        primitive_type_buffer,
+                        candid_type_buffer,
                         renaming_map,
                         unique_compound_type_map,
                         counter,
@@ -747,7 +1043,7 @@ module {
                         opt_type,
                         opt_value,
                         compound_type_buffer,
-                        primitive_type_buffer,
+                        candid_type_buffer,
                         value_buffer,
                         renaming_map,
                         unique_compound_type_map,
@@ -786,7 +1082,7 @@ module {
                 if (not type_exists) encode_type_only(
                     opt_type,
                     compound_type_buffer,
-                    primitive_type_buffer,
+                    candid_type_buffer,
                     renaming_map,
                     unique_compound_type_map,
                     counter,
@@ -824,7 +1120,7 @@ module {
                     encode_type_only(
                         arr_type,
                         compound_type_buffer,
-                        primitive_type_buffer,
+                        candid_type_buffer,
                         renaming_map,
                         unique_compound_type_map,
                         counter,
@@ -837,7 +1133,7 @@ module {
                         arr_type,
                         val,
                         compound_type_buffer,
-                        primitive_type_buffer,
+                        candid_type_buffer,
                         value_buffer,
                         renaming_map,
                         unique_compound_type_map,
@@ -870,7 +1166,7 @@ module {
                     #Array(#Nat8),
                     #Array(bytes),
                     compound_type_buffer,
-                    primitive_type_buffer,
+                    candid_type_buffer,
                     value_buffer,
                     renaming_map,
                     unique_compound_type_map,
@@ -888,7 +1184,7 @@ module {
                     #Array(#Nat8),
                     #Array(bytes),
                     compound_type_buffer,
-                    primitive_type_buffer,
+                    candid_type_buffer,
                     value_buffer,
                     renaming_map,
                     unique_compound_type_map,
@@ -910,7 +1206,7 @@ module {
                     #Array(#Nat8),
                     #Array(bytes),
                     compound_type_buffer,
-                    primitive_type_buffer,
+                    candid_type_buffer,
                     value_buffer,
                     renaming_map,
                     unique_compound_type_map,
@@ -922,40 +1218,58 @@ module {
             };
 
             case (#Record(record_types) or #Map(record_types), #Record(record_entries) or #Map(record_entries)) {
-                assert record_entries.size() == record_types.size();
 
                 let is_tuple = check_is_tuple(record_types);
 
-                let sorted_record_entries = Array.tabulate<(Text, Candid)>(
-                    record_types.size(),
-                    func(i : Nat) : (Text, Candid) {
-                        let field_type_key = get_renamed_key(renaming_map, record_types[i].0);
-                        let res = Array.find<(Text, Candid)>(
-                            record_entries,
-                            func((field_value_key, _) : (Text, Candid)) : Bool {
-                                get_renamed_key(renaming_map, field_value_key) == field_type_key;
-                            },
-                        );
+                let cache_size = if (record_entries.size() % 2 == 0) {
+                    record_entries.size() + 2;
+                } else {
+                    record_entries.size() + 3;
+                };
 
-                        switch (res) {
-                            case (?(_, field_value)) (field_type_key, field_value);
-                            case (_) Debug.trap("unable to find field key in field types: " # debug_show field_type_key # "in " # debug_show record_entries);
-                        };
-                    },
-                );
+                let record_entry_cache : Map.Map<Text, Candid> = Utils.create_map<Text, Candid>(cache_size);
+
+                for ((k, v) in record_entries.vals()) {
+                    let field_value_key = get_renamed_key(renaming_map, k);
+                    ignore Map.put(record_entry_cache, thash, field_value_key, v);
+                };
 
                 var i = 0;
                 while (i < record_types.size()) {
-                    let value_type = record_types[i].1;
-                    let field_value = sorted_record_entries[i].1;
+                    let field_type = record_types[i].1;
 
-                    let value_type_is_compound = is_compound_type(value_type);
+                    let field_type_key = get_renamed_key(renaming_map, record_types[i].0);
+
+                    let field_value = switch (Map.get(record_entry_cache, Map.thash, field_type_key)) {
+                        case (?field_value) {
+                            // If field type is optional but value isn't, wrap it
+                            switch (field_type, field_value) {
+                                case (#Option(inner_type), val) {
+                                    // Check if value is already wrapped in Option
+                                    switch (val) {
+                                        case (#Option(_) or #Null) val; // Already wrapped
+                                        case (_) #Option(val); // Wrap it
+                                    };
+                                };
+                                case (_) field_value;
+                            };
+                        };
+                        case (null) {
+                            // Field is missing - if the type is optional, use #Null
+                            switch (field_type) {
+                                case (#Option(_)) #Null;
+                                case (_) Debug.trap("unable to find field key in field types: " # debug_show field_type_key # "in " # debug_show record_entries);
+                            };
+                        };
+                    };
+
+                    let value_type_is_compound = is_compound_type(field_type);
 
                     ignore encode_candid(
-                        value_type,
+                        field_type,
                         field_value,
                         compound_type_buffer,
-                        primitive_type_buffer,
+                        candid_type_buffer,
                         value_buffer,
                         renaming_map,
                         unique_compound_type_map,
@@ -970,14 +1284,14 @@ module {
 
                 if (not type_exists) {
                     compound_type_buffer.add(T.TypeCode.Record);
-                    unsigned_leb128(compound_type_buffer, record_entries.size());
+                    unsigned_leb128(compound_type_buffer, record_types.size());
 
                     i := 0;
 
                     while (i < record_types.size()) {
-                        let value_type = record_types[i].1;
+                        let field_type = record_types[i].1;
 
-                        let value_type_is_compound = is_compound_type(value_type);
+                        let value_type_is_compound = is_compound_type(field_type);
 
                         if (is_tuple) {
                             unsigned_leb128(compound_type_buffer, i);
@@ -988,18 +1302,18 @@ module {
                         };
 
                         if (value_type_is_compound) {
-                            let value_type_info = get_type_info(value_type);
+                            let value_type_info = get_type_info(field_type);
                             let pos = switch (Map.get(unique_compound_type_map, thash, value_type_info)) {
                                 case (?pos) pos;
-                                case (_) Debug.trap("unable to find compound type pos to store in primitive type sequence for " # debug_show (type_info, value_type));
+                                case (_) Debug.trap("unable to find compound type pos to store in primitive type sequence for " # debug_show (type_info, field_type));
                             };
 
                             unsigned_leb128(compound_type_buffer, pos);
                         } else {
                             encode_primitive_type_only(
-                                value_type,
+                                field_type,
                                 compound_type_buffer,
-                                primitive_type_buffer,
+                                candid_type_buffer,
                                 true,
                             );
                         };
@@ -1014,7 +1328,7 @@ module {
                     #Record(tuple_type_to_record(tuple_types)),
                     #Record(tuple_value_to_record(tuple_values)),
                     compound_type_buffer,
-                    primitive_type_buffer,
+                    candid_type_buffer,
                     value_buffer,
                     renaming_map,
                     unique_compound_type_map,
@@ -1038,7 +1352,7 @@ module {
                     #Record(tuple_type_to_record(tuple_types)),
                     #Record(tuple_values),
                     compound_type_buffer,
-                    primitive_type_buffer,
+                    candid_type_buffer,
                     value_buffer,
                     renaming_map,
                     unique_compound_type_map,
@@ -1063,7 +1377,7 @@ module {
                     #Record(record_types),
                     #Record(tuple_value_to_record(tuple_values)),
                     compound_type_buffer,
-                    primitive_type_buffer,
+                    candid_type_buffer,
                     value_buffer,
                     renaming_map,
                     unique_compound_type_map,
@@ -1103,7 +1417,7 @@ module {
                             variant_type,
                             variant_value,
                             compound_type_buffer,
-                            primitive_type_buffer,
+                            candid_type_buffer,
                             value_buffer,
                             renaming_map,
                             unique_compound_type_map,
@@ -1116,7 +1430,7 @@ module {
                         encode_compound_type_only(
                             variant_type,
                             compound_type_buffer,
-                            primitive_type_buffer,
+                            candid_type_buffer,
                             renaming_map,
                             unique_compound_type_map,
                             counter,
@@ -1151,7 +1465,7 @@ module {
                             encode_primitive_type_only(
                                 variant_type,
                                 compound_type_buffer,
-                                primitive_type_buffer,
+                                candid_type_buffer,
                                 true,
                             );
                         };
@@ -1178,7 +1492,7 @@ module {
                 case (?pos) pos;
                 case (_) Debug.trap("unable to find compound type pos to store in primitive type sequence for " # debug_show (type_info));
             };
-            unsigned_leb128(primitive_type_buffer, pos);
+            unsigned_leb128(candid_type_buffer, pos);
         };
     };
 
@@ -1186,7 +1500,7 @@ module {
         candid_type : CandidType,
         candid_value : Candid,
         compound_type_buffer : Buffer<Nat8>,
-        primitive_type_buffer : Buffer<Nat8>,
+        candid_type_buffer : Buffer<Nat8>,
         value_buffer : Buffer<Nat8>,
         renaming_map : Map<Text, Text>,
         unique_compound_type_map : Map<Text, Nat>,
@@ -1203,7 +1517,7 @@ module {
                 candid_type,
                 candid_value,
                 compound_type_buffer,
-                primitive_type_buffer,
+                candid_type_buffer,
                 value_buffer,
                 renaming_map,
                 unique_compound_type_map,
@@ -1217,7 +1531,7 @@ module {
                 candid_type,
                 candid_value,
                 compound_type_buffer,
-                primitive_type_buffer,
+                candid_type_buffer,
                 value_buffer,
                 renaming_map,
                 unique_compound_type_map,
@@ -1462,21 +1776,100 @@ module {
                     case (#Array(_)) {
                         let vec_nodes = Iter.toArray(tmp_bottom_iter);
 
-                        let max = {
-                            var height = 0;
-                            var type_ : CandidType = #Empty;
-                        };
+                        // Special handling for arrays of records - merge fields across all records
+                        let all_records = Buffer.Buffer<[(Text, CandidType)]>(vec_nodes.size());
+                        var has_records = false;
 
                         for (node in vec_nodes.vals()) {
-                            if (max.height < node.height) {
-                                max.height := node.height;
-                                max.type_ := node.type_;
+                            switch (node.type_) {
+                                case (#Record(fields)) {
+                                    has_records := true;
+                                    all_records.add(fields);
+                                };
+                                case (_) {};
                             };
                         };
 
+                        // If we have multiple records, merge their fields
+                        let merged_type = if (has_records and all_records.size() > 1) {
+                            let field_map = Map.new<Text, (CandidType, Nat, Nat)>(); // key -> (type, height, count)
+                            var max_height = 0;
+
+                            for (record_fields in all_records.vals()) {
+                                for ((field_key, field_type) in record_fields.vals()) {
+                                    let field_depth = get_type_depth(field_type);
+                                    max_height := Nat.max(max_height, field_depth);
+
+                                    switch (Map.get(field_map, thash, field_key)) {
+                                        case (?existing) {
+                                            let (existing_type, existing_height, count) = existing;
+
+                                            // Choose better type
+                                            if (is_better_type(field_type, field_depth, existing_type, existing_height)) {
+                                                ignore Map.put(field_map, thash, field_key, (field_type, field_depth, count + 1));
+                                            } else {
+                                                ignore Map.put(field_map, thash, field_key, (existing_type, existing_height, count + 1));
+                                            };
+                                        };
+                                        case (null) {
+                                            ignore Map.put(field_map, thash, field_key, (field_type, field_depth, 1));
+                                        };
+                                    };
+                                };
+                            };
+
+                            // Build merged record type, wrapping optional fields
+                            let merged_fields = Buffer.Buffer<(Text, CandidType)>(Map.size(field_map));
+                            let total_records = all_records.size();
+
+                            for ((field_key, (field_type, field_height, count)) in Map.entries(field_map)) {
+                                // If field doesn't appear in all records, make it optional
+                                let final_type = if (count < total_records) {
+                                    switch (field_type) {
+                                        case (#Option(_)) field_type; // Already optional
+                                        case (_) #Option(field_type); // Make it optional
+                                    };
+                                } else {
+                                    field_type;
+                                };
+                                merged_fields.add((field_key, final_type));
+                            };
+
+                            #Record(Buffer.toArray(merged_fields));
+                        } else {
+                            // Not records or only one record, use normal max selection
+                            let max = {
+                                var height = 0;
+                                var type_ : CandidType = #Empty;
+                            };
+
+                            for (node in vec_nodes.vals()) {
+                                if (max.type_ == #Empty or is_better_type(node.type_, node.height, max.type_, max.height)) {
+                                    max.height := node.height;
+                                    max.type_ := node.type_;
+                                };
+                            };
+
+                            max.type_;
+                        };
+
+                        let final_height = if (has_records and all_records.size() > 1) {
+                            calc_height(parent_node.height, get_type_depth(merged_type));
+                        } else {
+                            let max = {
+                                var height = 0;
+                            };
+                            for (node in vec_nodes.vals()) {
+                                if (node.height > max.height) {
+                                    max.height := node.height;
+                                };
+                            };
+                            calc_height(parent_node.height, max.height);
+                        };
+
                         let best_node : CandidTypeNode = {
-                            type_ = #Array(max.type_);
-                            height = calc_height(parent_node.height, max.height);
+                            type_ = #Array(merged_type);
+                            height = final_height;
                             parent_index;
                             key = parent_key;
                         };
@@ -1555,7 +1948,34 @@ module {
             };
 
             if (variants.size() > 0) {
-                let full_variant_type : CandidType = #Variant(Buffer.toArray(variants));
+                // Merge variant types with the same key, choosing the better (more specific) type
+                let merged_variants = Buffer.Buffer<(Text, CandidType)>(variants.size());
+                let variant_map = Map.new<Text, (CandidType, Nat)>(); // key -> (type, height)
+
+                for ((key, variant_type) in variants.vals()) {
+                    switch (Map.get(variant_map, thash, key)) {
+                        case (?existing) {
+                            let (existing_type, existing_height) = existing;
+                            let variant_depth = get_type_depth(variant_type);
+
+                            // Choose the better type
+                            if (is_better_type(variant_type, variant_depth, existing_type, existing_height)) {
+                                ignore Map.put(variant_map, thash, key, (variant_type, variant_depth));
+                            };
+                        };
+                        case (null) {
+                            let variant_depth = get_type_depth(variant_type);
+                            ignore Map.put(variant_map, thash, key, (variant_type, variant_depth));
+                        };
+                    };
+                };
+
+                // Convert map back to array
+                for ((key, (variant_type, _)) in Map.entries(variant_map)) {
+                    merged_variants.add((key, variant_type));
+                };
+
+                let full_variant_type : CandidType = #Variant(Buffer.toArray(merged_variants));
 
                 for (index in variant_indexes.vals()) {
                     let prev_node = buffer.get(index);
@@ -1585,10 +2005,113 @@ module {
         };
     };
 
-    // for most of the typs we can easily retrieve it from the value, but for an array it becomes a bit tricky
-    // because of optional values we can have seemingly different types in the array
-    // for example type [?Nat] with values [null, ?1], for each values will have a inferred type of [#Option(#Null), #Option(#Nat)]
+    // Calculate the width (number of fields) of a type
+    func get_type_width(type_ : CandidType) : Nat {
+        switch (type_) {
+            case (#Record(fields) or #Map(fields)) fields.size();
+            case (#Variant(variants)) variants.size();
+            case (#Tuple(tuple_types)) tuple_types.size();
+            case (#Array(inner)) 1 + get_type_width(inner);
+            case (#Option(inner)) 1 + get_type_width(inner);
+            case (_) 1;
+        };
+    };
+
+    // Calculate the total depth of a type
+    func get_type_depth(type_ : CandidType) : Nat {
+        switch (type_) {
+            case (#Record(fields) or #Map(fields)) {
+                var max_depth = 0;
+                for ((_, field_type) in fields.vals()) {
+                    let depth = get_type_depth(field_type);
+                    if (depth > max_depth) {
+                        max_depth := depth;
+                    };
+                };
+                1 + max_depth;
+            };
+            case (#Variant(variants)) {
+                var max_depth = 0;
+                for ((_, variant_type) in variants.vals()) {
+                    let depth = get_type_depth(variant_type);
+                    if (depth > max_depth) {
+                        max_depth := depth;
+                    };
+                };
+                1 + max_depth;
+            };
+            case (#Tuple(tuple_types)) {
+                var max_depth = 0;
+                for (tuple_type in tuple_types.vals()) {
+                    let depth = get_type_depth(tuple_type);
+                    if (depth > max_depth) {
+                        max_depth := depth;
+                    };
+                };
+                1 + max_depth;
+            };
+            case (#Array(inner)) 1 + get_type_depth(inner);
+            case (#Option(inner)) 1 + get_type_depth(inner);
+            case (#Empty or #Null) 0;
+            case (_) 1;
+        };
+    };
+
+    // Compare two types to determine which is "better" (more specific)
+    // Returns true if type1 is better than type2
+    func is_better_type(type1 : CandidType, height1 : Nat, type2 : CandidType, height2 : Nat) : Bool {
+        // Special case: prefer non-null/non-empty types over null/empty
+        switch (type1, type2) {
+            case (#Null or #Empty, #Null or #Empty) return false; // Both are null/empty
+            case (#Null or #Empty, _) return false; // type2 is better (non-null)
+            case (_, #Null or #Empty) return true; // type1 is better (non-null)
+            case (_) {}; // Continue with other comparisons
+        };
+
+        // Compare Option types specially
+        switch (type1, type2) {
+            case (#Option(inner1), #Option(inner2)) {
+                // Both are options, compare their inner types
+                let inner1_depth = get_type_depth(inner1);
+                let inner2_depth = get_type_depth(inner2);
+                return is_better_type(inner1, inner1_depth, inner2, inner2_depth);
+            };
+            case (#Option(_), _) {
+                // type1 is optional, type2 is not
+                // Generally prefer the non-optional unless type2 is null/empty
+                return false;
+            };
+            case (_, #Option(_)) {
+                // type2 is optional, type1 is not
+                return true;
+            };
+            case (_) {}; // Neither is Option, continue
+        };
+
+        // Compare by depth (height)
+        if (height1 != height2) {
+            return height1 > height2;
+        };
+
+        // If depths are equal, compare by width
+        let width1 = get_type_width(type1);
+        let width2 = get_type_width(type2);
+
+        if (width1 != width2) {
+            return width1 > width2;
+        };
+
+        // All equal, no preference
+        false;
+    };
+
+    // for most of the types we can easily retrieve it from the value, but for an array it becomes a bit tricky
+    // because of optional values we can have different types in the array
+    // for example type [?Nat] with values [null, ?1], will have a inferred type of [#Option(#Null), #Option(#Nat)]
     // We need a way to choose #Option(#Nat) over #Option(#Null) in this case
+    //
+    // todo: Currently works well when there is a difference in the depth of the types (e.g. #Variant("key1", #Nat) vs #Variant("key2", #Record(...)))
+    // todo: However, it fails when there is a difference only in the width of the types (e.g. #Variant("key1", #Record(a: #Nat)) vs #Variant("key2", #Record(a: #Nat, b: #Option(#Nat))))
 
     func order_candid_types_by_height_bfs(rows : Buffer<[InternalCandidTypeNode]>) {
 

@@ -1,14 +1,15 @@
 // @testmode wasi
-import Array "mo:base@0.14.14/Array";
-import Blob "mo:base@0.14.14/Blob";
-import Debug "mo:base@0.14.14/Debug";
-import Iter "mo:base@0.14.14/Iter";
-import Principal "mo:base@0.14.14/Principal";
-import Text "mo:base@0.14.14/Text";
+import Array "mo:base@0.16.0/Array";
+import Blob "mo:base@0.16.0/Blob";
+import Debug "mo:base@0.16.0/Debug";
+import Iter "mo:base@0.16.0/Iter";
+import Principal "mo:base@0.16.0/Principal";
+import Text "mo:base@0.16.0/Text";
 
-import { test; suite } "mo:test@2.1.1";
+import { test; suite } "mo:test";
 
 import Serde "../src";
+import CandidTestUtils "CandidTestUtils";
 
 let { Candid } = Serde;
 
@@ -32,7 +33,9 @@ suite(
                     ("b", #Nat(2)),
                 ]);
 
-                let #ok(record_candid_blob2) = Candid.encode(record_candid, ?options);
+                let RecordType : Candid.CandidType = #Map([("a", #Nat), ("b", #Nat)]);
+
+                let #ok(record_candid_blob2) = CandidTestUtils.encode_with_types([RecordType], record_candid, ?options) else return assert false;
 
                 assert record_candid_blob == record_candid_blob2;
 
@@ -81,7 +84,9 @@ suite(
 
                 let candid_values = Candid.fromICRC3Value([icrc3]);
 
-                let #ok(blob) = Candid.encode(candid_values, null);
+                let UserType : Candid.CandidType = #Record([("name", #Text), ("id", #Nat)]);
+
+                let #ok(blob) = CandidTestUtils.encode_with_types([UserType], candid_values, null) else return assert false;
                 let user : ?User = from_candid (blob);
 
                 assert user == ?{ name = "bar"; id = 112 };

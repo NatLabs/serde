@@ -1,14 +1,14 @@
-import Array "mo:base@0.14.14/Array";
-import Blob "mo:base@0.14.14/Blob";
-import Buffer "mo:base@0.14.14/Buffer";
-import Char "mo:base@0.14.14/Char";
-import Debug "mo:base@0.14.14/Debug";
-import Result "mo:base@0.14.14/Result";
-import TrieMap "mo:base@0.14.14/TrieMap";
-import Nat "mo:base@0.14.14/Nat";
-import Text "mo:base@0.14.14/Text";
-import Iter "mo:base@0.14.14/Iter";
-import Option "mo:base@0.14.14/Option";
+import Array "mo:base@0.16.0/Array";
+import Blob "mo:base@0.16.0/Blob";
+import Buffer "mo:base@0.16.0/Buffer";
+import Char "mo:base@0.16.0/Char";
+import Debug "mo:base@0.16.0/Debug";
+import Result "mo:base@0.16.0/Result";
+import TrieMap "mo:base@0.16.0/TrieMap";
+import Nat "mo:base@0.16.0/Nat";
+import Text "mo:base@0.16.0/Text";
+import Iter "mo:base@0.16.0/Iter";
+import Option "mo:base@0.16.0/Option";
 
 import Itertools "mo:itertools@0.2.2/Iter";
 

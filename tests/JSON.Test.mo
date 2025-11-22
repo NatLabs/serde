@@ -1,10 +1,10 @@
 // @testmode wasi
-import Blob "mo:base@0.14.14/Blob";
-import Debug "mo:base@0.14.14/Debug";
-import Iter "mo:base@0.14.14/Iter";
-import Nat "mo:base@0.14.14/Nat";
+import Blob "mo:base@0.16.0/Blob";
+import Debug "mo:base@0.16.0/Debug";
+import Iter "mo:base@0.16.0/Iter";
+import Nat "mo:base@0.16.0/Nat";
 
-import { test; suite } "mo:test@2.1.1";
+import { test; suite } "mo:test";
 
 import { Candid; JSON } "../src";
 
@@ -149,6 +149,49 @@ suite(
                     account_label = 123;
                     user_query = "?user_id=12&address=2014%20Forest%20Hill%20Drive";
                 };
+            },
+        );
+
+        test(
+            "partial JSON to record",
+            func() {
+
+                type User = { name : Text; id : Int; email : ?Text };
+
+                let text = "{\"name\": \"Tomi\", \"id\": 123 }";
+
+                let #ok(blob) = JSON.fromText(text, null);
+                let user : ?User = from_candid (blob);
+
+                assert user == ?{ name = "Tomi"; id = 123; email = null };
+
+                let text2 = "{ \"name\": \"Tomi\", \"id\": 123, \"email\": \"test@gmail.com\" }";
+                let #ok(blob2) = JSON.fromText(text2, null);
+                let user2 : ?User = from_candid (blob2);
+                assert user2 == ?{
+                    name = "Tomi";
+                    id = 123;
+                    email = ?"test@gmail.com";
+                };
+
+                let jsonText = "[{\"name\": \"John\", \"id\": 123}, {\"name\": \"Jane\", \"id\": 456, \"email\": \"jane@gmail.com\"}]";
+
+                let #ok(blob3) = JSON.fromText(jsonText, null); // you probably want to handle the error case here :)
+                let users : ?[User] = from_candid (blob3);
+                Debug.print(debug_show ({ users }));
+
+                assert users == ?[
+                    {
+                        name = "John";
+                        id = 123;
+                        email = null;
+                    },
+                    {
+                        name = "Jane";
+                        id = 456;
+                        email = ?"jane@gmail.com";
+                    },
+                ];
             },
         );
     },

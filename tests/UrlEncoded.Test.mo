@@ -1,8 +1,8 @@
 // @testmode wasi
-import Debug "mo:base@0.14.14/Debug";
-import Iter "mo:base@0.14.14/Iter";
+import Debug "mo:base@0.16.0/Debug";
+import Iter "mo:base@0.16.0/Iter";
 
-import { test; suite } "mo:test@2.1.1";
+import { test; suite } "mo:test";
 
 import UrlEncoded "../src/UrlEncoded";
 

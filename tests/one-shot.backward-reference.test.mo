@@ -1,17 +1,17 @@
-import Array "mo:base@0.14.14/Array";
-import Blob "mo:base@0.14.14/Blob";
-import Debug "mo:base@0.14.14/Debug";
-import Iter "mo:base@0.14.14/Iter";
-import Principal "mo:base@0.14.14/Principal";
-import Text "mo:base@0.14.14/Text";
-import TrieMap "mo:base@0.14.14/TrieMap";
+import Array "mo:base@0.16.0/Array";
+import Blob "mo:base@0.16.0/Blob";
+import Debug "mo:base@0.16.0/Debug";
+import Iter "mo:base@0.16.0/Iter";
+import Principal "mo:base@0.16.0/Principal";
+import Text "mo:base@0.16.0/Text";
+import TrieMap "mo:base@0.16.0/TrieMap";
 
-import Arg "mo:candid@2.0.0/Arg";
-import Decoder "mo:candid@2.0.0/Decoder";
-import Encoder "mo:candid@2.0.0/Encoder";
-import Type "mo:candid@2.0.0/Type";
-import Value "mo:candid@2.0.0/Value";
-import { test; suite } "mo:test@2.1.1";
+import Arg "mo:candid/Arg";
+import Decoder "mo:candid/Decoder";
+import Encoder "mo:candid/Encoder";
+import Type "mo:candid/Type";
+import Value "mo:candid/Value";
+import { test; suite } "mo:test";
 
 import Candid "../src/Candid";
 import CandidEncoder "../src/Candid/Blob/Encoder";

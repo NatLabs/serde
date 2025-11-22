@@ -74,33 +74,34 @@ module {
 
     public let TypeCode = {
         // primitive types
-        Null : Nat8 = 0x7f;
-        Bool : Nat8 = 0x7e;
-        Nat : Nat8 = 0x7d;
-        Int : Nat8 = 0x7c;
-        Nat8 : Nat8 = 0x7b;
-        Nat16 : Nat8 = 0x7a;
-        Nat32 : Nat8 = 0x79;
-        Nat64 : Nat8 = 0x78;
-        Int8 : Nat8 = 0x77;
-        Int16 : Nat8 = 0x76;
-        Int32 : Nat8 = 0x75;
-        Int64 : Nat8 = 0x74;
-        // Float32 : Nat8 = 0x73;
-        Float : Nat8 = 0x72;
-        Text : Nat8 = 0x71;
-        // Reserved : Nat8 = 0x70;
-        Empty : Nat8 = 0x6f;
-        Principal : Nat8 = 0x68;
+        Null : Nat8 = 0x7f; // 127
+        Bool : Nat8 = 0x7e; // 126
+        Nat : Nat8 = 0x7d; // 125
+        Int : Nat8 = 0x7c; // 124
+        Nat8 : Nat8 = 0x7b; // 123
+        Nat16 : Nat8 = 0x7a; // 122
+        Nat32 : Nat8 = 0x79; // 121
+        Nat64 : Nat8 = 0x78; // 120
+        Int8 : Nat8 = 0x77; // 119
+        Int16 : Nat8 = 0x76; // 118
+        Int32 : Nat8 = 0x75; // 117
+        Int64 : Nat8 = 0x74; // 116
+        // Float32 : Nat8 = 0x73; // 115
+        Float : Nat8 = 0x72; // 114
+        Text : Nat8 = 0x71; // 113
+        // Reserved : Nat8 = 0x70; // 112
+        Empty : Nat8 = 0x6f; // 111
 
         // compound types
 
-        Option : Nat8 = 0x6e;
-        Array : Nat8 = 0x6d;
-        Record : Nat8 = 0x6c;
-        Variant : Nat8 = 0x6b;
-        // Func : Nat8 = 0x6a;
-        // Service : Nat8 = 0x69;
+        Option : Nat8 = 0x6e; // 110
+        Array : Nat8 = 0x6d; // 109
+        Record : Nat8 = 0x6c; // 108
+        Variant : Nat8 = 0x6b; // 107
+        // Func : Nat8 = 0x6a; // 106
+        // Service : Nat8 = 0x69; // 105
+
+        Principal : Nat8 = 0x68; // 104
 
     };
 
@@ -122,12 +123,6 @@ module {
         /// Must call `Candid.formatCandidTypes` before passing in the types
         types : ?[CandidType];
 
-        /// #### Decoding Options
-        /// When decoding, you have the option to pass in the Candid variant type
-        /// and omit the type portion of the candid blob and only pass in the
-        /// serialized values
-        blob_contains_only_values : Bool;
-
     };
 
     public type ICRC3Value = {
@@ -146,7 +141,6 @@ module {
 
         types = null;
 
-        blob_contains_only_values = false;
     };
 
 };

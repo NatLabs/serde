@@ -1,13 +1,13 @@
-import Buffer "mo:base@0.14.14/Buffer";
-import Blob "mo:base@0.14.14/Blob";
-import Int8 "mo:base@0.14.14/Int8";
-import Int16 "mo:base@0.14.14/Int16";
-import Int32 "mo:base@0.14.14/Int32";
-import Int64 "mo:base@0.14.14/Int64";
-import Option "mo:base@0.14.14/Option";
-import Nat64 "mo:base@0.14.14/Nat64";
-import Result "mo:base@0.14.14/Result";
-import Principal "mo:base@0.14.14/Principal";
+import Buffer "mo:base@0.16.0/Buffer";
+import Blob "mo:base@0.16.0/Blob";
+import Int8 "mo:base@0.16.0/Int8";
+import Int16 "mo:base@0.16.0/Int16";
+import Int32 "mo:base@0.16.0/Int32";
+import Int64 "mo:base@0.16.0/Int64";
+import Option "mo:base@0.16.0/Option";
+import Nat64 "mo:base@0.16.0/Nat64";
+import Result "mo:base@0.16.0/Result";
+import Principal "mo:base@0.16.0/Principal";
 
 import CBOR_Types "mo:cbor@4.0.0/Types";
 import CBOR_Encoder "mo:cbor@4.0.0/Encoder";
