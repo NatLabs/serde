@@ -1,115 +1,115 @@
 name: Benchmarks
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - "*"
+    push:
+        branches:
+            - main
+    pull_request:
+        branches:
+            - "*"
 
 jobs:
-  benchmark:
-    runs-on: ubuntu-latest
-    name: Run Benchmarks and Comment
+    benchmark:
+        runs-on: ubuntu-latest
+        name: Run Benchmarks and Comment
 
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-      - name: Cache Node modules
-        uses: actions/cache@v4
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
+        steps:
+            - uses: actions/checkout@v4
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 20
+            - name: Cache Node modules
+              uses: actions/cache@v4
+              with:
+                  path: ~/.npm
+                  key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+                  restore-keys: |
+                      ${{ runner.os }}-node-
 
-      - name: Cache mops packages
-        uses: actions/cache@v4
-        with:
-          key: mops-packages-${{ hashFiles('mops.toml') }}
-          path: |
-            ~/.cache/mops
+            - name: Cache mops packages
+              uses: actions/cache@v4
+              with:
+                  key: mops-packages-${{ hashFiles('mops.toml') }}
+                  path: |
+                      ~/.cache/mops
 
-      - name: Install dfx
-        uses: dfinity/setup-dfx@main
-      - name: Confirm successful installation
-        run: dfx --version
+            - name: Install dfx
+              uses: dfinity/setup-dfx@main
+            - name: Confirm successful installation
+              run: dfx --version
 
-      - name: Install dfx cache
-        run: dfx cache install
+            - name: Install dfx cache
+              run: dfx cache install
 
-      - name: Install mops & mocv
-        run: |
-          npm --yes -g i ic-mops
-          mops i
-          mops toolchain init
+            - name: Install mops & mocv
+              run: |
+                  npm --yes -g i ic-mops
+                  mops i
+                  mops toolchain init
 
-          # set moc path for dfx to use
-          echo "DFX_MOC_PATH=$(mops toolchain bin moc)" >> $GITHUB_ENV
+                  # set moc path for dfx to use
+                  echo "DFX_MOC_PATH=$(mops toolchain bin moc)" >> $GITHUB_ENV
 
-      - name: Create benchmark-results branch if it doesn't exist
-        uses: peterjgrainger/action-create-branch@v2.2.0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          branch: "benchmark-results"
-          sha: "${{ github.event.pull_request.head.sha }}"
-        continue-on-error: true
+            - name: Create benchmark-results branch if it doesn't exist
+              uses: peterjgrainger/action-create-branch@v2.2.0
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              with:
+                  branch: "benchmark-results"
+                  sha: "${{ github.event.pull_request.head.sha }}"
+              continue-on-error: true
 
-      - name: Checkout out the branch with benchmark results
-        uses: actions/checkout@v4
-        with:
-          ref: benchmark-results
-          path: .benchmark-results-branch/
+            - name: Checkout out the branch with benchmark results
+              uses: actions/checkout@v4
+              with:
+                  ref: benchmark-results
+                  path: .benchmark-results-branch/
 
-      - name: Move Saved Benchmarks
-        run: mv .benchmark-results-branch/.bench .bench 2>/dev/null || mkdir -p .bench
+            - name: Move Saved Benchmarks
+              run: mv .benchmark-results-branch/.bench .bench 2>/dev/null || mkdir -p .bench
 
-      - name: Pull Request Benchmarks
-        if: github.event_name == 'pull_request'
-        id: benchmarks
-        run: |
-          mops bench  --gc incremental --compare 2>&1 | tee benchmark_results.txt
-          echo "result<<EOF" >> $GITHUB_OUTPUT
-          cat benchmark_results.txt >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+            - name: Pull Request Benchmarks
+              if: github.event_name == 'pull_request'
+              id: benchmarks
+              run: |
+                  mops bench  --gc generational --compare 2>&1 | tee benchmark_results.txt
+                  echo "result<<EOF" >> $GITHUB_OUTPUT
+                  cat benchmark_results.txt >> $GITHUB_OUTPUT
+                  echo "EOF" >> $GITHUB_OUTPUT
 
-      - name: Find Benchmark Comment
-        if: github.event_name == 'pull_request'
-        uses: peter-evans/find-comment@v3
-        id: fc
-        with:
-          issue-number: ${{ github.event.pull_request.number }}
-          comment-author: "github-actions[bot]"
-          body-includes: Benchmark Results
+            - name: Find Benchmark Comment
+              if: github.event_name == 'pull_request'
+              uses: peter-evans/find-comment@v3
+              id: fc
+              with:
+                  issue-number: ${{ github.event.pull_request.number }}
+                  comment-author: "github-actions[bot]"
+                  body-includes: Benchmark Results
 
-      - name: Create or update comment
-        if: github.event_name == 'pull_request'
-        uses: peter-evans/create-or-update-comment@v4
-        with:
-          comment-id: ${{ steps.fc.outputs.comment-id }}
-          issue-number: ${{ github.event.pull_request.number }}
-          body: ${{ steps.benchmarks.outputs.result }}
-          edit-mode: replace
+            - name: Create or update comment
+              if: github.event_name == 'pull_request'
+              uses: peter-evans/create-or-update-comment@v4
+              with:
+                  comment-id: ${{ steps.fc.outputs.comment-id }}
+                  issue-number: ${{ github.event.pull_request.number }}
+                  body: ${{ steps.benchmarks.outputs.result }}
+                  edit-mode: replace
 
-      - name: Generate Benchmark Results
-        if: github.event_name != 'pull_request'
-        run: |
-          set -o pipefail
-          mops bench  --gc incremental --save --compare 2>&1 | tee bench-results.md
-      - name: Move Generated Results
-        if: github.event_name != 'pull_request'
-        run: |
-          mkdir .bench-br
-          mv .bench .bench-br/.bench
-          mv bench-results.md .bench-br/README.md 2>/dev/null || mkdir -p .bench
-      - name: Upload benchmark results
-        if: github.event_name != 'pull_request'
-        uses: JamesIves/github-pages-deploy-action@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          branch: benchmark-results
-          folder: .bench-br
+            - name: Generate Benchmark Results
+              if: github.event_name != 'pull_request'
+              run: |
+                  set -o pipefail
+                  mops bench  --gc generational --save --compare 2>&1 | tee bench-results.md
+            - name: Move Generated Results
+              if: github.event_name != 'pull_request'
+              run: |
+                  mkdir .bench-br
+                  mv .bench .bench-br/.bench
+                  mv bench-results.md .bench-br/README.md 2>/dev/null || mkdir -p .bench
+            - name: Upload benchmark results
+              if: github.event_name != 'pull_request'
+              uses: JamesIves/github-pages-deploy-action@v4
+              with:
+                  token: ${{ secrets.GITHUB_TOKEN }}
+                  branch: benchmark-results
+                  folder: .bench-br
