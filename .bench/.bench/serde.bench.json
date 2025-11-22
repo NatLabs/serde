@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "moc": "0.16.3",
+  "moc": "0.16.2",
   "replica": "dfx",
   "replicaVersion": "0.29.2",
   "gc": "incremental",
@@ -11,14 +11,14 @@
       {
         "rts_stable_memory_size": 0,
         "stable_memory_size": 0,
-        "instructions": 370326268,
+        "instructions": 580419885,
         "rts_memory_size": 33554432,
-        "rts_total_allocation": 23000188,
-        "rts_collector_instructions": 30177906,
+        "rts_total_allocation": 33469584,
+        "rts_collector_instructions": 30190926,
         "rts_mutator_instructions": -12683,
         "rts_logical_stable_memory_size": 0,
-        "rts_heap_size": -6448332,
-        "rts_reclaimed": 29448520
+        "rts_heap_size": 3520328,
+        "rts_reclaimed": 29949256
       }
     ],
     [
@@ -26,14 +26,14 @@
       {
         "rts_stable_memory_size": 0,
         "stable_memory_size": 0,
-        "instructions": 1450634915,
-        "rts_memory_size": 33554432,
-        "rts_total_allocation": 75464876,
-        "rts_collector_instructions": 2001361,
+        "instructions": 1583526541,
+        "rts_memory_size": 67108864,
+        "rts_total_allocation": 84215168,
+        "rts_collector_instructions": 76175,
         "rts_mutator_instructions": -10215,
         "rts_logical_stable_memory_size": 0,
-        "rts_heap_size": 12774176,
-        "rts_reclaimed": 62690700
+        "rts_heap_size": -12035608,
+        "rts_reclaimed": 96250776
       }
     ],
     [
@@ -41,14 +41,14 @@
       {
         "rts_stable_memory_size": 0,
         "stable_memory_size": 0,
-        "instructions": 464058702,
+        "instructions": 347444140,
         "rts_memory_size": 0,
-        "rts_total_allocation": 27680188,
-        "rts_collector_instructions": -174770,
+        "rts_total_allocation": 22393584,
+        "rts_collector_instructions": 6239,
         "rts_mutator_instructions": -10215,
         "rts_logical_stable_memory_size": 0,
-        "rts_heap_size": -3610860,
-        "rts_reclaimed": 31291048
+        "rts_heap_size": 22393584,
+        "rts_reclaimed": 0
       }
     ],
     [
@@ -56,14 +56,14 @@
       {
         "rts_stable_memory_size": 0,
         "stable_memory_size": 0,
-        "instructions": 1055977484,
+        "instructions": 1122563777,
         "rts_memory_size": 0,
-        "rts_total_allocation": 39513228,
-        "rts_collector_instructions": 1035370,
+        "rts_total_allocation": 42360780,
+        "rts_collector_instructions": 267001,
         "rts_mutator_instructions": -10215,
         "rts_logical_stable_memory_size": 0,
-        "rts_heap_size": 10376976,
-        "rts_reclaimed": 29136252
+        "rts_heap_size": -20335576,
+        "rts_reclaimed": 62696356
       }
     ],
     [
@@ -71,13 +71,13 @@
       {
         "rts_stable_memory_size": 0,
         "stable_memory_size": 0,
-        "instructions": 33969802,
+        "instructions": 33945881,
         "rts_memory_size": 0,
-        "rts_total_allocation": 660376,
-        "rts_collector_instructions": 6245,
+        "rts_total_allocation": 659300,
+        "rts_collector_instructions": 6251,
         "rts_mutator_instructions": -10215,
         "rts_logical_stable_memory_size": 0,
-        "rts_heap_size": 660376,
+        "rts_heap_size": 659300,
         "rts_reclaimed": 0
       }
     ],
@@ -86,13 +86,43 @@
       {
         "rts_stable_memory_size": 0,
         "stable_memory_size": 0,
-        "instructions": 9645870,
+        "instructions": 9618499,
         "rts_memory_size": 0,
-        "rts_total_allocation": 618340,
+        "rts_total_allocation": 616996,
+        "rts_collector_instructions": 6239,
+        "rts_mutator_instructions": -10215,
+        "rts_logical_stable_memory_size": 0,
+        "rts_heap_size": 616996,
+        "rts_reclaimed": 0
+      }
+    ],
+    [
+      "Serde: Single Type Serializer:decode()",
+      {
+        "rts_stable_memory_size": 0,
+        "stable_memory_size": 0,
+        "instructions": 155793437,
+        "rts_memory_size": 0,
+        "rts_total_allocation": 8245992,
+        "rts_collector_instructions": 6251,
+        "rts_mutator_instructions": -10215,
+        "rts_logical_stable_memory_size": 0,
+        "rts_heap_size": 8245992,
+        "rts_reclaimed": 0
+      }
+    ],
+    [
+      "Serde: Single Type Serializer:encode()",
+      {
+        "rts_stable_memory_size": 0,
+        "stable_memory_size": 0,
+        "instructions": 257579501,
+        "rts_memory_size": 0,
+        "rts_total_allocation": 9733404,
         "rts_collector_instructions": 6245,
         "rts_mutator_instructions": -10215,
         "rts_logical_stable_memory_size": 0,
-        "rts_heap_size": 618340,
+        "rts_heap_size": 9733404,
         "rts_reclaimed": 0
       }
     ]
