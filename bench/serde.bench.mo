@@ -18,7 +18,7 @@ module {
         let bench = Bench.Bench();
 
         bench.name("Benchmarking Serde");
-        bench.description("Benchmarking the performance with 10k calls");
+        bench.description("Benchmarking the performance with 1k calls");
 
         bench.rows([
             "Serde: One Shot",

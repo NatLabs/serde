@@ -32,7 +32,7 @@ module {
         let bench = Bench.Bench();
 
         bench.name("Benchmarking Serde by Data Types");
-        bench.description("Performance comparison across all supported Candid data types with 10k operations");
+        bench.description("Performance comparison across all supported Candid data types with 1k operations");
 
         bench.rows([
             // Primitive Types
@@ -101,7 +101,7 @@ module {
         };
 
         let fuzz = Fuzz.create(createGenerator(42));
-        let limit = 1;
+        let limit = 1000;
 
         // Generate test data for each type
         let nat_values = Buffer.Buffer<Nat>(limit);
