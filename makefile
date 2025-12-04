@@ -8,4 +8,4 @@ check:
 	xargs -0 $(shell mops toolchain bin moc) -r $(shell mops sources) -Werror -wasi-system-api
 
 bench:
-	mops bench --gc incremental
+	mops bench --gc generational

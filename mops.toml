@@ -7,22 +7,22 @@ keywords = ["json", "candid", "cbor", "urlencoded", "serialization"]
 license = "MIT"
 
 [dependencies]
-'base@0.16.0' = "0.16.0"
-'itertools@0.2.2' = "0.2.2"
-'xtended-numbers@2.0.0' = "2.0.0"
-'cbor@4.0.0' = "4.0.0"
-'map@9.0.1' = "9.0.1"
-'sha2@0.1.6' = "0.1.6"
-'byte-utils@0.1.2' = "0.1.2"
+"base@0.16.0" = "0.16.0"
+"itertools@0.2.2" = "0.2.2"
+"xtended-numbers@2.0.0" = "2.0.0"
+"cbor@4.0.0" = "4.0.0"
+"map@9.0.1" = "9.0.1"
+"sha2@0.1.6" = "0.1.6"
+"byte-utils@0.1.2" = "0.1.2"
 "base@0.7.3" = "0.7.3"
 
 [dev-dependencies]
 test = "2.1.1"
-'fuzz' = "1.0.0"
-'rep-indy-hash' = "0.1.1"
-'candid' = "2.0.0"
+fuzz = "1.0.0"
+rep-indy-hash = "0.1.1"
+candid = "2.0.0"
 bench = "1.0.0"
 
 [toolchain]
 wasmtime = "33.0.1"
-moc = "0.14.13"
+moc = "0.16.2"
