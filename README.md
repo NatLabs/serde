@@ -1,52 +1,52 @@
 # Benchmark Results
 
 
-2025-11-22 22:26:17.578544107 UTC: [Canister l62sy-yx777-77777-aaabq-cai] Generating test data for all types...
-2025-11-22 22:26:17.578544107 UTC: [Canister l62sy-yx777-77777-aaabq-cai] Generated test data for all types
+2025-12-04 19:52:06.591442556 UTC: [Canister l62sy-yx777-77777-aaabq-cai] Generating test data for all types...
+2025-12-04 19:52:06.591442556 UTC: [Canister l62sy-yx777-77777-aaabq-cai] Generated test data for all types
 
 <details>
 
-<summary>bench/serde.bench.mo $({\color{red}+2.21\%})$</summary>
+<summary>bench/serde.bench.mo $({\color{red}+493744.32\%})$</summary>
 
 ### Benchmarking Serde
 
 _Benchmarking the performance with 10k calls_
 
 
-Instructions: ${\color{red}+0.47\\%}$
-Heap: ${\color{green}-0.01\\%}$
+Instructions: ${\color{red}+34.17\\%}$
+Heap: ${\color{red}+493755.30\\%}$
 Stable Memory: ${\color{gray}0\\%}$
-Garbage Collection: ${\color{red}+1.75\\%}$
+Garbage Collection: ${\color{green}-45.15\\%}$
 
 
 **Instructions**
 
-|                                     |                                decode() |                                encode() |
-| :---------------------------------- | --------------------------------------: | --------------------------------------: |
-| Serde: One Shot                     | 394_433_750 $({\color{green}-0.01\\%})$ | 1_143_639_513 $({\color{red}+3.47\\%})$ |
-| Serde: One Shot sans type inference | 225_556_914 $({\color{green}-0.01\\%})$ |   892_444_207 $({\color{red}+0.09\\%})$ |
-| Motoko (to_candid(), from_candid()) |  31_297_307 $({\color{green}-0.05\\%})$ |   9_046_014 $({\color{green}-0.17\\%})$ |
-| Serde: Single Type Serializer       | 111_925_859 $({\color{green}-0.03\\%})$ |   223_626_155 $({\color{red}+0.47\\%})$ |
+|                                     |                               decode() |                                 encode() |
+| :---------------------------------- | -------------------------------------: | ---------------------------------------: |
+| Serde: One Shot                     | 608_329_078 $({\color{red}+54.22\\%})$ | 1_641_783_284 $({\color{red}+48.54\\%})$ |
+| Serde: One Shot sans type inference | 365_529_353 $({\color{red}+62.03\\%})$ | 1_147_192_946 $({\color{red}+28.66\\%})$ |
+| Motoko (to_candid(), from_candid()) |  34_591_271 $({\color{red}+10.47\\%})$ |      9_683_738 $({\color{red}+6.86\\%})$ |
+| Serde: Single Type Serializer       | 162_233_752 $({\color{red}+44.91\\%})$ |   261_905_755 $({\color{red}+17.67\\%})$ |
 
 
 **Heap**
 
-|                                     |                             decode() |                     encode() |
-| :---------------------------------- | -----------------------------------: | ---------------------------: |
-| Serde: One Shot                     | 1.51 MiB $({\color{green}-0.05\\%})$ | 308 B $({\color{gray}0\\%})$ |
-| Serde: One Shot sans type inference |         272 B $({\color{gray}0\\%})$ | 272 B $({\color{gray}0\\%})$ |
-| Motoko (to_candid(), from_candid()) |         272 B $({\color{gray}0\\%})$ | 272 B $({\color{gray}0\\%})$ |
-| Serde: Single Type Serializer       |         272 B $({\color{gray}0\\%})$ | 272 B $({\color{gray}0\\%})$ |
+|                                     |                                  decode() |                                     encode() |
+| :---------------------------------- | ----------------------------------------: | -------------------------------------------: |
+| Serde: One Shot                     |      3.36 MiB $({\color{red}+122.77\\%})$ | -11.44 MiB $({\color{green}-3895448.05\\%})$ |
+| Serde: One Shot sans type inference | 21.36 MiB $({\color{red}+8235304.41\\%})$ | -19.38 MiB $({\color{green}-7473098.53\\%})$ |
+| Motoko (to_candid(), from_candid()) | 644.54 KiB $({\color{red}+242548.53\\%})$ |    602.96 KiB $({\color{red}+226895.59\\%})$ |
+| Serde: Single Type Serializer       |  7.87 MiB $({\color{red}+3033972.06\\%})$ |     9.29 MiB $({\color{red}+3579745.59\\%})$ |
 
 
 **Garbage Collection**
 
-|                                     |                               decode() |                             encode() |
-| :---------------------------------- | -------------------------------------: | -----------------------------------: |
-| Serde: One Shot                     |  24.64 MiB $({\color{green}-0.01\\%})$ |  67.67 MiB $({\color{red}+8.22\\%})$ |
-| Serde: One Shot sans type inference |  17.55 MiB $({\color{green}-0.01\\%})$ |  34.33 MiB $({\color{red}+1.12\\%})$ |
-| Motoko (to_candid(), from_candid()) | 542.29 KiB $({\color{green}-0.03\\%})$ | 597.19 KiB $({\color{red}+0.00\\%})$ |
-| Serde: Single Type Serializer       |   6.52 MiB $({\color{green}-0.03\\%})$ |    8.4 MiB $({\color{red}+4.75\\%})$ |
+|                                     |                             decode() |                             encode() |
+| :---------------------------------- | -----------------------------------: | -----------------------------------: |
+| Serde: One Shot                     | 28.57 MiB $({\color{red}+15.94\\%})$ | 91.79 MiB $({\color{red}+46.78\\%})$ |
+| Serde: One Shot sans type inference |    0 B $({\color{green}-100.00\\%})$ | 59.79 MiB $({\color{red}+76.08\\%})$ |
+| Motoko (to_candid(), from_candid()) |    0 B $({\color{green}-100.00\\%})$ |    0 B $({\color{green}-100.00\\%})$ |
+| Serde: Single Type Serializer       |    0 B $({\color{green}-100.00\\%})$ |    0 B $({\color{green}-100.00\\%})$ |
 
 
 </details>
@@ -54,122 +54,122 @@ Saving results to .bench/serde.bench.json
 
 <details>
 
-<summary>bench/types.bench.mo $({\color{green}-129.53\%})$</summary>
+<summary>bench/types.bench.mo $({\color{red}+0.74\%})$</summary>
 
 ### Benchmarking Serde by Data Types
 
 _Performance comparison across all supported Candid data types with 10k operations_
 
 
-Instructions: ${\color{green}-31.24\\%}$
-Heap: ${\color{green}-98.29\\%}$
+Instructions: ${\color{red}+2.26\\%}$
+Heap: ${\color{green}-1.52\\%}$
 Stable Memory: ${\color{gray}0\\%}$
 Garbage Collection: ${\color{gray}0\\%}$
 
 
 **Instructions**
 
-|                  |                              encode() |                 encode(sans inference) |                               decode() |                 decode(sans inference) |
-| :--------------- | ------------------------------------: | -------------------------------------: | -------------------------------------: | -------------------------------------: |
-| Nat              |   33_442 $({\color{green}-53.99\\%})$ |    39_615 $({\color{green}-38.58\\%})$ |     9_853 $({\color{green}-32.83\\%})$ |    23_584 $({\color{green}-21.03\\%})$ |
-| Nat8             |   32_868 $({\color{green}-54.43\\%})$ |    39_343 $({\color{green}-38.74\\%})$ |     9_782 $({\color{green}-32.33\\%})$ |    23_830 $({\color{green}-20.49\\%})$ |
-| Nat16            |   33_942 $({\color{green}-53.68\\%})$ |    40_717 $({\color{green}-38.00\\%})$ |    10_538 $({\color{green}-31.38\\%})$ |    24_903 $({\color{green}-20.15\\%})$ |
-| Nat32            |   35_460 $({\color{green}-52.75\\%})$ |    42_536 $({\color{green}-37.22\\%})$ |    11_588 $({\color{green}-30.37\\%})$ |    26_270 $({\color{green}-19.89\\%})$ |
-| Nat64            |   37_969 $({\color{green}-51.20\\%})$ |    45_346 $({\color{green}-35.96\\%})$ |    13_084 $({\color{green}-30.07\\%})$ |    28_083 $({\color{green}-20.16\\%})$ |
-| Int              |   35_787 $({\color{green}-52.48\\%})$ |    43_575 $({\color{green}-36.60\\%})$ |    12_202 $({\color{green}-29.39\\%})$ |    27_518 $({\color{green}-19.22\\%})$ |
-| Int8             |   35_053 $({\color{green}-53.00\\%})$ |    43_143 $({\color{green}-36.83\\%})$ |    11_992 $({\color{green}-29.17\\%})$ |    27_625 $({\color{green}-18.82\\%})$ |
-| Int16            |   36_209 $({\color{green}-52.19\\%})$ |    44_517 $({\color{green}-36.18\\%})$ |    12_748 $({\color{green}-28.51\\%})$ |    28_698 $({\color{green}-18.58\\%})$ |
-| Int32            |   37_716 $({\color{green}-51.33\\%})$ |    46_407 $({\color{green}-35.38\\%})$ |    13_835 $({\color{green}-27.65\\%})$ |    30_102 $({\color{green}-18.33\\%})$ |
-| Int64            |   40_186 $({\color{green}-49.91\\%})$ |    49_219 $({\color{green}-34.24\\%})$ |    15_331 $({\color{green}-27.64\\%})$ |    31_915 $({\color{green}-18.67\\%})$ |
-| Float            |   59_791 $({\color{green}-41.77\\%})$ |    69_059 $({\color{green}-29.18\\%})$ |    39_863 $({\color{green}-18.36\\%})$ |    56_764 $({\color{green}-15.52\\%})$ |
-| Bool             |   37_336 $({\color{green}-51.61\\%})$ |    46_887 $({\color{green}-35.17\\%})$ |    14_082 $({\color{green}-26.98\\%})$ |    31_360 $({\color{green}-17.54\\%})$ |
-| Text             |   41_402 $({\color{green}-49.41\\%})$ |    51_233 $({\color{green}-33.70\\%})$ |    16_956 $({\color{green}-27.25\\%})$ |    34_496 $({\color{green}-18.47\\%})$ |
-| Null             |   37_286 $({\color{green}-51.59\\%})$ |    47_738 $({\color{green}-34.58\\%})$ |    45_104 $({\color{green}-48.92\\%})$ |    55_395 $({\color{green}-33.82\\%})$ |
-| Empty            |   37_642 $({\color{green}-51.39\\%})$ |    48_395 $({\color{green}-34.32\\%})$ |    45_545 $({\color{green}-48.71\\%})$ |    56_062 $({\color{green}-33.59\\%})$ |
-| Principal        |   56_639 $({\color{green}-42.63\\%})$ |    67_401 $({\color{green}-29.12\\%})$ |    24_717 $({\color{green}-26.70\\%})$ |    43_218 $({\color{green}-19.50\\%})$ |
-| Blob             |  149_277 $({\color{green}-38.75\\%})$ |   148_555 $({\color{green}-29.36\\%})$ |    54_077 $({\color{green}-45.08\\%})$ |    72_206 $({\color{green}-38.14\\%})$ |
-| Option(Nat)      |   57_276 $({\color{green}-50.63\\%})$ |    60_197 $({\color{green}-32.35\\%})$ |    19_063 $({\color{green}-29.19\\%})$ |    37_519 $({\color{green}-17.57\\%})$ |
-| Option(Text)     |   60_891 $({\color{green}-49.36\\%})$ |    63_927 $({\color{green}-31.49\\%})$ |    21_620 $({\color{green}-28.98\\%})$ |    40_343 $({\color{green}-18.17\\%})$ |
-| Array(Nat8)      |   70_840 $({\color{green}-48.09\\%})$ |    62_445 $({\color{green}-32.12\\%})$ |    20_536 $({\color{green}-30.56\\%})$ |    39_631 $({\color{green}-18.78\\%})$ |
-| Array(Text)      |  116_466 $({\color{green}-37.76\\%})$ |    92_831 $({\color{green}-27.40\\%})$ |    39_696 $({\color{green}-31.48\\%})$ |    59_063 $({\color{green}-23.72\\%})$ |
-| Array(Record)    |  185_332 $({\color{green}-37.82\\%})$ |   156_656 $({\color{green}-23.32\\%})$ |    55_241 $({\color{green}-25.22\\%})$ |    60_401 $({\color{green}-29.94\\%})$ |
-| Record(Nested)   |  530_923 $({\color{green}-30.24\\%})$ |   426_403 $({\color{green}-19.37\\%})$ |    285_998 $({\color{green}-7.61\\%})$ |    97_357 $({\color{green}-34.45\\%})$ |
-| Variant(Simple)  |   83_944 $({\color{green}-44.01\\%})$ |   103_607 $({\color{green}-26.55\\%})$ |    51_936 $({\color{green}-18.35\\%})$ |    45_003 $({\color{green}-16.77\\%})$ |
-| Variant(Complex) |  659_943 $({\color{green}-31.25\\%})$ |   630_016 $({\color{green}-22.10\\%})$ |    413_052 $({\color{green}-0.97\\%})$ |    84_789 $({\color{green}-31.64\\%})$ |
-| Large Text       | 5_516_208 $({\color{green}-5.37\\%})$ |  5_531_190 $({\color{green}-5.12\\%})$ | 1_385_413 $({\color{green}-27.36\\%})$ | 1_408_105 $({\color{green}-27.10\\%})$ |
-| Large Array      | 5_856_631 $({\color{green}-3.07\\%})$ | 2_436_585 $({\color{green}-10.94\\%})$ |   758_620 $({\color{green}-37.89\\%})$ |   780_981 $({\color{green}-37.21\\%})$ |
-| Deep Nesting     |  387_666 $({\color{green}-38.21\\%})$ |   335_632 $({\color{green}-22.60\\%})$ |    86_149 $({\color{green}-31.13\\%})$ |    82_208 $({\color{green}-32.53\\%})$ |
-| Wide Record      |  623_161 $({\color{green}-26.70\\%})$ |   400_752 $({\color{green}-20.98\\%})$ |      357_486 $({\color{red}+6.14\\%})$ |   206_160 $({\color{green}-37.52\\%})$ |
+|                  |                              encode() |                encode(sans inference) |                               decode() |                 decode(sans inference) |
+| :--------------- | ------------------------------------: | ------------------------------------: | -------------------------------------: | -------------------------------------: |
+| Nat              |         72_692 $({\color{gray}0\\%})$ |    64_494 $({\color{green}-0.00\\%})$ |       15_787 $({\color{red}+7.63\\%})$ |       30_888 $({\color{red}+3.42\\%})$ |
+| Nat8             |         72_122 $({\color{gray}0\\%})$ |    64_223 $({\color{green}-0.00\\%})$ |       15_767 $({\color{red}+9.08\\%})$ |       31_185 $({\color{red}+4.05\\%})$ |
+| Nat16            |      73_423 $({\color{red}+0.20\\%})$ |      65_821 $({\color{red}+0.22\\%})$ |       16_577 $({\color{red}+7.95\\%})$ |       32_312 $({\color{red}+3.60\\%})$ |
+| Nat32            |      75_057 $({\color{red}+0.01\\%})$ |      67_753 $({\color{red}+0.00\\%})$ |       17_682 $({\color{red}+6.24\\%})$ |       33_734 $({\color{red}+2.87\\%})$ |
+| Nat64            |    77_741 $({\color{green}-0.09\\%})$ |    70_735 $({\color{green}-0.10\\%})$ |       19_372 $({\color{red}+3.54\\%})$ |       35_741 $({\color{red}+1.61\\%})$ |
+| Int              |         75_309 $({\color{gray}0\\%})$ |    68_731 $({\color{green}-0.00\\%})$ |       18_401 $({\color{red}+6.48\\%})$ |       35_087 $({\color{red}+3.00\\%})$ |
+| Int8             |         74_577 $({\color{gray}0\\%})$ |    68_298 $({\color{green}-0.00\\%})$ |       18_242 $({\color{red}+7.75\\%})$ |       35_245 $({\color{red}+3.57\\%})$ |
+| Int16            |      75_878 $({\color{red}+0.19\\%})$ |      69_896 $({\color{red}+0.21\\%})$ |       19_052 $({\color{red}+6.85\\%})$ |       36_372 $({\color{red}+3.19\\%})$ |
+| Int32            |      77_680 $({\color{red}+0.24\\%})$ |      71_996 $({\color{red}+0.26\\%})$ |       20_332 $({\color{red}+6.32\\%})$ |       37_969 $({\color{red}+3.02\\%})$ |
+| Int64            |      80_366 $({\color{red}+0.17\\%})$ |      74_980 $({\color{red}+0.18\\%})$ |       22_022 $({\color{red}+3.94\\%})$ |       39_976 $({\color{red}+1.88\\%})$ |
+| Float            |     103_392 $({\color{red}+0.69\\%})$ |      98_226 $({\color{red}+0.72\\%})$ |       50_119 $({\color{red}+2.65\\%})$ |       68_390 $({\color{red}+1.78\\%})$ |
+| Bool             |         77_158 $({\color{gray}0\\%})$ |    72_317 $({\color{green}-0.00\\%})$ |       20_597 $({\color{red}+6.80\\%})$ |       39_245 $({\color{red}+3.19\\%})$ |
+| Text             |    81_477 $({\color{green}-0.45\\%})$ |    76_910 $({\color{green}-0.48\\%})$ |       24_025 $({\color{red}+3.09\\%})$ |       42_935 $({\color{red}+1.47\\%})$ |
+| Null             |         77_016 $({\color{gray}0\\%})$ |    72_965 $({\color{green}-0.00\\%})$ |       89_708 $({\color{red}+1.59\\%})$ |       85_009 $({\color{red}+1.57\\%})$ |
+| Empty            |         77_430 $({\color{gray}0\\%})$ |    73_677 $({\color{green}-0.00\\%})$ |       90_208 $({\color{red}+1.59\\%})$ |       85_732 $({\color{red}+1.55\\%})$ |
+| Principal        |    97_697 $({\color{green}-1.05\\%})$ |    94_054 $({\color{green}-1.09\\%})$ |     32_091 $({\color{green}-4.84\\%})$ |     51_962 $({\color{green}-3.22\\%})$ |
+| Blob             |     248_736 $({\color{red}+2.06\\%})$ |     210_310 $({\color{red}+0.00\\%})$ |     90_867 $({\color{green}-7.72\\%})$ |    108_822 $({\color{green}-6.77\\%})$ |
+| Option(Nat)      |     116_011 $({\color{red}+0.00\\%})$ |      88_984 $({\color{red}+0.00\\%})$ |       28_159 $({\color{red}+4.60\\%})$ |       46_441 $({\color{red}+2.03\\%})$ |
+| Option(Text)     |   119_891 $({\color{green}-0.30\\%})$ |    92_952 $({\color{green}-0.39\\%})$ |       31_279 $({\color{red}+2.75\\%})$ |       49_828 $({\color{red}+1.07\\%})$ |
+| Array(Nat8)      |     144_332 $({\color{red}+5.76\\%})$ |      91_990 $({\color{red}+0.00\\%})$ |       30_802 $({\color{red}+4.15\\%})$ |       49_723 $({\color{red}+1.90\\%})$ |
+| Array(Text)      |     198_093 $({\color{red}+5.86\\%})$ |   125_319 $({\color{green}-2.00\\%})$ |     54_635 $({\color{green}-5.69\\%})$ |     73_828 $({\color{green}-4.65\\%})$ |
+| Array(Record)    |     310_942 $({\color{red}+4.32\\%})$ |     212_131 $({\color{red}+3.84\\%})$ |      87_120 $({\color{red}+17.93\\%})$ |       86_410 $({\color{red}+0.23\\%})$ |
+| Record(Nested)   |     798_534 $({\color{red}+4.92\\%})$ |     558_187 $({\color{red}+5.55\\%})$ |     419_202 $({\color{red}+35.43\\%})$ |    145_404 $({\color{green}-2.09\\%})$ |
+| Variant(Simple)  |     160_343 $({\color{red}+6.94\\%})$ |   140_474 $({\color{green}-0.42\\%})$ |      72_029 $({\color{red}+13.24\\%})$ |       55_348 $({\color{red}+2.37\\%})$ |
+| Variant(Complex) |   1_006_537 $({\color{red}+4.86\\%})$ |     839_090 $({\color{red}+3.75\\%})$ |     587_207 $({\color{red}+40.79\\%})$ |    122_988 $({\color{green}-0.84\\%})$ |
+| Large Text       | 5_686_587 $({\color{green}-2.44\\%})$ | 5_687_171 $({\color{green}-2.44\\%})$ | 1_427_622 $({\color{green}-25.15\\%})$ | 1_451_684 $({\color{green}-24.84\\%})$ |
+| Large Array      |  7_161_925 $({\color{red}+18.54\\%})$ |   2_735_912 $({\color{red}+0.00\\%})$ |   994_844 $({\color{green}-18.55\\%})$ | 1_016_990 $({\color{green}-18.24\\%})$ |
+| Deep Nesting     |     648_113 $({\color{red}+3.30\\%})$ |     454_050 $({\color{red}+4.71\\%})$ |     146_301 $({\color{red}+16.96\\%})$ |      122_856 $({\color{red}+0.84\\%})$ |
+| Wide Record      |   826_163 $({\color{green}-2.83\\%})$ |   492_118 $({\color{green}-2.96\\%})$ |     540_797 $({\color{red}+60.56\\%})$ |    325_083 $({\color{green}-1.48\\%})$ |
 
 
 **Heap**
 
-|                  |                              encode() |             encode(sans inference) |                           decode() |             decode(sans inference) |
-| :--------------- | ------------------------------------: | ---------------------------------: | ---------------------------------: | ---------------------------------: |
-| Nat              |    292 B $({\color{green}-98.55\\%})$ | 272 B $({\color{green}-98.43\\%})$ | 272 B $({\color{green}-97.43\\%})$ | 272 B $({\color{green}-97.42\\%})$ |
-| Nat8             |    288 B $({\color{green}-98.57\\%})$ | 272 B $({\color{green}-98.43\\%})$ | 272 B $({\color{green}-97.42\\%})$ | 272 B $({\color{green}-97.41\\%})$ |
-| Nat16            |    292 B $({\color{green}-98.55\\%})$ | 272 B $({\color{green}-98.43\\%})$ | 272 B $({\color{green}-97.43\\%})$ | 272 B $({\color{green}-97.41\\%})$ |
-| Nat32            |    292 B $({\color{green}-98.56\\%})$ | 272 B $({\color{green}-98.43\\%})$ | 272 B $({\color{green}-97.44\\%})$ | 272 B $({\color{green}-97.42\\%})$ |
-| Nat64            |    296 B $({\color{green}-98.54\\%})$ | 272 B $({\color{green}-98.43\\%})$ | 272 B $({\color{green}-97.46\\%})$ | 272 B $({\color{green}-97.45\\%})$ |
-| Int              |    292 B $({\color{green}-98.55\\%})$ | 272 B $({\color{green}-98.43\\%})$ | 272 B $({\color{green}-97.43\\%})$ | 272 B $({\color{green}-97.42\\%})$ |
-| Int8             |    288 B $({\color{green}-98.57\\%})$ | 272 B $({\color{green}-98.43\\%})$ | 272 B $({\color{green}-97.42\\%})$ | 272 B $({\color{green}-97.41\\%})$ |
-| Int16            |    292 B $({\color{green}-98.55\\%})$ | 272 B $({\color{green}-98.43\\%})$ | 272 B $({\color{green}-97.43\\%})$ | 272 B $({\color{green}-97.41\\%})$ |
-| Int32            |    292 B $({\color{green}-98.56\\%})$ | 272 B $({\color{green}-98.43\\%})$ | 272 B $({\color{green}-97.44\\%})$ | 272 B $({\color{green}-97.42\\%})$ |
-| Int64            |    296 B $({\color{green}-98.54\\%})$ | 272 B $({\color{green}-98.43\\%})$ | 272 B $({\color{green}-97.46\\%})$ | 272 B $({\color{green}-97.45\\%})$ |
-| Float            |    296 B $({\color{green}-98.59\\%})$ | 272 B $({\color{green}-98.49\\%})$ | 272 B $({\color{green}-97.62\\%})$ | 272 B $({\color{green}-97.61\\%})$ |
-| Bool             |    288 B $({\color{green}-98.57\\%})$ | 272 B $({\color{green}-98.43\\%})$ | 272 B $({\color{green}-97.42\\%})$ | 272 B $({\color{green}-97.41\\%})$ |
-| Text             |    296 B $({\color{green}-98.54\\%})$ | 272 B $({\color{green}-98.43\\%})$ | 272 B $({\color{green}-97.47\\%})$ | 272 B $({\color{green}-97.46\\%})$ |
-| Null             |    272 B $({\color{green}-98.65\\%})$ | 272 B $({\color{green}-98.42\\%})$ | 272 B $({\color{green}-98.68\\%})$ | 272 B $({\color{green}-98.45\\%})$ |
-| Empty            |    272 B $({\color{green}-98.65\\%})$ | 272 B $({\color{green}-98.42\\%})$ | 272 B $({\color{green}-98.68\\%})$ | 272 B $({\color{green}-98.45\\%})$ |
-| Principal        |    320 B $({\color{green}-98.44\\%})$ | 272 B $({\color{green}-98.45\\%})$ | 272 B $({\color{green}-97.61\\%})$ | 272 B $({\color{green}-97.60\\%})$ |
-| Blob             |    388 B $({\color{green}-98.66\\%})$ | 272 B $({\color{green}-98.79\\%})$ | 272 B $({\color{green}-98.33\\%})$ | 272 B $({\color{green}-98.30\\%})$ |
-| Option(Nat)      |    296 B $({\color{green}-98.73\\%})$ | 272 B $({\color{green}-98.46\\%})$ | 272 B $({\color{green}-97.51\\%})$ | 272 B $({\color{green}-97.45\\%})$ |
-| Option(Text)     |    300 B $({\color{green}-98.72\\%})$ | 272 B $({\color{green}-98.47\\%})$ | 272 B $({\color{green}-97.55\\%})$ | 272 B $({\color{green}-97.49\\%})$ |
-| Array(Nat8)      |    296 B $({\color{green}-98.82\\%})$ | 272 B $({\color{green}-98.47\\%})$ | 272 B $({\color{green}-97.54\\%})$ | 272 B $({\color{green}-97.48\\%})$ |
-| Array(Text)      |    340 B $({\color{green}-98.70\\%})$ | 272 B $({\color{green}-98.53\\%})$ | 272 B $({\color{green}-97.88\\%})$ | 272 B $({\color{green}-97.83\\%})$ |
-| Array(Record)    |    320 B $({\color{green}-99.04\\%})$ | 272 B $({\color{green}-98.73\\%})$ | 272 B $({\color{green}-98.06\\%})$ | 272 B $({\color{green}-97.97\\%})$ |
-| Record(Nested)   |    408 B $({\color{green}-99.26\\%})$ | 272 B $({\color{green}-99.15\\%})$ | 272 B $({\color{green}-98.86\\%})$ | 272 B $({\color{green}-98.43\\%})$ |
-| Variant(Simple)  |    304 B $({\color{green}-98.78\\%})$ | 272 B $({\color{green}-98.56\\%})$ | 272 B $({\color{green}-97.82\\%})$ | 272 B $({\color{green}-97.47\\%})$ |
-| Variant(Complex) |    396 B $({\color{green}-99.39\\%})$ | 272 B $({\color{green}-99.36\\%})$ | 272 B $({\color{green}-99.00\\%})$ | 272 B $({\color{green}-98.23\\%})$ |
-| Large Text       | 5.07 KiB $({\color{green}-96.46\\%})$ | 272 B $({\color{green}-99.81\\%})$ | 272 B $({\color{green}-99.80\\%})$ | 272 B $({\color{green}-99.80\\%})$ |
-| Large Array      |  2.6 KiB $({\color{green}-98.84\\%})$ | 272 B $({\color{green}-99.71\\%})$ | 272 B $({\color{green}-99.69\\%})$ | 272 B $({\color{green}-99.69\\%})$ |
-| Deep Nesting     |    332 B $({\color{green}-99.39\\%})$ | 272 B $({\color{green}-99.09\\%})$ | 272 B $({\color{green}-98.40\\%})$ | 272 B $({\color{green}-98.23\\%})$ |
-| Wide Record      |    472 B $({\color{green}-98.97\\%})$ | 272 B $({\color{green}-98.99\\%})$ | 272 B $({\color{green}-99.10\\%})$ | 272 B $({\color{green}-99.06\\%})$ |
+|                  |                                encode() |                  encode(sans inference) |                               decode() |                 decode(sans inference) |
+| :--------------- | --------------------------------------: | --------------------------------------: | -------------------------------------: | -------------------------------------: |
+| Nat              |        19.73 KiB $({\color{gray}0\\%})$ |   16.88 KiB $({\color{green}-0.02\\%})$ |    10.43 KiB $({\color{red}+0.79\\%})$ |    10.37 KiB $({\color{red}+0.76\\%})$ |
+| Nat8             |        19.72 KiB $({\color{gray}0\\%})$ |   16.86 KiB $({\color{green}-0.02\\%})$ |    10.43 KiB $({\color{red}+1.18\\%})$ |    10.37 KiB $({\color{red}+1.14\\%})$ |
+| Nat16            |     19.75 KiB $({\color{red}+0.10\\%})$ |     16.89 KiB $({\color{red}+0.09\\%})$ |    10.43 KiB $({\color{red}+0.98\\%})$ |    10.37 KiB $({\color{red}+0.95\\%})$ |
+| Nat32            |     19.76 KiB $({\color{red}+0.14\\%})$ |     16.91 KiB $({\color{red}+0.14\\%})$ |    10.43 KiB $({\color{red}+0.60\\%})$ |    10.37 KiB $({\color{red}+0.57\\%})$ |
+| Nat64            |      19.8 KiB $({\color{red}+0.22\\%})$ |     16.94 KiB $({\color{red}+0.23\\%})$ |  10.44 KiB $({\color{green}-0.15\\%})$ |  10.38 KiB $({\color{green}-0.19\\%})$ |
+| Int              |        19.73 KiB $({\color{gray}0\\%})$ |   16.88 KiB $({\color{green}-0.02\\%})$ |    10.43 KiB $({\color{red}+0.79\\%})$ |    10.37 KiB $({\color{red}+0.76\\%})$ |
+| Int8             |        19.72 KiB $({\color{gray}0\\%})$ |   16.86 KiB $({\color{green}-0.02\\%})$ |    10.43 KiB $({\color{red}+1.18\\%})$ |    10.37 KiB $({\color{red}+1.14\\%})$ |
+| Int16            |     19.75 KiB $({\color{red}+0.10\\%})$ |     16.89 KiB $({\color{red}+0.09\\%})$ |    10.43 KiB $({\color{red}+0.98\\%})$ |    10.37 KiB $({\color{red}+0.95\\%})$ |
+| Int32            |     19.77 KiB $({\color{red}+0.20\\%})$ |     16.92 KiB $({\color{red}+0.21\\%})$ |    10.44 KiB $({\color{red}+0.72\\%})$ |    10.38 KiB $({\color{red}+0.68\\%})$ |
+| Int64            |     19.81 KiB $({\color{red}+0.30\\%})$ |     16.96 KiB $({\color{red}+0.32\\%})$ |       10.46 KiB $({\color{gray}0\\%})$ |   10.4 KiB $({\color{green}-0.04\\%})$ |
+| Float            |     20.48 KiB $({\color{red}+0.19\\%})$ |     17.63 KiB $({\color{red}+0.20\\%})$ |    11.24 KiB $({\color{red}+0.74\\%})$ |    11.18 KiB $({\color{red}+0.70\\%})$ |
+| Bool             |        19.72 KiB $({\color{gray}0\\%})$ |   16.86 KiB $({\color{green}-0.02\\%})$ |    10.43 KiB $({\color{red}+1.18\\%})$ |    10.37 KiB $({\color{red}+1.14\\%})$ |
+| Text             |   19.75 KiB $({\color{green}-0.18\\%})$ |   16.89 KiB $({\color{green}-0.23\\%})$ |       10.52 KiB $({\color{gray}0\\%})$ |  10.46 KiB $({\color{green}-0.04\\%})$ |
+| Null             |        19.68 KiB $({\color{gray}0\\%})$ |   16.83 KiB $({\color{green}-0.02\\%})$ |    20.26 KiB $({\color{red}+0.70\\%})$ |    17.32 KiB $({\color{red}+0.80\\%})$ |
+| Empty            |        19.68 KiB $({\color{gray}0\\%})$ |   16.83 KiB $({\color{green}-0.02\\%})$ |    20.26 KiB $({\color{red}+0.70\\%})$ |    17.32 KiB $({\color{red}+0.80\\%})$ |
+| Principal        |   19.91 KiB $({\color{green}-0.62\\%})$ |   17.05 KiB $({\color{green}-0.75\\%})$ |  10.66 KiB $({\color{green}-4.21\\%})$ |   10.6 KiB $({\color{green}-4.27\\%})$ |
+| Blob             |     28.84 KiB $({\color{red}+2.27\\%})$ |   22.04 KiB $({\color{green}-0.02\\%})$ | 14.21 KiB $({\color{green}-10.79\\%})$ | 13.93 KiB $({\color{green}-11.09\\%})$ |
+| Option(Nat)      |        22.75 KiB $({\color{gray}0\\%})$ |   17.29 KiB $({\color{green}-0.02\\%})$ |    10.74 KiB $({\color{red}+0.73\\%})$ |    10.46 KiB $({\color{red}+0.56\\%})$ |
+| Option(Text)     |   22.77 KiB $({\color{green}-0.15\\%})$ |   17.32 KiB $({\color{green}-0.23\\%})$ |  10.84 KiB $({\color{green}-0.04\\%})$ |  10.55 KiB $({\color{green}-0.22\\%})$ |
+| Array(Nat8)      |     25.22 KiB $({\color{red}+3.13\\%})$ |   17.39 KiB $({\color{green}-0.02\\%})$ |    10.89 KiB $({\color{red}+0.72\\%})$ |    10.61 KiB $({\color{red}+0.56\\%})$ |
+| Array(Text)      |     26.36 KiB $({\color{red}+3.01\\%})$ |   17.77 KiB $({\color{green}-1.39\\%})$ |  11.68 KiB $({\color{green}-6.77\\%})$ |  11.39 KiB $({\color{green}-7.07\\%})$ |
+| Array(Record)    |      33.5 KiB $({\color{red}+2.82\\%})$ |     21.23 KiB $({\color{red}+1.21\\%})$ |     14.2 KiB $({\color{red}+3.44\\%})$ |  12.96 KiB $({\color{green}-0.78\\%})$ |
+| Record(Nested)   |     55.37 KiB $({\color{red}+3.49\\%})$ |     32.36 KiB $({\color{red}+3.05\\%})$ |   26.23 KiB $({\color{red}+12.18\\%})$ |  16.11 KiB $({\color{green}-4.98\\%})$ |
+| Variant(Simple)  |     25.58 KiB $({\color{red}+5.15\\%})$ |   18.38 KiB $({\color{green}-0.21\\%})$ |    12.48 KiB $({\color{red}+2.63\\%})$ |    10.62 KiB $({\color{red}+1.12\\%})$ |
+| Variant(Complex) |      66.8 KiB $({\color{red}+4.82\\%})$ |     42.62 KiB $({\color{red}+2.55\\%})$ |   31.35 KiB $({\color{red}+18.13\\%})$ |  14.52 KiB $({\color{green}-3.20\\%})$ |
+| Large Text       | 123.98 KiB $({\color{green}-13.40\\%})$ | 121.13 KiB $({\color{green}-13.67\\%})$ | 39.23 KiB $({\color{green}-70.93\\%})$ | 39.18 KiB $({\color{green}-70.96\\%})$ |
+| Large Array      |   273.89 KiB $({\color{red}+22.27\\%})$ |    90.6 KiB $({\color{green}-0.00\\%})$ | 38.51 KiB $({\color{green}-54.49\\%})$ | 38.23 KiB $({\color{green}-54.69\\%})$ |
+| Deep Nesting     |     54.22 KiB $({\color{red}+1.98\\%})$ |     30.07 KiB $({\color{red}+3.27\\%})$ |    18.3 KiB $({\color{red}+10.13\\%})$ |    15.09 KiB $({\color{red}+0.52\\%})$ |
+| Wide Record      |     45.81 KiB $({\color{red}+2.60\\%})$ |     27.46 KiB $({\color{red}+4.32\\%})$ |   36.48 KiB $({\color{red}+22.92\\%})$ |  27.13 KiB $({\color{green}-3.68\\%})$ |
 
 
 **Garbage Collection**
 
-|                  |                                 encode() |                   encode(sans inference) |                                decode() |                  decode(sans inference) |
-| :--------------- | ---------------------------------------: | ---------------------------------------: | --------------------------------------: | --------------------------------------: |
-| Nat              |   25.2 KiB $({\color{red}+Infinity\\%})$ |  22.82 KiB $({\color{red}+Infinity\\%})$ | 16.87 KiB $({\color{red}+Infinity\\%})$ | 16.82 KiB $({\color{red}+Infinity\\%})$ |
-| Nat8             |  25.19 KiB $({\color{red}+Infinity\\%})$ |   22.8 KiB $({\color{red}+Infinity\\%})$ | 16.87 KiB $({\color{red}+Infinity\\%})$ | 16.82 KiB $({\color{red}+Infinity\\%})$ |
-| Nat16            |  25.21 KiB $({\color{red}+Infinity\\%})$ |  22.83 KiB $({\color{red}+Infinity\\%})$ | 16.87 KiB $({\color{red}+Infinity\\%})$ | 16.82 KiB $({\color{red}+Infinity\\%})$ |
-| Nat32            |  25.22 KiB $({\color{red}+Infinity\\%})$ |  22.84 KiB $({\color{red}+Infinity\\%})$ | 16.87 KiB $({\color{red}+Infinity\\%})$ | 16.82 KiB $({\color{red}+Infinity\\%})$ |
-| Nat64            |  25.25 KiB $({\color{red}+Infinity\\%})$ |  22.88 KiB $({\color{red}+Infinity\\%})$ | 16.88 KiB $({\color{red}+Infinity\\%})$ | 16.84 KiB $({\color{red}+Infinity\\%})$ |
-| Int              |   25.2 KiB $({\color{red}+Infinity\\%})$ |  22.82 KiB $({\color{red}+Infinity\\%})$ | 16.87 KiB $({\color{red}+Infinity\\%})$ | 16.82 KiB $({\color{red}+Infinity\\%})$ |
-| Int8             |  25.19 KiB $({\color{red}+Infinity\\%})$ |   22.8 KiB $({\color{red}+Infinity\\%})$ | 16.87 KiB $({\color{red}+Infinity\\%})$ | 16.82 KiB $({\color{red}+Infinity\\%})$ |
-| Int16            |  25.21 KiB $({\color{red}+Infinity\\%})$ |  22.83 KiB $({\color{red}+Infinity\\%})$ | 16.87 KiB $({\color{red}+Infinity\\%})$ | 16.82 KiB $({\color{red}+Infinity\\%})$ |
-| Int32            |  25.23 KiB $({\color{red}+Infinity\\%})$ |  22.85 KiB $({\color{red}+Infinity\\%})$ | 16.88 KiB $({\color{red}+Infinity\\%})$ | 16.83 KiB $({\color{red}+Infinity\\%})$ |
-| Int64            |  25.27 KiB $({\color{red}+Infinity\\%})$ |  22.89 KiB $({\color{red}+Infinity\\%})$ | 16.89 KiB $({\color{red}+Infinity\\%})$ | 16.85 KiB $({\color{red}+Infinity\\%})$ |
-| Float            |  25.84 KiB $({\color{red}+Infinity\\%})$ |  23.46 KiB $({\color{red}+Infinity\\%})$ | 17.57 KiB $({\color{red}+Infinity\\%})$ | 17.53 KiB $({\color{red}+Infinity\\%})$ |
-| Bool             |  25.19 KiB $({\color{red}+Infinity\\%})$ |   22.8 KiB $({\color{red}+Infinity\\%})$ | 16.87 KiB $({\color{red}+Infinity\\%})$ | 16.82 KiB $({\color{red}+Infinity\\%})$ |
-| Text             |  25.21 KiB $({\color{red}+Infinity\\%})$ |  22.84 KiB $({\color{red}+Infinity\\%})$ | 16.95 KiB $({\color{red}+Infinity\\%})$ |  16.9 KiB $({\color{red}+Infinity\\%})$ |
-| Null             |  25.18 KiB $({\color{red}+Infinity\\%})$ |  22.78 KiB $({\color{red}+Infinity\\%})$ | 25.64 KiB $({\color{red}+Infinity\\%})$ | 23.17 KiB $({\color{red}+Infinity\\%})$ |
-| Empty            |  25.18 KiB $({\color{red}+Infinity\\%})$ |  22.78 KiB $({\color{red}+Infinity\\%})$ | 25.64 KiB $({\color{red}+Infinity\\%})$ | 23.17 KiB $({\color{red}+Infinity\\%})$ |
-| Principal        |  25.34 KiB $({\color{red}+Infinity\\%})$ |  22.99 KiB $({\color{red}+Infinity\\%})$ | 17.09 KiB $({\color{red}+Infinity\\%})$ | 17.04 KiB $({\color{red}+Infinity\\%})$ |
-| Blob             |  32.69 KiB $({\color{red}+Infinity\\%})$ |  27.12 KiB $({\color{red}+Infinity\\%})$ | 19.85 KiB $({\color{red}+Infinity\\%})$ | 19.62 KiB $({\color{red}+Infinity\\%})$ |
-| Option(Nat)      |   27.7 KiB $({\color{red}+Infinity\\%})$ |  23.16 KiB $({\color{red}+Infinity\\%})$ | 17.13 KiB $({\color{red}+Infinity\\%})$ | 16.89 KiB $({\color{red}+Infinity\\%})$ |
-| Option(Text)     |  27.72 KiB $({\color{red}+Infinity\\%})$ |  23.18 KiB $({\color{red}+Infinity\\%})$ |  17.2 KiB $({\color{red}+Infinity\\%})$ | 16.97 KiB $({\color{red}+Infinity\\%})$ |
-| Array(Nat8)      |  29.77 KiB $({\color{red}+Infinity\\%})$ |  23.24 KiB $({\color{red}+Infinity\\%})$ | 17.24 KiB $({\color{red}+Infinity\\%})$ | 17.01 KiB $({\color{red}+Infinity\\%})$ |
-| Array(Text)      |  30.73 KiB $({\color{red}+Infinity\\%})$ |  23.59 KiB $({\color{red}+Infinity\\%})$ | 17.89 KiB $({\color{red}+Infinity\\%})$ | 17.66 KiB $({\color{red}+Infinity\\%})$ |
-| Array(Record)    |  36.64 KiB $({\color{red}+Infinity\\%})$ |  26.44 KiB $({\color{red}+Infinity\\%})$ | 19.94 KiB $({\color{red}+Infinity\\%})$ | 18.93 KiB $({\color{red}+Infinity\\%})$ |
-| Record(Nested)   |  54.81 KiB $({\color{red}+Infinity\\%})$ |  35.73 KiB $({\color{red}+Infinity\\%})$ |  29.8 KiB $({\color{red}+Infinity\\%})$ | 21.47 KiB $({\color{red}+Infinity\\%})$ |
-| Variant(Simple)  |  30.06 KiB $({\color{red}+Infinity\\%})$ |  24.08 KiB $({\color{red}+Infinity\\%})$ | 18.58 KiB $({\color{red}+Infinity\\%})$ | 17.03 KiB $({\color{red}+Infinity\\%})$ |
-| Variant(Complex) |   64.2 KiB $({\color{red}+Infinity\\%})$ |  44.11 KiB $({\color{red}+Infinity\\%})$ | 34.19 KiB $({\color{red}+Infinity\\%})$ | 20.17 KiB $({\color{red}+Infinity\\%})$ |
-| Large Text       | 124.63 KiB $({\color{red}+Infinity\\%})$ | 127.04 KiB $({\color{red}+Infinity\\%})$ | 45.66 KiB $({\color{red}+Infinity\\%})$ | 45.62 KiB $({\color{red}+Infinity\\%})$ |
-| Large Array      | 248.38 KiB $({\color{red}+Infinity\\%})$ |  90.29 KiB $({\color{red}+Infinity\\%})$ | 38.73 KiB $({\color{red}+Infinity\\%})$ |  38.5 KiB $({\color{red}+Infinity\\%})$ |
-| Deep Nesting     |  53.77 KiB $({\color{red}+Infinity\\%})$ |  33.74 KiB $({\color{red}+Infinity\\%})$ | 23.25 KiB $({\color{red}+Infinity\\%})$ | 20.66 KiB $({\color{red}+Infinity\\%})$ |
-| Wide Record      |  46.96 KiB $({\color{red}+Infinity\\%})$ |  31.94 KiB $({\color{red}+Infinity\\%})$ |    38 KiB $({\color{red}+Infinity\\%})$ |  30.5 KiB $({\color{red}+Infinity\\%})$ |
+|                  |                   encode() |     encode(sans inference) |                   decode() |     decode(sans inference) |
+| :--------------- | -------------------------: | -------------------------: | -------------------------: | -------------------------: |
+| Nat              | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ |
+| Nat8             | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ |
+| Nat16            | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ |
+| Nat32            | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ |
+| Nat64            | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ |
+| Int              | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ |
+| Int8             | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ |
+| Int16            | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ |
+| Int32            | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ |
+| Int64            | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ |
+| Float            | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ |
+| Bool             | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ |
+| Text             | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ |
+| Null             | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ |
+| Empty            | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ |
+| Principal        | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ |
+| Blob             | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ |
+| Option(Nat)      | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ |
+| Option(Text)     | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ |
+| Array(Nat8)      | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ |
+| Array(Text)      | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ |
+| Array(Record)    | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ |
+| Record(Nested)   | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ |
+| Variant(Simple)  | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ |
+| Variant(Complex) | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ |
+| Large Text       | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ |
+| Large Array      | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ |
+| Deep Nesting     | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ |
+| Wide Record      | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ | 0 B $({\color{gray}0\\%})$ |
 
 
 </details>
