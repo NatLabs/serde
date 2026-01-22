@@ -2,7 +2,7 @@
 
 import Array "mo:core/Array";
 import Text "mo:core/Text";
-import Map "mo:map@9.0.1/Map";
+import PureMap "mo:core/pure/Map";
 
 import CandidEncoder "Blob/Encoder";
 import Decoder "Blob/Decoder";
@@ -18,7 +18,6 @@ import Utils "../Utils";
 import ICRC3Value "ICRC3Value";
 
 module {
-    let { thash } = Map;
 
     /// A representation of the Candid format with variants for all possible types.
     public type Candid = T.Candid;
@@ -50,12 +49,12 @@ module {
     /// Additionally, all fields that have a name mapping added as a 'renameKeys' option should add the mapping to the function or rename the keys in the Candid type before passing it to the encoder/decoder
     /// Failure to do so will result in unexpected behavior
     public func formatCandidType(c : [CandidType], opt_rename_keys : ?[(Text, Text)]) : [CandidType] {
-        let renaming_map = Map.new<Text, Text>();
+        var renaming_map = PureMap.empty<Text, Text>();
 
         switch (opt_rename_keys) {
             case (?rename_keys) {
                 for ((prev, new) in rename_keys.vals()) {
-                    ignore Map.put(renaming_map, thash, prev, new);
+                    renaming_map := PureMap.add(renaming_map, Text.compare, prev, new);
                 };
             };
             case (_) {};

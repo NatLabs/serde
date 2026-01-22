@@ -16,8 +16,6 @@ import Blob "mo:core/Blob";
 import Prelude "mo:base/Prelude";
 import Debug "mo:core/Debug";
 import Itertools "mo:itertools@0.2.2/Iter";
-import Map "mo:map@9.0.1/Map";
-import MapConst "mo:map@9.0.1/Map/const";
 
 import ByteUtils "mo:byte-utils@0.1.2";
 
@@ -26,15 +24,6 @@ module {
     type Iter<A> = Iter.Iter<A>;
     type Buffer<A> = Buffer.Buffer<A>;
     type Result<A, B> = Result.Result<A, B>;
-
-    public func create_map<K, V>(map_size : Nat) : Map.Map<K, V> = [
-        var ?(
-            Array.init<?K>(map_size, null),
-            Array.init<?V>(map_size, null),
-            Array.init<Nat>(map_size * 2, MapConst.NULL),
-            Array.init<Nat32>(3, 0),
-        )
-    ];
 
     /// Function copied from mo:candid/Tag: https://github.com/edjCase/motoko_candid/blob/d038b7bd953fb8826ae66a5f34bf06dcc29b2e0f/src/Tag.mo#L14-L30
     ///

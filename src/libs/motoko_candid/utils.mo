@@ -19,7 +19,7 @@ import Text "mo:core/Text";
 import Order "mo:core/Order";
 import Func "mo:core/Func";
 import Char "mo:core/Char";
-import TrieMap "mo:core/TrieMap";
+import PureMap "mo:core/pure/Map";
 import Int16 "mo:core/Int16";
 
 import Arg "mo:candid/Arg";
@@ -28,7 +28,6 @@ import Type "mo:candid/Type";
 import Tag "mo:candid/Tag";
 import Itertools "mo:itertools@0.2.2/Iter";
 import PeekableIter "mo:itertools@0.2.2/PeekableIter";
-import Map "mo:map@9.0.1/Map";
 import FloatX "mo:xtended-numbers/FloatX";
 
 import T "../../Candid/Types";
@@ -42,12 +41,11 @@ module {
     type Value = Value.Value;
     type RecordFieldType = Type.RecordFieldType;
     type RecordFieldValue = Value.RecordFieldValue;
-    type TrieMap<K, V> = TrieMap.TrieMap<K, V>;
+    type PureMapType<K, V> = PureMap.Map<K, V>;
     type Result<A, B> = Result.Result<A, B>;
     type Buffer<A> = Buffer.Buffer<A>;
     type Iter<A> = Iter.Iter<A>;
     type Hash = Nat32;
-    type Map<K, V> = Map.Map<K, V>;
     type Order = Order.Order;
 
     type Candid = T.Candid;
@@ -107,7 +105,7 @@ module {
             };
         };
     };
-    public func toArgs(candid_values : [Candid], renaming_map : TrieMap<Text, Text>) : Result<[Arg], Text> {
+    public func toArgs(candid_values : [Candid], renaming_map : PureMapType<Text, Text>) : Result<[Arg], Text> {
         let buffer = Buffer.Buffer<Arg>(candid_values.size());
 
         for (candid in candid_values.vals()) {
@@ -150,7 +148,7 @@ module {
 
     type InternalType = Type.PrimitiveType or InternalCompoundType;
 
-    func toArgTypeAndValue(candid : Candid, renaming_map : TrieMap<Text, Text>) : (InternalType, Value) {
+    func toArgTypeAndValue(candid : Candid, renaming_map : PureMapType<Text, Text>) : (InternalType, Value) {
         let (arg_type, arg_value) : (InternalType, Value) = switch (candid) {
             case (#Nat(n)) (#nat, #nat(n));
             case (#Nat8(n)) (#nat8, #nat8(n));
@@ -571,8 +569,8 @@ module {
         };
     };
 
-    func get_renamed_key(renaming_map : TrieMap<Text, Text>, key : Text) : Text {
-        switch (renaming_map.get(key)) {
+    func get_renamed_key(renaming_map : PureMapType<Text, Text>, key : Text) : Text {
+        switch (PureMap.get(renaming_map, Text.compare, key)) {
             case (?v) v;
             case (_) key;
         };

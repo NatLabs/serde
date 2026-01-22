@@ -4,7 +4,7 @@ import Debug "mo:core/Debug";
 import Iter "mo:core/Iter";
 import Principal "mo:core/Principal";
 import Text "mo:core/Text";
-import TrieMap "mo:core/TrieMap";
+import PureMap "mo:core/pure/Map";
 
 import Arg "mo:candid/Arg";
 import Decoder "mo:candid/Decoder";
@@ -20,7 +20,7 @@ import { toArgs; toArgType } "../src/libs/motoko_candid/utils";
 
 type CandidType = Candid.CandidType;
 
-let empty_map = TrieMap.TrieMap<Text, Text>(Text.equal, Text.hash);
+let empty_map = PureMap.empty<Text, Text>();
 
 func validate_encoding(candid_values : [Candid.Candid]) : Bool {
     Debug.print("candid_values: " # debug_show candid_values);

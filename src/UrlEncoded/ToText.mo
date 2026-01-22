@@ -2,7 +2,7 @@ import Result "mo:core/Result";
 import Nat "mo:core/Nat";
 import Nat32 "mo:core/Nat32";
 import Text "mo:core/Text";
-import TrieMap "mo:core/TrieMap";
+import PureMap "mo:core/pure/Map";
 import Iter "mo:core/Iter";
 import Float "mo:core/Float";
 import Principal "mo:core/Principal";
@@ -17,7 +17,7 @@ import CandidType "../Candid/Types";
 
 module {
     type Candid = Candid.Candid;
-    type TrieMap<K, V> = TrieMap.TrieMap<K, V>;
+    type Map<K, V> = PureMap.Map<K, V>;
     type Result<K, V> = Result.Result<K, V>;
 
     /// Converts a serialized Candid blob to a URL-Encoded string.
@@ -35,16 +35,16 @@ module {
             case (_) return #err("invalid type: the value must be a record");
         };
 
-        let pairs = TrieMap.TrieMap<Text, Text>(Text.equal, Text.hash);
+        var pairs = PureMap.empty<Text, Text>();
 
         for ((key, value) in records.vals()) {
-            toKeyValuePairs(pairs, key, value);
+            pairs := toKeyValuePairs(pairs, key, value);
         };
 
         var url_encoding = "";
 
         let entries = Iter.map(
-            pairs.entries(),
+            PureMap.entries(pairs),
             func((key, value) : (Text, Text)) : Text {
                 key # "=" # value;
             },
@@ -62,23 +62,27 @@ module {
     };
 
     func toKeyValuePairs(
-        pairs : TrieMap<Text, Text>,
+        pairs : Map<Text, Text>,
         storedKey : Text,
         candid : Candid,
-    ) {
+    ) : Map<Text, Text> {
         switch (candid) {
             case (#Array(arr)) {
+                var result = pairs;
                 for ((i, value) in itertools.enumerate(arr.vals())) {
                     let array_key = storedKey # "[" # Nat.toText(i) # "]";
-                    toKeyValuePairs(pairs, array_key, value);
+                    result := toKeyValuePairs(result, array_key, value);
                 };
+                result;
             };
 
             case (#Record(records) or #Map(records)) {
+                var result = pairs;
                 for ((key, value) in records.vals()) {
                     let record_key = storedKey # "[" # key # "]";
-                    toKeyValuePairs(pairs, record_key, value);
+                    result := toKeyValuePairs(result, record_key, value);
                 };
+                result;
             };
 
             case (#Variant(key, val)) {
@@ -87,29 +91,29 @@ module {
             };
 
             // TODO: convert blob to hex
-            // case (#Blob(blob)) pairs.put(storedKey, "todo: Blob.toText(blob)");
+            // case (#Blob(blob)) PureMap.add(pairs, Text.compare, storedKey, "todo: Blob.toText(blob)");
 
             case (#Option(p)) toKeyValuePairs(pairs, storedKey, p);
-            case (#Text(t)) pairs.put(storedKey, t);
-            case (#Principal(p)) pairs.put(storedKey, Principal.toText(p));
+            case (#Text(t)) PureMap.add(pairs, Text.compare, storedKey, t);
+            case (#Principal(p)) PureMap.add(pairs, Text.compare, storedKey, Principal.toText(p));
 
-            case (#Nat(n)) pairs.put(storedKey, Nat.toText(n));
-            case (#Nat8(n)) pairs.put(storedKey, debug_show (n));
-            case (#Nat16(n)) pairs.put(storedKey, debug_show (n));
-            case (#Nat32(n)) pairs.put(storedKey, Nat32.toText(n));
-            case (#Nat64(n)) pairs.put(storedKey, debug_show (n));
+            case (#Nat(n)) PureMap.add(pairs, Text.compare, storedKey, Nat.toText(n));
+            case (#Nat8(n)) PureMap.add(pairs, Text.compare, storedKey, debug_show (n));
+            case (#Nat16(n)) PureMap.add(pairs, Text.compare, storedKey, debug_show (n));
+            case (#Nat32(n)) PureMap.add(pairs, Text.compare, storedKey, Nat32.toText(n));
+            case (#Nat64(n)) PureMap.add(pairs, Text.compare, storedKey, debug_show (n));
 
-            case (#Int(n)) pairs.put(storedKey, U.stripStart(debug_show (n), #char '+'));
-            case (#Int8(n)) pairs.put(storedKey, U.stripStart(debug_show (n), #char '+'));
-            case (#Int16(n)) pairs.put(storedKey, U.stripStart(debug_show (n), #char '+'));
-            case (#Int32(n)) pairs.put(storedKey, U.stripStart(debug_show (n), #char '+'));
-            case (#Int64(n)) pairs.put(storedKey, U.stripStart(debug_show (n), #char '+'));
+            case (#Int(n)) PureMap.add(pairs, Text.compare, storedKey, U.stripStart(debug_show (n), #char '+'));
+            case (#Int8(n)) PureMap.add(pairs, Text.compare, storedKey, U.stripStart(debug_show (n), #char '+'));
+            case (#Int16(n)) PureMap.add(pairs, Text.compare, storedKey, U.stripStart(debug_show (n), #char '+'));
+            case (#Int32(n)) PureMap.add(pairs, Text.compare, storedKey, U.stripStart(debug_show (n), #char '+'));
+            case (#Int64(n)) PureMap.add(pairs, Text.compare, storedKey, U.stripStart(debug_show (n), #char '+'));
 
-            case (#Float(n)) pairs.put(storedKey, Float.toText(n));
-            case (#Null) pairs.put(storedKey, "null");
-            case (#Empty) pairs.put(storedKey, "");
+            case (#Float(n)) PureMap.add(pairs, Text.compare, storedKey, Float.toText(n));
+            case (#Null) PureMap.add(pairs, Text.compare, storedKey, "null");
+            case (#Empty) PureMap.add(pairs, Text.compare, storedKey, "");
 
-            case (#Bool(b)) pairs.put(storedKey, debug_show (b));
+            case (#Bool(b)) PureMap.add(pairs, Text.compare, storedKey, debug_show (b));
 
             case (_) Debug.trap(debug_show candid # " is not supported by URL-Encoded");
 

@@ -5,7 +5,7 @@ import Debug "mo:core/Debug";
 import Iter "mo:core/Iter";
 import Principal "mo:core/Principal";
 import Text "mo:core/Text";
-import TrieMap "mo:core/TrieMap";
+import PureMap "mo:core/pure/Map";
 import Option "mo:core/Option";
 
 import Arg "mo:candid/Arg";
@@ -22,7 +22,7 @@ type CandidType = Candid.CandidType;
 
 let { toArgs } = CandidEncoder;
 
-let empty_map = TrieMap.TrieMap<Text, Text>(Text.equal, Text.hash);
+let empty_map = PureMap.empty<Text, Text>();
 
 func validate_encoding(candid_values : [Candid.Candid]) : Bool {
     let #ok(encoded) = CandidEncoder.one_shot(candid_values, null);

@@ -4,7 +4,7 @@ import Buffer "mo:base/Buffer";
 import Char "mo:core/Char";
 import Debug "mo:core/Debug";
 import Result "mo:core/Result";
-import TrieMap "mo:core/TrieMap";
+import PureMap "mo:core/pure/Map";
 import Nat "mo:core/Nat";
 import Text "mo:core/Text";
 import Iter "mo:core/Iter";
@@ -25,17 +25,17 @@ module {
 
     type Buffer<A> = Buffer.Buffer<A>;
     type Iter<A> = Iter.Iter<A>;
-    type TrieMap<K, V> = TrieMap.TrieMap<K, V>;
+    type Map<K, V> = PureMap.Map<K, V>;
     type Result<A, B> = Result.Result<A, B>;
 
-    type TextOrTrieMap = {
+    type TextOrMap = {
         #text : Text;
-        #triemap : TrieMap<Text, TextOrTrieMap>;
+        #map : Map<Text, TextOrMap>;
     };
 
-    type NestedTrieMap = TrieMap<Text, TextOrTrieMap>;
+    type NestedMap = Map<Text, TextOrMap>;
 
-    func newMap() : NestedTrieMap = TrieMap.TrieMap(Text.equal, Text.hash);
+    func newMap() : NestedMap = PureMap.empty<Text, TextOrMap>();
 
     /// Converts a Url-Encoded Text to a serialized Candid Record
     public func fromText(text : Text, options : ?T.Options) : Result<Blob, Text> {
@@ -47,11 +47,11 @@ module {
 
     /// Converts a Url-Encoded Text to a Candid Record
     public func toCandid(text : Text, options : T.Options) : Result<Candid, Text> {
-        let triemap_res = entriesToTrieMap(text, options);
+        let map_res = entriesToMap(text, options);
 
-        let #ok(triemap) = triemap_res else return Utils.send_error(triemap_res);
+        let #ok(map) = map_res else return Utils.send_error(map_res);
 
-        trieMapToCandid(triemap, options);
+        mapToCandid(map, options);
     };
 
     // Converting entries from UrlSearchParams
@@ -65,32 +65,32 @@ module {
     // 'settings[language]=en'
     //
     // --------------------------------------------------
-    // Into a nested TrieMap
+    // Into a nested Map
     // --------------------------------------------------
-    // TrieMap {
-    //     'users' => TrieMap {
-    //         '0' => TrieMap {
+    // Map {
+    //     'users' => Map {
+    //         '0' => Map {
     //             'name' => 'peter',
     //             'age' => '20',
     //         },
-    //         '1' => TrieMap {
+    //         '1' => Map {
     //             'name' => 'john',
     //             'age' => '30',
     //         },
     //     },
-    //     'settings' => TrieMap {
+    //     'settings' => Map {
     //         'theme' => 'dark',
     //         'language' => 'en',
     //     },
     // }
     // --------------------------------------------------
-    func entriesToTrieMap(text : Text, options : T.Options) : Result<NestedTrieMap, Text> {
+    func entriesToMap(text : Text, options : T.Options) : Result<NestedMap, Text> {
         let entries : [Text] = Array.sort(
             Iter.toArray(Text.split(text, #char '&')),
             Text.compare,
         );
 
-        let triemap : NestedTrieMap = newMap();
+        var map : NestedMap = newMap();
 
         for (entry in entries.vals()) {
             let entry_iter = Text.split(entry, #char '=');
@@ -127,33 +127,39 @@ module {
                         #text "][",
                     );
 
-                    let res = insert(triemap, first_field, other_fields, value);
-                    let #ok(_) = res else return Utils.send_error(res);
+                    let res = insert(map, first_field, other_fields, value);
+                    switch (res) {
+                        case (#ok(newMap)) { map := newMap };
+                        case (#err(msg)) return #err(msg);
+                    };
                 };
                 case (_) {
-                    let res = insert(triemap, key, Itertools.empty(), value);
-                    let #ok(_) = res else return Utils.send_error(res);
+                    let res = insert(map, key, Itertools.empty(), value);
+                    switch (res) {
+                        case (#ok(newMap)) { map := newMap };
+                        case (#err(msg)) return #err(msg);
+                    };
                 };
             };
         };
 
-        #ok(triemap);
+        #ok(map);
     };
 
-    // Convert from a nested TrieMap
+    // Convert from a nested Map
     // --------------------------------------------------
-    // TrieMap {
-    //     'users' => TrieMap {
-    //         '0' => TrieMap {
+    // Map {
+    //     'users' => Map {
+    //         '0' => Map {
     //             'name' => 'peter',
     //             'age' => '20',
     //         },
-    //         '1' => TrieMap {
+    //         '1' => Map {
     //             'name' => 'john',
     //             'age' => '30',
     //         },
     //     },
-    //     'settings' => TrieMap {
+    //     'settings' => Map {
     //         'theme' => 'dark',
     //         'language' => 'en',
     //     },
@@ -179,10 +185,10 @@ module {
     // }
     // --------------------------------------------------
 
-    func trieMapToCandid(triemap : NestedTrieMap, options : T.Options) : Result<Candid, Text> {
+    func mapToCandid(map : NestedMap, options : T.Options) : Result<Candid, Text> {
         var i = 0;
         let isArray = Itertools.all(
-            Iter.sort(triemap.keys(), Text.compare),
+            Iter.sort(PureMap.keys(map), Text.compare),
             func(key : Text) : Bool {
                 let res = key == Nat.toText(i);
                 i += 1;
@@ -191,17 +197,17 @@ module {
         );
 
         if (isArray) {
-            let buffer = Buffer.Buffer<Candid>(triemap.size());
+            let buffer = Buffer.Buffer<Candid>(PureMap.size(map));
 
-            for (i in Itertools.range(0, triemap.size())) {
+            for (i in Itertools.range(0, PureMap.size(map))) {
 
-                switch (triemap.get(Nat.toText(i))) {
+                switch (PureMap.get(map, Text.compare, Nat.toText(i))) {
                     case (?(#text(text))) {
                         let candid = parseValue(text);
                         buffer.add(candid);
                     };
-                    case (?(#triemap(map))) {
-                        let res = trieMapToCandid(map, options);
+                    case (?(#map(nestedMap))) {
+                        let res = mapToCandid(nestedMap, options);
                         let #ok(candid) = res else return Utils.send_error(res);
                         buffer.add(candid);
                     };
@@ -216,8 +222,8 @@ module {
         };
 
         // check if single value is a variant
-        if (triemap.size() == 1) {
-            let (variant_key, value) = switch (triemap.entries().next()) {
+        if (PureMap.size(map) == 1) {
+            let (variant_key, value) = switch (PureMap.entries(map).next()) {
                 case (?(k, v)) { (k, v) };
                 case (_) { Debug.trap("Variant might be improperly formatted") };
             };
@@ -229,7 +235,7 @@ module {
 
                 let value_res = switch (value) {
                     case (#text(text)) #ok(parseValue(text));
-                    case (#triemap(map)) trieMapToCandid(map, options);
+                    case (#map(nestedMap)) mapToCandid(nestedMap, options);
                 };
 
                 let #ok(val) = value_res else return Utils.send_error(value_res);
@@ -238,16 +244,16 @@ module {
             };
         };
 
-        let buffer = Buffer.Buffer<(Text, Candid)>(triemap.size());
+        let buffer = Buffer.Buffer<(Text, Candid)>(PureMap.size(map));
 
-        for ((key, field) in triemap.entries()) {
+        for ((key, field) in PureMap.entries(map)) {
             switch (field) {
                 case (#text(text)) {
                     let candid = parseValue(text);
                     buffer.add((key, candid));
                 };
-                case (#triemap(map)) {
-                    let res = trieMapToCandid(map, options);
+                case (#map(nestedMap)) {
+                    let res = mapToCandid(nestedMap, options);
                     let #ok(candid) = res else return Utils.send_error(res);
                     buffer.add((key, candid));
                 };
@@ -260,32 +266,37 @@ module {
         #ok(#Record(records));
     };
 
-    // Inserts a key value pair from UrlSearchParams into a nested TrieMap
-    func insert(map : NestedTrieMap, field : Text, fields_iter : Iter<Text>, value : Text) : Result<(), Text> {
+    // Inserts a key value pair from UrlSearchParams into a nested Map
+    func insert(map : NestedMap, field : Text, fields_iter : Iter<Text>, value : Text) : Result<NestedMap, Text> {
         let next_field = switch (fields_iter.next()) {
             case (?_field) _field;
             case (_) {
-                map.put(field, #text(value));
-                return #ok();
+                let newMap = PureMap.add(map, Text.compare, field, #text(value));
+                return #ok(newMap);
             };
         };
 
-        let nestedTriemap = switch (map.get(field)) {
+        let nestedMap = switch (PureMap.get(map, Text.compare, field)) {
             case (?val) {
                 switch (val) {
                     case (#text(prevValue)) {
                         return #err("field name '" # field # "' cannot have multiple values: '" # prevValue # "' and '" # value # "'");
                     };
-                    case (#triemap(nestedTriemap)) nestedTriemap;
+                    case (#map(nestedMap)) nestedMap;
                 };
             };
             case (_) {
-                let nestedTriemap = newMap();
-                map.put(field, #triemap(nestedTriemap));
-                nestedTriemap;
+                newMap();
             };
         };
 
-        insert(nestedTriemap, next_field, fields_iter, value);
+        let updatedNestedRes = insert(nestedMap, next_field, fields_iter, value);
+        switch (updatedNestedRes) {
+            case (#ok(updatedNested)) {
+                let newMap = PureMap.add(map, Text.compare, field, #map(updatedNested));
+                #ok(newMap);
+            };
+            case (#err(msg)) #err(msg);
+        };
     };
 };
