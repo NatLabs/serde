@@ -1,6 +1,7 @@
 import Array "mo:core/Array";
 import Blob "mo:core/Blob";
 import Debug "mo:core/Debug";
+import Runtime "mo:core/Runtime";
 import Result "mo:core/Result";
 import Nat64 "mo:core/Nat64";
 import Int8 "mo:core/Int8";
@@ -188,7 +189,7 @@ module {
     func read_from_iter(iter : Iter.Iter<Nat8>) : Nat8 {
         switch (iter.next()) {
             case (?byte) byte;
-            case (null) Debug.trap("Unexpected end of data stream");
+            case (null) Runtime.trap("Unexpected end of data stream");
         };
     };
 
@@ -271,7 +272,7 @@ module {
         } else if (code == T.TypeCode.Empty) {
             #Empty;
         } else {
-            Debug.trap("code [" # debug_show code # "] does not belong to a primitive type");
+            Runtime.trap("code [" # debug_show code # "] does not belong to a primitive type");
         };
     };
 
@@ -333,7 +334,7 @@ module {
                     #VariantRef(fields);
                 };
             } else {
-                Debug.trap("extract_compound_types(): expected compound type instead found " # debug_show (compound_type_code));
+                Runtime.trap("extract_compound_types(): expected compound type instead found " # debug_show (compound_type_code));
             };
 
             shallow_type;
@@ -473,7 +474,7 @@ module {
                     i += 1;
                 };
             } else {
-                Debug.trap("code [" # debug_show compound_type_code # "] does not belong to a compound type");
+                Runtime.trap("code [" # debug_show compound_type_code # "] does not belong to a compound type");
             };
 
             i += 1;
@@ -888,13 +889,13 @@ module {
             case (#Recursive(pos)) {
                 let recursive_type = switch (PureMap.get(recursive_map, Nat.compare, pos)) {
                     case (?recursive_type) recursive_type;
-                    case (_) Debug.trap("Recursive type not found");
+                    case (_) Runtime.trap("Recursive type not found");
                 };
 
                 return decode_value_from_iter(iter, options, renaming_map, recursive_map, recursive_type);
             };
 
-            case (val) Debug.trap(debug_show (val) # " decoding is not supported");
+            case (val) Runtime.trap(debug_show (val) # " decoding is not supported");
         };
 
         #ok(value);

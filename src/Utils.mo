@@ -285,6 +285,8 @@ module {
         public func vals() : Iter.Iter<A> = List.values(list);
 
         public func toArray() : [A] = List.toArray(list);
+
+        public func removeLast() : ?A = List.removeLast(list);
     };
 
     /// Buffer module that provides a compatible API with mo:base/Buffer but uses mo:core/List
@@ -294,6 +296,23 @@ module {
         public func Buffer<A>(initCapacity : Nat) : ListBuffer<A> = ListBuffer<A>();
 
         public func toArray<A>(buffer : ListBuffer<A>) : [A] = buffer.toArray();
+
+        public func fromArray<A>(arr : [A]) : ListBuffer<A> {
+            let buf = ListBuffer<A>();
+            for (elem in arr.vals()) {
+                buf.add(elem);
+            };
+            buf;
+        };
+
+        public func last<A>(buffer : ListBuffer<A>) : ?A {
+            let s = buffer.size();
+            if (s == 0) {
+                null;
+            } else {
+                ?buffer.get(s - 1);
+            };
+        };
     };
 
 };

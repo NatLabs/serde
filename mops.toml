@@ -13,7 +13,7 @@ core = "/Users/ggreif/motoko-core/src"
 "xtended-numbers@2.3.0" = "2.3.0"
 "cbor@4.1.0" = "4.1.0"
 "sha2@0.1.6" = "0.1.6"
-"byte-utils@0.1.2" = "0.1.2"
+"byte-utils@0.1.2" = "./ByteUtils"
 "base@0.7.3" = "0.7.3"
 
 [dev-dependencies]
