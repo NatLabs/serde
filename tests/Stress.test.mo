@@ -1,11 +1,11 @@
 // @testmode wasi
-import Iter "mo:base@0.16.0/Iter";
-import Debug "mo:base@0.16.0/Debug";
-import Prelude "mo:base@0.16.0/Prelude";
-import Text "mo:base@0.16.0/Text";
-import Char "mo:base@0.16.0/Char";
-import Buffer "mo:base@0.16.0/Buffer";
-import Nat64 "mo:base@0.16.0/Nat64";
+import Iter "mo:core/Iter";
+import Debug "mo:core/Debug";
+import Prelude "mo:core/Prelude";
+import Text "mo:core/Text";
+import Char "mo:core/Char";
+import Buffer "mo:core/Buffer";
+import Nat64 "mo:core/Nat64";
 
 import Fuzz "mo:fuzz";
 import Itertools "mo:itertools@0.2.2/Iter";

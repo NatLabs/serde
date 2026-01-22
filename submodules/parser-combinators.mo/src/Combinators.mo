@@ -1,8 +1,8 @@
-import Char "mo:base@0.7.3/Char";
-import Iter "mo:base@0.7.3/Iter";
-import List "mo:base@0.7.3/List";
-import Nat32 "mo:base@0.7.3/Nat32";
-import Text "mo:base@0.7.3/Text";
+import Char "mo:core/Char";
+import Iter "mo:core/Iter";
+import List "mo:core/pure/List";
+import Nat32 "mo:core/Nat32";
+import Text "mo:core/Text";
 
 import P "Parser";
 import L "List";

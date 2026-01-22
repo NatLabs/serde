@@ -1,17 +1,17 @@
-import Array "mo:base@0.16.0/Array";
-import Buffer "mo:base@0.16.0/Buffer";
-import Result "mo:base@0.16.0/Result";
-import Nat32 "mo:base@0.16.0/Nat32";
-import Nat "mo:base@0.16.0/Nat";
-import Iter "mo:base@0.16.0/Iter";
-import Text "mo:base@0.16.0/Text";
-import Order "mo:base@0.16.0/Order";
+import Array "mo:core/Array";
+import Buffer "mo:core/Buffer";
+import Result "mo:core/Result";
+import Nat32 "mo:core/Nat32";
+import Nat "mo:core/Nat";
+import Iter "mo:core/Iter";
+import Text "mo:core/Text";
+import Order "mo:core/Order";
 
 import Itertools "mo:itertools@0.2.2/Iter";
 import Map "mo:map@9.0.1/Map";
 
 import T "../Types";
-import TrieMap "mo:base@0.16.0/TrieMap";
+import TrieMap "mo:core/TrieMap";
 import Utils "../../Utils";
 
 module {

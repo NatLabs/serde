@@ -1,6 +1,6 @@
-import Buffer "mo:base@0.16.0/Buffer";
-import Result "mo:base@0.16.0/Result";
-import Text "mo:base@0.16.0/Text";
+import Buffer "mo:core/Buffer";
+import Result "mo:core/Result";
+import Text "mo:core/Text";
 
 import JSON "../../submodules/json.mo/src/JSON";
 import NatX "mo:xtended-numbers/NatX";

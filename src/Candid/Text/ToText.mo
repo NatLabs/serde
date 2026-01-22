@@ -1,8 +1,8 @@
-import Float "mo:base@0.16.0/Float";
-import Array "mo:base@0.16.0/Array";
-import Text "mo:base@0.16.0/Text";
-import Principal "mo:base@0.16.0/Principal";
-import TrieMap "mo:base@0.16.0/TrieMap";
+import Float "mo:core/Float";
+import Array "mo:core/Array";
+import Text "mo:core/Text";
+import Principal "mo:core/Principal";
+import TrieMap "mo:core/TrieMap";
 
 import Itertools "mo:itertools@0.2.2/Iter";
 

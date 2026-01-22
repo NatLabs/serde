@@ -1,12 +1,12 @@
 // @testmode wasi
-import Array "mo:base@0.16.0/Array";
-import Blob "mo:base@0.16.0/Blob";
-import Debug "mo:base@0.16.0/Debug";
-import Iter "mo:base@0.16.0/Iter";
-import Principal "mo:base@0.16.0/Principal";
-import Text "mo:base@0.16.0/Text";
-import TrieMap "mo:base@0.16.0/TrieMap";
-import Option "mo:base@0.16.0/Option";
+import Array "mo:core/Array";
+import Blob "mo:core/Blob";
+import Debug "mo:core/Debug";
+import Iter "mo:core/Iter";
+import Principal "mo:core/Principal";
+import Text "mo:core/Text";
+import TrieMap "mo:core/TrieMap";
+import Option "mo:core/Option";
 
 import Arg "mo:candid/Arg";
 import Decoder "mo:candid/Decoder";

@@ -1,6 +1,6 @@
-import Blob "mo:base@0.16.0/Blob";
-import Iter "mo:base@0.16.0/Iter";
-import List "mo:base@0.16.0/List";
+import Blob "mo:core/Blob";
+import Iter "mo:core/Iter";
+import List "mo:core/pure/List";
 
 import C "../../../../submodules/parser-combinators.mo/src/Combinators";
 import P "../../../../submodules/parser-combinators.mo/src/Parser";
