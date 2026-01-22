@@ -41,7 +41,7 @@ module {
                 ),
             ),
             func(chars : List<Nat8>) : Candid {
-                let blob = Blob.fromArray(Iter.toArray(Iter.fromList(chars)));
+                let blob = Blob.fromArray(List.toArray(chars));
                 #Blob(blob);
             },
         );

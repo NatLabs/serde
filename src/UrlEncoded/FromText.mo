@@ -2,6 +2,7 @@ import Array "mo:core/Array";
 import Blob "mo:core/Blob";
 import Char "mo:core/Char";
 import Debug "mo:core/Debug";
+import Runtime "mo:core/Runtime";
 import Result "mo:core/Result";
 import PureMap "mo:core/pure/Map";
 import Nat "mo:core/Nat";
@@ -211,7 +212,7 @@ module {
                         buffer.add(candid);
                     };
 
-                    case (_) Debug.trap("Array might be improperly formatted");
+                    case (_) Runtime.trap("Array might be improperly formatted");
                 };
             };
 
@@ -224,7 +225,7 @@ module {
         if (PureMap.size(map) == 1) {
             let (variant_key, value) = switch (PureMap.entries(map).next()) {
                 case (?(k, v)) { (k, v) };
-                case (_) { Debug.trap("Variant might be improperly formatted") };
+                case (_) { Runtime.trap("Variant might be improperly formatted") };
             };
 
             let isVariant = Text.startsWith(variant_key, #text "#");

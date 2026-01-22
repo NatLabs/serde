@@ -46,7 +46,7 @@ module {
             case (#Int32(n)) addBrackets(U.stripStart(removeUnderscore(debug_show (n)), #char '+') # " : int32");
             case (#Int64(n)) addBrackets(U.stripStart(removeUnderscore(debug_show (n)), #char '+') # " : int64");
 
-            case (#Float(n)) Float.format(#exact, n);
+            case (#Float(n)) Float.format(n, #exact);
 
             case (#Null) "null";
             case (#Empty) "()";

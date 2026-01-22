@@ -1,5 +1,6 @@
 import Char "mo:core/Char";
 import Debug "mo:core/Debug";
+import Runtime "mo:core/Runtime";
 import Iter "mo:core/Iter";
 import List "mo:core/pure/List";
 
@@ -31,11 +32,11 @@ module CandidParser {
     type Parser<T, A> = P.Parser<T, A>;
 
     public func parse(text : Text) : [Candid] {
-        let chars = Iter.toList(text.chars());
+        let chars = List.fromIter(text.chars());
 
         switch (parseCandid(chars)) {
             case (?candid) candid;
-            case (null) Debug.trap("Failed to parse Candid text from input: " # debug_show (chars));
+            case (null) Runtime.trap("Failed to parse Candid text from input: " # debug_show (chars));
         };
     };
 

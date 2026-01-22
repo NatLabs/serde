@@ -50,7 +50,7 @@ module {
             func(chars : List<Char>) : Nat {
                 var n : Nat64 = 0;
 
-                for (hex in Iter.fromList(chars)) {
+                for (hex in List.values(chars)) {
                     n := (n << 4) + NatX.from8To64(fromHex(hex));
                 };
 

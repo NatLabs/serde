@@ -31,7 +31,7 @@ module {
                 C.String.string("\""),
             ),
             func(chars : List<Char>) : Text {
-                Text.fromIter(Iter.fromList(chars));
+                Text.fromIter(List.values(chars));
             },
         );
     };

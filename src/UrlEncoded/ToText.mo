@@ -7,6 +7,7 @@ import Iter "mo:core/Iter";
 import Float "mo:core/Float";
 import Principal "mo:core/Principal";
 import Debug "mo:core/Debug";
+import Runtime "mo:core/Runtime";
 
 import itertools "mo:itertools@0.2.2/Iter";
 
@@ -115,7 +116,7 @@ module {
 
             case (#Bool(b)) PureMap.add(pairs, Text.compare, storedKey, debug_show (b));
 
-            case (_) Debug.trap(debug_show candid # " is not supported by URL-Encoded");
+            case (_) Runtime.trap(debug_show candid # " is not supported by URL-Encoded");
 
         };
     };

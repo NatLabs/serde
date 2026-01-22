@@ -36,7 +36,7 @@ module {
                 ),
             ),
             func(xs : List<(Text, Candid)>) : Candid {
-                let records = Iter.toArray(Iter.fromList(xs));
+                let records = List.toArray(xs);
                 #Record(records);
             },
         );

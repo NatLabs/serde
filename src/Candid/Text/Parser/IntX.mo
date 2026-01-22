@@ -1,4 +1,5 @@
 import Debug "mo:core/Debug";
+import Runtime "mo:core/Runtime";
 import List "mo:core/pure/List";
 import Int8 "mo:core/Int8";
 import Int16 "mo:core/Int16";
@@ -28,7 +29,7 @@ module {
                     case ("int16") #Int16(Int16.fromInt(int));
                     case ("int32") #Int32(Int32.fromInt(int));
                     case ("int64") #Int64(Int64.fromInt(int));
-                    case (_) Debug.trap("Only int8, int16, int32, int64 int bit types but got '" # intType # "'");
+                    case (_) Runtime.trap("Only int8, int16, int32, int64 int bit types but got '" # intType # "'");
                 };
             },
         );

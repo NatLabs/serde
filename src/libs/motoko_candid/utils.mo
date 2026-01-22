@@ -1,6 +1,7 @@
 import Array "mo:core/Array";
 import Blob "mo:core/Blob";
 import Debug "mo:core/Debug";
+import Runtime "mo:core/Runtime";
 import Result "mo:core/Result";
 import Nat64 "mo:core/Nat64";
 import Int8 "mo:core/Int8";
@@ -103,7 +104,7 @@ module {
                 )
             );
             case (unsupported) {
-                Debug.trap("toArgeType(): Unsupported type " # debug_show unsupported);
+                Runtime.trap("toArgeType(): Unsupported type " # debug_show unsupported);
             };
         };
     };
@@ -498,7 +499,7 @@ module {
     func order_types_by_height_bfs(rows : Buffer<[InternalTypeNode]>) {
 
         label while_loop while (rows.size() > 0) {
-            let candid_values = Buffer.last(rows) else return Prelude.unreachable();
+            let ?candid_values = Buffer.last(rows) else return Prelude.unreachable();
             let buffer = Buffer.Buffer<InternalTypeNode>(8);
 
             var has_compound_type = false;

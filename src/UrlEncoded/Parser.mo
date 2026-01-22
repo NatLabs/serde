@@ -36,7 +36,7 @@ module {
             case (t) t;
         };
 
-        let list = Iter.toList(t.chars());
+        let list = List.fromIter(t.chars());
 
         // todo: parse Principal
         switch (parseCharList(list)) {
@@ -141,7 +141,7 @@ module {
             C.many(C.Character.digit()),
 
             func(first_digit : Char, digits : List<Char>) : Bool {
-                let size_eq_1 = switch (List.pop(digits)) {
+                let size_eq_1 = switch (List.popFront(digits)) {
                     case ((_, xs)) xs == null;
                 };
 
@@ -190,7 +190,7 @@ module {
                     parserAs,
                     func(as : List<A>) : Parser<T, List<A>> {
                         if (cond(a, as)) {
-                            P.result<T, List<A>>(List.push(a, as));
+                            P.result<T, List<A>>(List.pushFront(as, a));
                         } else {
                             P.zero();
                         };

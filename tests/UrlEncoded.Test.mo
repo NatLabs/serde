@@ -1,5 +1,6 @@
 // @testmode wasi
 import Debug "mo:core/Debug";
+import Runtime "mo:core/Runtime";
 import Iter "mo:core/Iter";
 
 import { test; suite } "mo:test";
@@ -23,7 +24,7 @@ suite(
 
                         let blob = switch (UrlEncoded.fromText("msg=Hello World&name=John", null)) {
                             case (#ok(b)) b;
-                            case (#err(errorMsg)) Debug.trap(errorMsg);
+                            case (#err(errorMsg)) Runtime.trap(errorMsg);
                         };
 
                         let res : ?User = from_candid (blob);
