@@ -26,6 +26,7 @@ import Int16 "mo:core/Int16";
 import Itertools "mo:itertools@0.2.2/Iter";
 import PeekableIter "mo:itertools@0.2.2/PeekableIter";
 import PureMap "mo:core/pure/Map";
+import Map "mo:core/Map";
 import ByteUtils "mo:byte-utils@0.1.2";
 
 import T "../Types";
@@ -37,7 +38,8 @@ module {
     type Buffer<A> = Utils.Buffer.Buffer<A>;
     type Iter<A> = Iter.Iter<A>;
     type Hash = Nat32;
-    type Map<K, V> = PureMap.Map<K, V>;
+    type PureMapType<K, V> = PureMap.Map<K, V>;
+    type Map<K, V> = Map.Map<K, V>;
     type Order = Order.Order;
 
     type Candid = T.Candid;
@@ -68,7 +70,7 @@ module {
         encode([candid], options);
     };
 
-    func infer_candid_types(candid_values : [Candid], renaming_map : Map<Text, Text>) : Result<[CandidType], Text> {
+    func infer_candid_types(candid_values : [Candid], renaming_map : PureMapType<Text, Text>) : Result<[CandidType], Text> {
         let buffer = Buffer.Buffer<CandidType>(candid_values.size());
 
         for (candid in candid_values.vals()) {
@@ -106,8 +108,6 @@ module {
 
     public func one_shot(candid_values : [Candid], _options : ?T.Options) : Result<Blob, Text> {
 
-        var renaming_map = PureMap.empty<Text, Text>();
-
         let compound_type_buffer = Buffer.Buffer<Nat8>(200);
         let candid_type_buffer = Buffer.Buffer<Nat8>(200);
         let value_buffer = Buffer.Buffer<Nat8>(400);
@@ -116,6 +116,7 @@ module {
 
         let options = Option.get(_options, T.defaultOptions);
 
+        var renaming_map = PureMap.empty<Text, Text>();
         for ((k, v) in options.renameKeys.vals()) {
             renaming_map := PureMap.add(renaming_map, Text.compare, k, v);
         };
@@ -236,14 +237,14 @@ module {
         candid_type_buffer : Buffer<Nat8>,
         value_buffer : Buffer<Nat8>,
         counter : [var Nat],
-        renaming_map : Map<Text, Text>,
+        renaming_map : PureMapType<Text, Text>,
     ) {
         assert candid_values.size() == candid_types.size();
 
         // include size of candid values
         // unsigned_leb128(type_buffer, candid_values.size());
 
-        var unique_compound_type_map = PureMap.empty<Text, Nat>();
+        let unique_compound_type_map = Map.empty<Text, Nat>();
         let recursive_map = PureMap.empty<Text, Text>();
 
         var i = 0;
@@ -274,7 +275,7 @@ module {
         candid_type : CandidType,
         candid_value : Candid,
         value_buffer : Buffer<Nat8>,
-        renaming_map : Map<Text, Text>,
+        renaming_map : PureMapType<Text, Text>,
         unique_compound_type_map : Map<Text, Nat>,
         recursive_map : Map<Text, Text>,
         counter : [var Nat],
@@ -609,13 +610,13 @@ module {
         candid_type : CandidType,
         compound_type_buffer : Buffer<Nat8>,
         candid_type_buffer : Buffer<Nat8>,
-        renaming_map : Map<Text, Text>,
+        renaming_map : PureMapType<Text, Text>,
         unique_compound_type_map : Map<Text, Nat>,
         counter : [var Nat],
         is_nested_child_of_compound_type : Bool,
     ) {
         let type_info = get_type_info(candid_type);
-        let compound_type_exists = PureMap.containsKey(unique_compound_type_map, Text.compare, type_info);
+        let compound_type_exists = Map.containsKey(unique_compound_type_map, Text.compare, type_info);
         if (compound_type_exists) return;
         // Debug.print("encode_compound_type_only(): " # debug_show type_info);
         switch (candid_type) {
@@ -639,7 +640,7 @@ module {
                 if (opt_type_is_compound) {
                     compound_type_buffer.add(T.TypeCode.Option);
                     let opt_type_info = get_type_info(opt_type);
-                    let pos = switch (PureMap.get(unique_compound_type_map, Text.compare, opt_type_info)) {
+                    let pos = switch (Map.get(unique_compound_type_map, Text.compare, opt_type_info)) {
                         case (?pos) pos;
                         case (_) Runtime.trap("unable to find compound type pos to store in primitive type sequence for " # debug_show (type_info));
                     };
@@ -667,7 +668,7 @@ module {
                 if (arr_type_is_compound) {
                     compound_type_buffer.add(T.TypeCode.Array);
                     let arr_type_info = get_type_info(arr_type);
-                    let pos = switch (PureMap.get(unique_compound_type_map, Text.compare, arr_type_info)) {
+                    let pos = switch (Map.get(unique_compound_type_map, Text.compare, arr_type_info)) {
                         case (?pos) pos;
                         case (_) Runtime.trap("unable to find compound type pos to store in primitive type sequence for " # debug_show (type_info));
                     };
@@ -727,7 +728,7 @@ module {
 
                     if (value_type_is_compound) {
                         let value_type_info = get_type_info(field_type);
-                        let pos = switch (PureMap.get(unique_compound_type_map, Text.compare, value_type_info)) {
+                        let pos = switch (Map.get(unique_compound_type_map, Text.compare, value_type_info)) {
                             case (?pos) pos;
                             case (_) Runtime.trap("unable to find compound type pos to store in primitive type sequence for " # debug_show (type_info));
                         };
@@ -794,7 +795,7 @@ module {
 
                     if (variant_type_is_compound) {
                         let variant_type_info = get_type_info(variant_type);
-                        let pos = switch (PureMap.get(unique_compound_type_map, Text.compare, variant_type_info)) {
+                        let pos = switch (Map.get(unique_compound_type_map, Text.compare, variant_type_info)) {
                             case (?pos) pos;
                             case (_) Runtime.trap("unable to find compound type pos to store in primitive type sequence for " # debug_show (type_info));
                         };
@@ -815,7 +816,7 @@ module {
             case (_) Runtime.trap("encode_compound_type_only(): unknown compound type " # debug_show candid_type);
         };
 
-        unique_compound_type_map := PureMap.add(unique_compound_type_map, Text.compare, type_info, counter[C.COUNTER.COMPOUND_TYPE]);
+        Map.add(unique_compound_type_map, Text.compare, type_info, counter[C.COUNTER.COMPOUND_TYPE]);
         counter[C.COUNTER.COMPOUND_TYPE] += 1;
 
     };
@@ -824,7 +825,7 @@ module {
         candid_type : CandidType,
         compound_type_buffer : Buffer<Nat8>,
         candid_type_buffer : Buffer<Nat8>,
-        renaming_map : Map<Text, Text>,
+        renaming_map : PureMapType<Text, Text>,
         unique_compound_type_map : Map<Text, Nat>,
         counter : [var Nat],
         is_nested_child_of_compound_type : Bool,
@@ -843,7 +844,7 @@ module {
             // Add compound type reference to primitive type buffer for top-level types
             if (not is_nested_child_of_compound_type) {
                 let type_info = get_type_info(candid_type);
-                let pos = switch (PureMap.get(unique_compound_type_map, Text.compare, type_info)) {
+                let pos = switch (Map.get(unique_compound_type_map, Text.compare, type_info)) {
                     case (?pos) pos;
                     case (_) Runtime.trap("unable to find compound type pos to store in primitive type sequence for " # debug_show (type_info));
                 };
@@ -875,7 +876,7 @@ module {
         compound_type_buffer : Buffer<Nat8>,
         candid_type_buffer : Buffer<Nat8>,
         value_buffer : Buffer<Nat8>,
-        renaming_map : Map<Text, Text>,
+        renaming_map : PureMapType<Text, Text>,
         unique_compound_type_map : Map<Text, Nat>,
         recursive_map : Map<Text, Text>,
         is_nested_child_of_compound_type : Bool,
@@ -985,7 +986,7 @@ module {
         compound_type_buffer : Buffer<Nat8>,
         candid_type_buffer : Buffer<Nat8>,
         value_buffer : Buffer<Nat8>,
-        renaming_map : Map<Text, Text>,
+        renaming_map : PureMapType<Text, Text>,
         unique_compound_type_map : Map<Text, Nat>,
         recursive_map : Map<Text, Text>,
         counter : [var Nat],
@@ -1005,7 +1006,7 @@ module {
         let type_info = get_type_info(candid_type);
 
         // type_exists_in_compound_type_sequence
-        let type_exists = _type_exists or PureMap.containsKey(unique_compound_type_map, Text.compare, type_info);
+        let type_exists = _type_exists or Map.containsKey(unique_compound_type_map, Text.compare, type_info);
 
         switch (candid_type, candid_value) {
 
@@ -1057,7 +1058,7 @@ module {
                     // let prev_start = get_prev_compound_type_start_index(compound_type_buffer);
                     compound_type_buffer.add(T.TypeCode.Option);
                     let opt_type_info = get_type_info(opt_type);
-                    let pos = switch (PureMap.get(unique_compound_type_map, Text.compare, opt_type_info)) {
+                    let pos = switch (Map.get(unique_compound_type_map, Text.compare, opt_type_info)) {
                         case (?pos) pos;
                         case (_) Runtime.trap("unable to find compound type pos to store in primitive type sequence for " # debug_show (type_info));
                     };
@@ -1091,7 +1092,7 @@ module {
                 ) {
                     compound_type_buffer.add(T.TypeCode.Option);
                     let opt_type_info = get_type_info(opt_type);
-                    let pos = switch (PureMap.get(unique_compound_type_map, Text.compare, opt_type_info)) {
+                    let pos = switch (Map.get(unique_compound_type_map, Text.compare, opt_type_info)) {
                         case (?pos) pos;
                         case (_) Runtime.trap("unable to find compound type pos to store in primitive type sequence for " # debug_show (type_info, opt_type));
                     };
@@ -1147,7 +1148,7 @@ module {
                     compound_type_buffer.add(T.TypeCode.Array);
 
                     let arr_type_info = get_type_info(arr_type);
-                    let pos = switch (PureMap.get(unique_compound_type_map, Text.compare, arr_type_info)) {
+                    let pos = switch (Map.get(unique_compound_type_map, Text.compare, arr_type_info)) {
                         case (?pos) pos;
                         case (_) Runtime.trap("unable to find compound type pos to store in primitive type sequence for " # debug_show (type_info, arr_type));
                     };
@@ -1300,7 +1301,7 @@ module {
 
                         if (value_type_is_compound) {
                             let value_type_info = get_type_info(field_type);
-                            let pos = switch (PureMap.get(unique_compound_type_map, Text.compare, value_type_info)) {
+                            let pos = switch (Map.get(unique_compound_type_map, Text.compare, value_type_info)) {
                                 case (?pos) pos;
                                 case (_) Runtime.trap("unable to find compound type pos to store in primitive type sequence for " # debug_show (type_info, field_type));
                             };
@@ -1453,7 +1454,7 @@ module {
 
                         if (variant_type_is_compound) {
                             let variant_type_info = get_type_info(variant_type);
-                            let pos = switch (PureMap.get(unique_compound_type_map, Text.compare, variant_type_info)) {
+                            let pos = switch (Map.get(unique_compound_type_map, Text.compare, variant_type_info)) {
                                 case (?pos) pos;
                                 case (_) Runtime.trap("unable to find compound type pos to store in primitive type sequence for " # debug_show (type_info));
                             };
@@ -1480,12 +1481,12 @@ module {
             var pos = counter[C.COUNTER.COMPOUND_TYPE];
             counter[C.COUNTER.COMPOUND_TYPE] += 1;
 
-            unique_compound_type_map := PureMap.add(unique_compound_type_map, Text.compare, type_info, pos);
+            Map.add(unique_compound_type_map, Text.compare, type_info, pos);
         };
 
         // if it is the top level parent and not one of the nested children
         if (not is_nested_child_of_compound_type) {
-            let pos = switch (PureMap.get(unique_compound_type_map, Text.compare, type_info)) {
+            let pos = switch (Map.get(unique_compound_type_map, Text.compare, type_info)) {
                 case (?pos) pos;
                 case (_) Runtime.trap("unable to find compound type pos to store in primitive type sequence for " # debug_show (type_info));
             };
@@ -1499,7 +1500,7 @@ module {
         compound_type_buffer : Buffer<Nat8>,
         candid_type_buffer : Buffer<Nat8>,
         value_buffer : Buffer<Nat8>,
-        renaming_map : Map<Text, Text>,
+        renaming_map : PureMapType<Text, Text>,
         unique_compound_type_map : Map<Text, Nat>,
         recursive_map : Map<Text, Text>,
         counter : [var Nat],
@@ -1583,7 +1584,7 @@ module {
         key : ?Text;
     };
 
-    func to_candid_types(candid : Candid, renaming_map : Map<Text, Text>) : (InternalCandidTypes) {
+    func to_candid_types(candid : Candid, renaming_map : PureMapType<Text, Text>) : (InternalCandidTypes) {
         switch (candid) {
             case (#Nat(_)) (#Nat);
             case (#Nat8(_)) (#Nat8);
@@ -2186,7 +2187,7 @@ module {
         };
     };
 
-    func get_renamed_key(renaming_map : Map<Text, Text>, key : Text) : Text {
+    func get_renamed_key(renaming_map : PureMapType<Text, Text>, key : Text) : Text {
         switch (PureMap.get(renaming_map, Text.compare, key)) {
             case (?v) v;
             case (_) key;
