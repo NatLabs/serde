@@ -19,7 +19,7 @@ import Int16 "mo:core/Int16";
 import Option "mo:core/Option";
 
 import PureMap "mo:core/pure/Map";
-import Set "mo:map@9.0.1/Set";
+import PureSet "mo:core/pure/Set";
 import ByteUtils "mo:byte-utils@0.1.2";
 
 import T "../Types";
@@ -35,13 +35,11 @@ module {
     type Buffer<A> = Buffer.Buffer<A>;
     type Hash = Nat32;
     type Map<K, V> = PureMap.Map<K, V>;
-    type Set<A> = Set.Set<A>;
+    type Set<A> = PureSet.Set<A>;
     type Order = Order.Order;
 
     type CandidType = T.CandidType;
     type ShallowCandidTypes = T.ShallowCandidTypes;
-
-    let { nhash } = Set;
 
     /// Decodes a blob encoded in the candid format into a list of the [Candid](./Types.mo#Candid) type in motoko
     ///
@@ -347,21 +345,20 @@ module {
 
     func build_compound_type(compound_types : [ShallowCandidTypes], start_pos : Nat, recursive_types_map_param : Map<Nat, CandidType>) : CandidType {
         var recursive_types_map = recursive_types_map_param;
+        var visited = PureSet.empty<Nat>();
+        var is_recursive_set = PureSet.empty<Nat>();
 
-        func _build_compound_type(compound_types : [ShallowCandidTypes], start_pos : Nat, visited : Set<Nat>, is_recursive_set : Set<Nat>) : CandidType {
+        func _build_compound_type(compound_types : [ShallowCandidTypes], start_pos : Nat) : CandidType {
             var pos = start_pos;
 
             func resolve_field_types((field_key, ref_pos) : (Text, Nat)) : ((Text, CandidType)) {
-                let visited_size = Set.size(visited);
+                let saved_visited = visited;
                 let resolved_type : CandidType = if (is_code_primitive_type(Nat8.fromNat(ref_pos))) {
                     code_to_primitive_type(Nat8.fromNat(ref_pos));
                 } else {
-                    _build_compound_type(compound_types, ref_pos, visited, is_recursive_set);
+                    _build_compound_type(compound_types, ref_pos);
                 };
-
-                while (Set.size(visited) > visited_size) {
-                    ignore Set.pop(visited, nhash);
-                };
+                visited := saved_visited;
 
                 (field_key, resolved_type);
             };
@@ -371,19 +368,19 @@ module {
                 case (null) {};
             };
 
-            if (Set.has(visited, nhash, pos) and not Set.has(is_recursive_set, nhash, pos)) {
-                ignore Set.put(is_recursive_set, nhash, pos);
+            if (PureSet.contains(visited, Nat.compare, pos) and not PureSet.contains(is_recursive_set, Nat.compare, pos)) {
+                is_recursive_set := PureSet.add(is_recursive_set, Nat.compare, pos);
                 return #Recursive(pos);
             };
 
-            ignore Set.put(visited, nhash, pos);
+            visited := PureSet.add(visited, Nat.compare, pos);
 
             let resolved_compound_type = switch (compound_types.get(pos)) {
                 case (#OptionRef(ref_pos)) {
                     let ref_type = if (is_code_primitive_type(Nat8.fromNat(ref_pos))) {
                         code_to_primitive_type(Nat8.fromNat(ref_pos));
                     } else {
-                        _build_compound_type(compound_types, ref_pos, visited, is_recursive_set);
+                        _build_compound_type(compound_types, ref_pos);
                     };
 
                     #Option(ref_type);
@@ -392,7 +389,7 @@ module {
                     let ref_type = if (is_code_primitive_type(Nat8.fromNat(ref_pos))) {
                         code_to_primitive_type(Nat8.fromNat(ref_pos));
                     } else {
-                        _build_compound_type(compound_types, ref_pos, visited, is_recursive_set);
+                        _build_compound_type(compound_types, ref_pos);
                     };
                     #Array(ref_type);
                 };
@@ -406,17 +403,14 @@ module {
                 };
             };
 
-            if (Set.has(is_recursive_set, nhash, pos) and not PureMap.containsKey(recursive_types_map, Nat.compare, pos)) {
+            if (PureSet.contains(is_recursive_set, Nat.compare, pos) and not PureMap.containsKey(recursive_types_map, Nat.compare, pos)) {
                 recursive_types_map := PureMap.add(recursive_types_map, Nat.compare, pos, resolved_compound_type);
             };
 
             resolved_compound_type;
         };
 
-        let visited = Set.new<Nat>();
-        let is_recursive_set = Set.new<Nat>();
-
-        _build_compound_type(compound_types, start_pos, visited, is_recursive_set);
+        _build_compound_type(compound_types, start_pos);
     };
 
     public func build_types(bytes : Blob, state : [var Nat], compound_types : [ShallowCandidTypes], recursive_types_map : Map<Nat, CandidType>) : [CandidType] {
