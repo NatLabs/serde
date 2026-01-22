@@ -1,4 +1,4 @@
-import Buffer "mo:core/Buffer";
+import Buffer "mo:base/Buffer";
 import Blob "mo:core/Blob";
 import Int8 "mo:core/Int8";
 import Int16 "mo:core/Int16";

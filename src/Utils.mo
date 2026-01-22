@@ -8,12 +8,12 @@ import Nat64 "mo:core/Nat64";
 import Nat32 "mo:core/Nat32";
 import Nat8 "mo:core/Nat8";
 import Int "mo:core/Int";
-import Buffer "mo:core/Buffer";
+import Buffer "mo:base/Buffer";
 import Result "mo:core/Result";
 import Int64 "mo:core/Int64";
 import Blob "mo:core/Blob";
 
-import Prelude "mo:core/Prelude";
+import Prelude "mo:base/Prelude";
 import Debug "mo:core/Debug";
 import Itertools "mo:itertools@0.2.2/Iter";
 import Map "mo:map@9.0.1/Map";

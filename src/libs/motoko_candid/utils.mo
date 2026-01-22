@@ -1,6 +1,6 @@
 import Array "mo:core/Array";
 import Blob "mo:core/Blob";
-import Buffer "mo:core/Buffer";
+import Buffer "mo:base/Buffer";
 import Debug "mo:core/Debug";
 import Result "mo:core/Result";
 import Nat64 "mo:core/Nat64";
@@ -13,7 +13,7 @@ import Int64 "mo:core/Int64";
 import Nat "mo:core/Nat";
 import Int "mo:core/Int";
 import Iter "mo:core/Iter";
-import Prelude "mo:core/Prelude";
+import Prelude "mo:base/Prelude";
 import Principal "mo:core/Principal";
 import Text "mo:core/Text";
 import Order "mo:core/Order";

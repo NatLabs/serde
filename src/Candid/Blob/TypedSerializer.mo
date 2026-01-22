@@ -1,6 +1,6 @@
 import Array "mo:core/Array";
 import Blob "mo:core/Blob";
-import Buffer "mo:core/Buffer";
+import Buffer "mo:base/Buffer";
 import Result "mo:core/Result";
 import Nat64 "mo:core/Nat64";
 import Nat8 "mo:core/Nat8";

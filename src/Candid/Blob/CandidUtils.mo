@@ -1,5 +1,5 @@
 import Array "mo:core/Array";
-import Buffer "mo:core/Buffer";
+import Buffer "mo:base/Buffer";
 import Result "mo:core/Result";
 import Nat32 "mo:core/Nat32";
 import Nat "mo:core/Nat";

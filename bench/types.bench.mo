@@ -1,9 +1,9 @@
 import Iter "mo:core/Iter";
 import Debug "mo:core/Debug";
-import Prelude "mo:core/Prelude";
+import Prelude "mo:base/Prelude";
 import Text "mo:core/Text";
 import Char "mo:core/Char";
-import Buffer "mo:core/Buffer";
+import Buffer "mo:base/Buffer";
 import Array "mo:core/Array";
 import Blob "mo:core/Blob";
 import Principal "mo:core/Principal";

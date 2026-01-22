@@ -1,4 +1,4 @@
-import Buffer "mo:core/Buffer";
+import Buffer "mo:base/Buffer";
 import Result "mo:core/Result";
 import Text "mo:core/Text";
 
