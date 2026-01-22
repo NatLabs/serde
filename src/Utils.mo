@@ -1,6 +1,7 @@
 import Array "mo:core/Array";
 import Char "mo:core/Char";
 import Order "mo:core/Order";
+import VarArray "mo:core/VarArray";
 import Float "mo:core/Float";
 import Text "mo:core/Text";
 import Iter "mo:core/Iter";
@@ -206,14 +207,14 @@ module {
     // };
 
     public class ReusableBuffer<A>(init_capacity : Nat) {
-        var elems : [var ?A] = Array.init(init_capacity, null);
+        var elems : [var ?A] = VarArray.repeat(null, init_capacity);
         var count : Nat = 0;
 
         public func size() : Nat = count;
 
         public func add(elem : A) {
             if (count == elems.size()) {
-                elems := Array.tabulateVar(
+                elems := VarArray.tabulate(
                     elems.size() * 2,
                     func(i : Nat) : ?A {
                         if (i < count) {
