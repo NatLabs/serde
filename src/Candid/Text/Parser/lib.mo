@@ -2,7 +2,6 @@ import Char "mo:core/Char";
 import Debug "mo:core/Debug";
 import Iter "mo:core/Iter";
 import List "mo:core/pure/List";
-import TrieMap "mo:core/TrieMap";
 
 import C "../../../../submodules/parser-combinators.mo/src/Combinators";
 import P "../../../../submodules/parser-combinators.mo/src/Parser";
@@ -28,7 +27,6 @@ import { variantParser } "Variant";
 module CandidParser {
     type Candid = Candid.Candid;
     type List<A> = List.List<A>;
-    type TrieMap<K, V> = TrieMap.TrieMap<K, V>;
 
     type Parser<T, A> = P.Parser<T, A>;
 

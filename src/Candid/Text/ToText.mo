@@ -2,7 +2,6 @@ import Float "mo:core/Float";
 import Array "mo:core/Array";
 import Text "mo:core/Text";
 import Principal "mo:core/Principal";
-import TrieMap "mo:core/TrieMap";
 
 import Itertools "mo:itertools@0.2.2/Iter";
 
@@ -12,7 +11,6 @@ import U "../../Utils";
 
 module {
     type Candid = CandidType.Candid;
-    type TrieMap<K, V> = TrieMap.TrieMap<K, V>;
 
     public func toText(candid_values : [Candid]) : Text {
         var text = "";
