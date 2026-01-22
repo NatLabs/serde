@@ -1,6 +1,5 @@
 import Array "mo:core/Array";
 import Blob "mo:core/Blob";
-import Buffer "mo:base/Buffer";
 import Debug "mo:core/Debug";
 import Result "mo:core/Result";
 import Nat64 "mo:core/Nat64";
@@ -43,7 +42,7 @@ module {
     type RecordFieldValue = Value.RecordFieldValue;
     type PureMapType<K, V> = PureMap.Map<K, V>;
     type Result<A, B> = Result.Result<A, B>;
-    type Buffer<A> = Buffer.Buffer<A>;
+    type Buffer<A> = Utils.Buffer.Buffer<A>;
     type Iter<A> = Iter.Iter<A>;
     type Hash = Nat32;
     type Order = Order.Order;
@@ -51,6 +50,9 @@ module {
     type Candid = T.Candid;
     type CandidType = T.CandidType;
     type KeyValuePair = T.KeyValuePair;
+
+    let { Buffer } = Utils;
+
     public func toArgType(candid : CandidType) : (Type.Type) {
         let (arg_type) : (Type.Type) = switch (candid) {
             case (#Nat) (#nat);

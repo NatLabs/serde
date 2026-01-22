@@ -1,6 +1,5 @@
 import Array "mo:core/Array";
 import Blob "mo:core/Blob";
-import Buffer "mo:base/Buffer";
 import Debug "mo:core/Debug";
 import Nat64 "mo:core/Nat64";
 import Int8 "mo:core/Int8";
@@ -21,9 +20,9 @@ import Sha256 "mo:sha2@0.1.6/Sha256";
 import ByteUtils "mo:byte-utils@0.1.2";
 
 module {
-    type Buffer<A> = Buffer.Buffer<A>;
+    type Buffer<A> = Utils.Buffer.Buffer<A>;
 
-    let { ReusableBuffer; unsigned_leb128; signed_leb128_64 } = Utils;
+    let { ReusableBuffer; unsigned_leb128; signed_leb128_64; Buffer } = Utils;
 
     public func hash(candid_value : T.Candid) : Blob {
         // let buffer = ReusableBuffer<Nat8>(100);

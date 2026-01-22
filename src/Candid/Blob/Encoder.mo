@@ -1,6 +1,5 @@
 import Array "mo:core/Array";
 import Blob "mo:core/Blob";
-import Buffer "mo:base/Buffer";
 import B "mo:buffer";
 import Debug "mo:core/Debug";
 import Result "mo:core/Result";
@@ -34,7 +33,7 @@ import CandidUtils "CandidUtils";
 
 module {
     type Result<A, B> = Result.Result<A, B>;
-    type Buffer<A> = Buffer.Buffer<A>;
+    type Buffer<A> = Utils.Buffer.Buffer<A>;
     type Iter<A> = Iter.Iter<A>;
     type Hash = Nat32;
     type Map<K, V> = PureMap.Map<K, V>;
@@ -43,7 +42,7 @@ module {
     type Candid = T.Candid;
     type CandidType = T.CandidType;
     type KeyValuePair = T.KeyValuePair;
-    let { unsigned_leb128; signed_leb128_64 } = Utils;
+    let { unsigned_leb128; signed_leb128_64; Buffer } = Utils;
 
     // public func encode(candid_values : [Candid], options : ?T.Options) : Result<Blob, Text> {
     //   let renaming_map = PureMap.empty<Text, Text>();

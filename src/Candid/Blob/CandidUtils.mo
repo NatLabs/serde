@@ -1,5 +1,4 @@
 import Array "mo:core/Array";
-import Buffer "mo:base/Buffer";
 import Result "mo:core/Result";
 import Nat32 "mo:core/Nat32";
 import Nat "mo:core/Nat";
@@ -16,7 +15,7 @@ import Utils "../../Utils";
 module {
 
     type Result<A, B> = Result.Result<A, B>;
-    type Buffer<A> = Buffer.Buffer<A>;
+    type Buffer<A> = Utils.Buffer.Buffer<A>;
     type Iter<A> = Iter.Iter<A>;
     type Hash = Nat32;
     type Map<K, V> = PureMap.Map<K, V>;

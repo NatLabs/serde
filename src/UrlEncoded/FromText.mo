@@ -1,6 +1,5 @@
 import Array "mo:core/Array";
 import Blob "mo:core/Blob";
-import Buffer "mo:base/Buffer";
 import Char "mo:core/Char";
 import Debug "mo:core/Debug";
 import Result "mo:core/Result";
@@ -19,11 +18,11 @@ import U "../Utils";
 import Utils "../Utils";
 
 module {
-    let { subText } = U;
+    let { subText; Buffer } = U;
 
     type Candid = Candid.Candid;
 
-    type Buffer<A> = Buffer.Buffer<A>;
+    type Buffer<A> = Utils.Buffer.Buffer<A>;
     type Iter<A> = Iter.Iter<A>;
     type Map<K, V> = PureMap.Map<K, V>;
     type Result<A, B> = Result.Result<A, B>;

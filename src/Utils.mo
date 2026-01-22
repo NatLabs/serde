@@ -8,13 +8,14 @@ import Nat64 "mo:core/Nat64";
 import Nat32 "mo:core/Nat32";
 import Nat8 "mo:core/Nat8";
 import Int "mo:core/Int";
-import Buffer "mo:base/Buffer";
+import List "mo:core/List";
 import Result "mo:core/Result";
 import Int64 "mo:core/Int64";
 import Blob "mo:core/Blob";
 
 import Prelude "mo:base/Prelude";
 import Debug "mo:core/Debug";
+import Runtime "mo:core/Runtime";
 import Itertools "mo:itertools@0.2.2/Iter";
 
 import ByteUtils "mo:byte-utils@0.1.2";
@@ -22,7 +23,7 @@ import ByteUtils "mo:byte-utils@0.1.2";
 module {
 
     type Iter<A> = Iter.Iter<A>;
-    type Buffer<A> = Buffer.Buffer<A>;
+    type List<A> = List.List<A>;
     type Result<A, B> = Result.Result<A, B>;
 
     /// Function copied from mo:candid/Tag: https://github.com/edjCase/motoko_candid/blob/d038b7bd953fb8826ae66a5f34bf06dcc29b2e0f/src/Tag.mo#L14-L30
@@ -235,12 +236,12 @@ module {
         public func get(i : Nat) : A {
             switch (elems[i]) {
                 case (?elem) elem;
-                case (null) Debug.trap "Index out of bounds";
+                case (null) Runtime.trap "Index out of bounds";
             };
         };
 
         public func put(i : Nat, elem : A) {
-            if (i >= count) Debug.trap "Index out of bounds";
+            if (i >= count) Runtime.trap "Index out of bounds";
             elems[i] := ?elem;
         };
 
@@ -259,6 +260,39 @@ module {
                 };
             };
         };
+    };
+
+    /// Wrapper class that provides a Buffer-like interface around mo:core/List
+    public class ListBuffer<A>() {
+        let list = List.empty<A>();
+
+        public func size() : Nat = List.size(list);
+
+        public func add(elem : A) = List.add(list, elem);
+
+        public func clear() = List.clear(list);
+
+        public func get(i : Nat) : A {
+            switch (List.get(list, i)) {
+                case (?elem) elem;
+                case (null) Runtime.trap "Index out of bounds";
+            };
+        };
+
+        public func put(i : Nat, elem : A) = List.put(list, i, elem);
+
+        public func vals() : Iter.Iter<A> = List.values(list);
+
+        public func toArray() : [A] = List.toArray(list);
+    };
+
+    /// Buffer module that provides a compatible API with mo:base/Buffer but uses mo:core/List
+    public module Buffer {
+        public type Buffer<A> = ListBuffer<A>;
+
+        public func Buffer<A>(initCapacity : Nat) : ListBuffer<A> = ListBuffer<A>();
+
+        public func toArray<A>(buffer : ListBuffer<A>) : [A] = buffer.toArray();
     };
 
 };

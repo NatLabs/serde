@@ -1,4 +1,3 @@
-import Buffer "mo:base/Buffer";
 import Result "mo:core/Result";
 import Text "mo:core/Text";
 
@@ -14,6 +13,8 @@ module {
     type JSON = JSON.JSON;
     type Candid = Candid.Candid;
     type Result<A, B> = Result.Result<A, B>;
+
+    let { Buffer } = Utils;
 
     /// Converts serialized Candid blob to JSON text
     public func toText(blob : Blob, keys : [Text], options : ?CandidType.Options) : Result<Text, Text> {

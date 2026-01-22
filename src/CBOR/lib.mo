@@ -1,4 +1,3 @@
-import Buffer "mo:base/Buffer";
 import Blob "mo:core/Blob";
 import Int8 "mo:core/Int8";
 import Int16 "mo:core/Int16";
@@ -26,6 +25,8 @@ module {
     type CBOR = CBOR_Types.Value;
 
     public type Options = CandidType.Options;
+
+    let { Buffer } = Utils;
 
     /// Converts serialized Candid blob to CBOR blob
     public func encode(blob : Blob, keys : [Text], options : ?Options) : Result<Blob, Text> {

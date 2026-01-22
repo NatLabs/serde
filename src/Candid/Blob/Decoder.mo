@@ -1,6 +1,5 @@
 import Array "mo:core/Array";
 import Blob "mo:core/Blob";
-import Buffer "mo:base/Buffer";
 import Debug "mo:core/Debug";
 import Result "mo:core/Result";
 import Nat64 "mo:core/Nat64";
@@ -32,7 +31,7 @@ module {
     type Candid = T.Candid;
     type KeyValuePair = T.KeyValuePair;
 
-    type Buffer<A> = Buffer.Buffer<A>;
+    type Buffer<A> = Utils.Buffer.Buffer<A>;
     type Hash = Nat32;
     type Map<K, V> = PureMap.Map<K, V>;
     type Set<A> = PureSet.Set<A>;

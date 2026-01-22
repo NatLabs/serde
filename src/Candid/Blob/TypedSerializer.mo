@@ -1,6 +1,5 @@
 import Array "mo:core/Array";
 import Blob "mo:core/Blob";
-import Buffer "mo:base/Buffer";
 import Result "mo:core/Result";
 import Nat64 "mo:core/Nat64";
 import Nat8 "mo:core/Nat8";
@@ -30,7 +29,7 @@ module TypedSerializer {
     type Candid = T.Candid;
     type KeyValuePair = T.KeyValuePair;
 
-    type Buffer<A> = Buffer.Buffer<A>;
+    type Buffer<A> = Utils.Buffer.Buffer<A>;
     type Hash = Nat32;
     type Map<K, V> = PureMap.Map<K, V>;
     type Set<A> = Set.Set<A>;
@@ -40,6 +39,7 @@ module TypedSerializer {
     type ShallowCandidTypes = T.ShallowCandidTypes;
 
     let { nhash } = Set;
+    let { Buffer } = Utils;
 
     // Constants
     let C = {
