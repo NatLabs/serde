@@ -8,6 +8,7 @@ import Int16 "mo:core/Int16";
 import Int64 "mo:core/Int64";
 import Int32 "mo:core/Int32";
 import Debug "mo:core/Debug";
+import Runtime "mo:core/Runtime";
 import Principal "mo:core/Principal";
 
 import T "Types";
@@ -48,10 +49,10 @@ module {
                         },
                     )
                 );
-                case (#Bool(_) or #Option(_) or #Variant(_) or #Tuple(_)) Debug.trap(debug_show candid # " not suppported in ICRC3Value");
-                case (#Empty) Debug.trap("Empty not suppported in ICRC3Value");
-                case (#Float(f)) Debug.trap("Float not suppported in ICRC3Value");
-                case (#Null) Debug.trap("Null not suppported in ICRC3Value");
+                case (#Bool(_) or #Option(_) or #Variant(_) or #Tuple(_)) Runtime.trap(debug_show candid # " not suppported in ICRC3Value");
+                case (#Empty) Runtime.trap("Empty not suppported in ICRC3Value");
+                case (#Float(f)) Runtime.trap("Float not suppported in ICRC3Value");
+                case (#Null) Runtime.trap("Null not suppported in ICRC3Value");
 
             };
 

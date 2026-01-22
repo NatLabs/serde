@@ -12,7 +12,8 @@ import Option "mo:core/Option";
 import Debug "mo:core/Debug";
 
 import PureMap "mo:core/pure/Map";
-import Set "mo:map@9.0.1/Set";
+import Set "mo:core/pure/Set";
+import Map "mo:core/Map";
 import ByteUtils "mo:byte-utils@0.1.2";
 
 import T "../Types";
@@ -38,7 +39,6 @@ module TypedSerializer {
     type CandidType = T.CandidType;
     type ShallowCandidTypes = T.ShallowCandidTypes;
 
-    let { nhash } = Set;
     let { Buffer } = Utils;
 
     // Constants
@@ -125,7 +125,7 @@ module TypedSerializer {
 
         // Only encode the types, not the values
         var i = 0;
-        var unique_compound_type_map = PureMap.empty<Text, Nat>();
+        let unique_compound_type_map = Map.empty<Text, Nat>();
 
         while (i < candid_types.size()) {
             Encoder.encode_type_only(
@@ -250,11 +250,11 @@ module TypedSerializer {
         # "  encoder_candid_types: " # debug_show (self.encoder_candid_types) # "\n"
         # "  decoder_candid_types: " # debug_show (self.decoder_candid_types) # "\n"
         # "  encoded_type_header: " # debug_show (self.encoded_type_header) # "\n"
-        # "  renaming_map: " # debug_show (PureMap.toArray(self.renaming_map)) # "\n"
-        # "  record_key_map: " # debug_show (PureMap.toArray(self.record_key_map)) # "\n"
+        # "  renaming_map: " # debug_show (Iter.toArray(PureMap.entries(self.renaming_map))) # "\n"
+        # "  record_key_map: " # debug_show (Iter.toArray(PureMap.entries(self.record_key_map))) # "\n"
         # "  options: " # debug_show (self.options) # "\n"
         # "  compound_types: " # debug_show (self.compound_types) # "\n"
-        # "  recursive_types_map: " # debug_show (PureMap.toArray(self.recursive_types_map)) # "\n"
+        # "  recursive_types_map: " # debug_show (Iter.toArray(PureMap.entries(self.recursive_types_map))) # "\n"
         # "}";
     };
 
@@ -413,7 +413,7 @@ module TypedSerializer {
         let value_buffer = Buffer.Buffer<Nat8>(400);
         let recursive_map = PureMap.empty<Text, Text>();
         let counter = [var 0];
-        var unique_compound_type_map = PureMap.empty<Text, Nat>();
+        let unique_compound_type_map = Map.empty<Text, Nat>();
 
         var i = 0;
         while (i < candid_values.size()) {
@@ -432,7 +432,7 @@ module TypedSerializer {
 
         #ok(
             Blob.fromArray(
-                Array.append(
+                Array.concat(
                     self.encoded_type_header,
                     Buffer.toArray(value_buffer),
                 )

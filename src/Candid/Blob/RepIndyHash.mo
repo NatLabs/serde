@@ -1,6 +1,7 @@
 import Array "mo:core/Array";
 import Blob "mo:core/Blob";
 import Debug "mo:core/Debug";
+import Runtime "mo:core/Runtime";
 import Nat64 "mo:core/Nat64";
 import Int8 "mo:core/Int8";
 import Int32 "mo:core/Int32";
@@ -68,7 +69,10 @@ module {
             };
 
             case (#Float(f64)) {
-                ByteUtils.Buffer.LE.addFloat(buffer, f64);
+                let bytes = ByteUtils.LE.fromFloat(f64);
+                for (byte in bytes.vals()) {
+                    buffer.add(byte);
+                };
             };
             case (#Bool(b)) {
                 buffer.add(if (b) (1) else (0));
@@ -130,7 +134,7 @@ module {
                     let value_hash = candid_hash(buffer, sha256, unwrapped_value);
 
                     let concatenated = Blob.fromArray(
-                        Array.append(
+                        Array.concat(
                             Blob.toArray(key_hash),
                             Blob.toArray(value_hash),
                         )
@@ -139,9 +143,9 @@ module {
                     hashes.add(concatenated);
                 };
 
-                hashes.sort(Blob.compare);
+                let sorted_hashes = Array.sort(hashes.toArray(), Blob.compare);
 
-                for (hash in hashes.vals()) {
+                for (hash in sorted_hashes.vals()) {
                     let hash_bytes = Blob.toArray(hash);
                     for (byte in hash_bytes.vals()) {
                         buffer.add(byte);
@@ -149,7 +153,7 @@ module {
                 };
 
             };
-            case (candid) Debug.trap("oops: " # debug_show (candid));
+            case (candid) Runtime.trap("oops: " # debug_show (candid));
         };
 
         sha256.writeIter(buffer.vals());

@@ -277,7 +277,7 @@ module {
         value_buffer : Buffer<Nat8>,
         renaming_map : PureMapType<Text, Text>,
         unique_compound_type_map : Map<Text, Nat>,
-        recursive_map : Map<Text, Text>,
+        recursive_map : PureMapType<Text, Text>,
         counter : [var Nat],
         is_nested_child_of_compound_type : Bool,
     ) : ?Hash {
@@ -531,7 +531,10 @@ module {
                     ByteUtils.Buffer.LE.addInt64(value_buffer, i64);
                 };
                 case (#Float, #Float(f64)) {
-                    ByteUtils.Buffer.LE.addFloat(value_buffer, f64);
+                    let bytes = ByteUtils.LE.fromFloat(f64);
+                    for (byte in bytes.vals()) {
+                        value_buffer.add(byte);
+                    };
                 };
                 case (#Bool, #Bool(b)) {
                     value_buffer.add(if (b) (1) else (0));
@@ -878,7 +881,7 @@ module {
         value_buffer : Buffer<Nat8>,
         renaming_map : PureMapType<Text, Text>,
         unique_compound_type_map : Map<Text, Nat>,
-        recursive_map : Map<Text, Text>,
+        recursive_map : PureMapType<Text, Text>,
         is_nested_child_of_compound_type : Bool,
         ignore_type : Bool,
     ) {
@@ -938,7 +941,10 @@ module {
             };
             case (#Float, #Float(f64)) {
                 ref_candid_type_buffer.add(T.TypeCode.Float);
-                ByteUtils.Buffer.LE.addFloat(value_buffer, f64);
+                let bytes = ByteUtils.LE.fromFloat(f64);
+                for (byte in bytes.vals()) {
+                    value_buffer.add(byte);
+                };
             };
             case (#Bool, #Bool(b)) {
                 ref_candid_type_buffer.add(T.TypeCode.Bool);
@@ -988,7 +994,7 @@ module {
         value_buffer : Buffer<Nat8>,
         renaming_map : PureMapType<Text, Text>,
         unique_compound_type_map : Map<Text, Nat>,
-        recursive_map : Map<Text, Text>,
+        recursive_map : PureMapType<Text, Text>,
         counter : [var Nat],
         is_nested_child_of_compound_type : Bool,
         _type_exists : Bool,
@@ -1502,7 +1508,7 @@ module {
         value_buffer : Buffer<Nat8>,
         renaming_map : PureMapType<Text, Text>,
         unique_compound_type_map : Map<Text, Nat>,
-        recursive_map : Map<Text, Text>,
+        recursive_map : PureMapType<Text, Text>,
         counter : [var Nat],
         is_nested_child_of_compound_type : Bool,
         ignore_type : Bool,

@@ -65,7 +65,7 @@ module {
                     parserAs,
                     func(as : List<A>) : Parser<T, List<A>> {
                         if (cond(a, as)) {
-                            P.result<T, List<A>>(List.push(a, as));
+                            P.result<T, List<A>>(List.pushFront(as, a));
                         } else {
                             P.zero();
                         };
@@ -86,7 +86,7 @@ module {
             return NatX.from32To8(digit);
         };
 
-        if (Char.isUppercase(char)) {
+        if (char >= 'A' and char <= 'Z') {
             let digit = charCode - Char.toNat32('A') + 10;
 
             return NatX.from32To8(digit);
@@ -99,7 +99,7 @@ module {
     };
 
     public func toText(chars : List<Char>) : Text {
-        let iter = Iter.fromList(chars);
+        let iter = List.values(chars);
         Text.fromIter(iter);
     };
 
