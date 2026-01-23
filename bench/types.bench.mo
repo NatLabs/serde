@@ -2,7 +2,7 @@ import Iter "mo:core/Iter";
 import Debug "mo:core/Debug";
 import Text "mo:core/Text";
 import Char "mo:core/Char";
-import Buffer "mo:base/Buffer";
+import Buffer "mo:core/List";
 import Array "mo:core/Array";
 import Blob "mo:core/Blob";
 import Principal "mo:core/Principal";

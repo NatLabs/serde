@@ -4,7 +4,7 @@ import Debug "mo:core/Debug";
 import Prelude "mo:base/Prelude";
 import Text "mo:core/Text";
 import Char "mo:core/Char";
-import Buffer "mo:base/Buffer";
+import Buffer "mo:core/List";
 import Nat64 "mo:core/Nat64";
 
 import Fuzz "mo:fuzz";
