@@ -1,6 +1,5 @@
 import Iter "mo:core/Iter";
 import Debug "mo:core/Debug";
-import Prelude "mo:base/Prelude";
 import Text "mo:core/Text";
 import Char "mo:core/Char";
 import Buffer "mo:base/Buffer";

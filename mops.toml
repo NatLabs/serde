@@ -8,7 +8,6 @@ license = "MIT"
 
 [dependencies]
 core = "/Users/ggreif/motoko-core/src"
-"base@0.16.0" = "0.16.0"
 "itertools@0.2.2" = "0.2.2"
 "xtended-numbers@2.3.0" = "2.3.0"
 "cbor@4.1.0" = "4.1.0"
@@ -25,4 +24,4 @@ bench = "1.0.0"
 
 [toolchain]
 wasmtime = "33.0.1"
-moc = "0.16.2"
+moc = "1.1.0"
