@@ -95,7 +95,7 @@ suite(
 
                 let self_describe_tag : Blob = "\D9\D9\F7";
 
-                func blob_concat(b1 : Blob, b2 : Blob) : Blob = Blob.fromArray(Array.flatten([Blob.toArray(b1), Blob.toArray(b2)]));
+                func blob_concat(b1 : Blob, b2 : Blob) : Blob = Blob.fromArray(Array.concat(Blob.toArray(b1), Blob.toArray(b2)));
                 func sdt(blob : Blob) : Blob = blob_concat(self_describe_tag, blob);
                 func strip(text : Text, to_strip : Text) : Text = Text.replace(text, #text(to_strip), "");
 
