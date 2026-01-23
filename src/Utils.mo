@@ -13,8 +13,6 @@ import List "mo:core/List";
 import Result "mo:core/Result";
 import Int64 "mo:core/Int64";
 import Blob "mo:core/Blob";
-
-import Prelude "mo:base/Prelude";
 import Debug "mo:core/Debug";
 import Runtime "mo:core/Runtime";
 import Itertools "mo:itertools@0.2.2/Iter";
@@ -84,7 +82,7 @@ module {
             func(i : Nat) {
                 switch (iter.next()) {
                     case (?x) x;
-                    case (_) Prelude.unreachable();
+                    case (_) Runtime.unreachable();
                 };
             },
         );
@@ -92,7 +90,7 @@ module {
 
     public func send_error<OldOk, NewOk, Error>(res : Result<OldOk, Error>) : Result<NewOk, Error> {
         switch (res) {
-            case (#ok(_)) Prelude.unreachable();
+            case (#ok(_)) Runtime.unreachable();
             case (#err(errorMsg)) #err(errorMsg);
         };
     };

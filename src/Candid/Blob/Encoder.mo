@@ -14,7 +14,6 @@ import Int64 "mo:core/Int64";
 import Nat "mo:core/Nat";
 import Int "mo:core/Int";
 import Iter "mo:core/Iter";
-import Prelude "mo:base/Prelude";
 import Principal "mo:core/Principal";
 import Text "mo:core/Text";
 import Order "mo:core/Order";
@@ -2120,7 +2119,7 @@ module {
     func order_candid_types_by_height_bfs(rows : Buffer<[InternalCandidTypeNode]>) {
 
         label while_loop while (rows.size() > 0) {
-            let ?candid_values = Buffer.last(rows) else return Prelude.unreachable();
+            let ?candid_values = Buffer.last(rows) else return Runtime.unreachable();
             let buffer = Buffer.Buffer<InternalCandidTypeNode>(8);
 
             var has_compound_type = false;
