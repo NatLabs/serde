@@ -41,7 +41,7 @@ module {
     type Value = Value.Value;
     type RecordFieldType = Type.RecordFieldType;
     type RecordFieldValue = Value.RecordFieldValue;
-    type PureMapType<K, V> = PureMap.Map<K, V>;
+    type PureMap<K, V> = PureMap.Map<K, V>;
     type Result<A, B> = Result.Result<A, B>;
     type Buffer<A> = Utils.Buffer.Buffer<A>;
     type Iter<A> = Iter.Iter<A>;
@@ -104,11 +104,11 @@ module {
                 )
             );
             case (unsupported) {
-                Runtime.trap("toArgeType(): Unsupported type " # debug_show unsupported);
+                Runtime.trap("toArgType(): Unsupported type " # debug_show unsupported);
             };
         };
     };
-    public func toArgs(candid_values : [Candid], renaming_map : PureMapType<Text, Text>) : Result<[Arg], Text> {
+    public func toArgs(candid_values : [Candid], renaming_map : PureMap<Text, Text>) : Result<[Arg], Text> {
         let buffer = Buffer.Buffer<Arg>(candid_values.size());
 
         for (candid in candid_values.vals()) {
@@ -151,7 +151,7 @@ module {
 
     type InternalType = Type.PrimitiveType or InternalCompoundType;
 
-    func toArgTypeAndValue(candid : Candid, renaming_map : PureMapType<Text, Text>) : (InternalType, Value) {
+    func toArgTypeAndValue(candid : Candid, renaming_map : PureMap<Text, Text>) : (InternalType, Value) {
         let (arg_type, arg_value) : (InternalType, Value) = switch (candid) {
             case (#Nat(n)) (#nat, #nat(n));
             case (#Nat8(n)) (#nat8, #nat8(n));
@@ -572,7 +572,7 @@ module {
         };
     };
 
-    func get_renamed_key(renaming_map : PureMapType<Text, Text>, key : Text) : Text {
+    func get_renamed_key(renaming_map : PureMap<Text, Text>, key : Text) : Text {
         switch (PureMap.get(renaming_map, Text.compare, key)) {
             case (?v) v;
             case (_) key;

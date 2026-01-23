@@ -26,7 +26,7 @@ suite(
         test(
             "Int",
             func() {
-                for (_ in Array.tabulate(limit, func(i) = i).vals()) {
+                for (_ in Nat.range(0, limit)) {
                     let int : Int = fuzz.int.randomRange(-(2 ** 63), (2 ** 63) - 1);
 
                     let candid_encoding = to_candid (int);
@@ -50,7 +50,7 @@ suite(
         test(
             "Nat8",
             func() {
-                for (_ in Array.tabulate(limit, func(i) = i).vals()) {
+                for (_ in Nat.range(0, limit)) {
                     let nat8 : Nat8 = fuzz.nat8.random();
 
                     let candid_encoding = to_candid (nat8);
@@ -72,7 +72,7 @@ suite(
         test(
             "Nat16",
             func() {
-                for (_ in Array.tabulate(limit, func(i) = i).vals()) {
+                for (_ in Nat.range(0, limit)) {
                     let nat16 : Nat16 = fuzz.nat16.random();
 
                     let candid_encoding = to_candid (nat16);
@@ -94,7 +94,7 @@ suite(
         test(
             "Nat32",
             func() {
-                for (_ in Array.tabulate(limit, func(i) = i).vals()) {
+                for (_ in Nat.range(0, limit)) {
                     let nat32 : Nat32 = fuzz.nat32.random();
 
                     let candid_encoding = to_candid (nat32);
@@ -116,7 +116,7 @@ suite(
         test(
             "Nat64",
             func() {
-                for (_ in Array.tabulate(limit, func(i) = i).vals()) {
+                for (_ in Nat.range(0, limit)) {
                     let nat64 : Nat64 = fuzz.nat64.random();
 
                     let candid_encoding = to_candid (nat64);
@@ -138,7 +138,7 @@ suite(
         test(
             "Int8",
             func() {
-                for (_ in Array.tabulate(limit, func(i) = i).vals()) {
+                for (_ in Nat.range(0, limit)) {
                     let int8 : Int8 = fuzz.int8.random();
 
                     let candid_encoding = to_candid (int8);
@@ -160,7 +160,7 @@ suite(
         test(
             "Int16",
             func() {
-                for (_ in Array.tabulate(limit, func(i) = i).vals()) {
+                for (_ in Nat.range(0, limit)) {
                     let int16 : Int16 = fuzz.int16.random();
 
                     let candid_encoding = to_candid (int16);
@@ -182,7 +182,7 @@ suite(
         test(
             "Int32",
             func() {
-                for (_ in Array.tabulate(limit, func(i) = i).vals()) {
+                for (_ in Nat.range(0, limit)) {
                     let int32 : Int32 = fuzz.int32.random();
 
                     let candid_encoding = to_candid (int32);
@@ -204,7 +204,7 @@ suite(
         test(
             "Int64",
             func() {
-                for (_ in Array.tabulate(limit, func(i) = i).vals()) {
+                for (_ in Nat.range(0, limit)) {
                     let int64 : Int64 = fuzz.int64.random();
 
                     let candid_encoding = to_candid (int64);
@@ -226,7 +226,7 @@ suite(
         test(
             "Text",
             func() {
-                for (_ in Array.tabulate(limit, func(i) = i).vals()) {
+                for (_ in Nat.range(0, limit)) {
                     let text : Text = fuzz.text.randomAlphanumeric(fuzz.nat.randomRange(0, 20));
 
                     let candid_encoding = to_candid (text);
@@ -248,7 +248,7 @@ suite(
         test(
             "Principal",
             func() {
-                for (_ in Array.tabulate(limit, func(i) = i).vals()) {
+                for (_ in Nat.range(0, limit)) {
                     let principal : Principal = fuzz.principal.randomPrincipal(29);
 
                     let candid_encoding = to_candid (principal);
@@ -270,7 +270,7 @@ suite(
         test(
             "Blob",
             func() {
-                for (_ in Array.tabulate(limit, func(i) = i).vals()) {
+                for (_ in Nat.range(0, limit)) {
                     let blob : Blob = fuzz.blob.randomBlob(fuzz.nat.randomRange(0, 20));
 
                     let candid_encoding = to_candid (blob);

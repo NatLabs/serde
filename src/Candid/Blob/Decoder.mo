@@ -343,7 +343,7 @@ module {
         Array.tabulate(total_compound_types, extract_compound_type);
     };
 
-    func build_compound_type(compound_types : [ShallowCandidTypes], start_pos : Nat, recursive_types_map_param : Map<Nat, CandidType>) : CandidType {
+    func build_compound_type(compound_types : [ShallowCandidTypes], start_pos : Nat, recursive_types_map_param : Map<Nat, CandidType>) : (CandidType, Map<Nat, CandidType>) {
         var recursive_types_map = recursive_types_map_param;
         var visited = PureSet.empty<Nat>();
         var is_recursive_set = PureSet.empty<Nat>();
@@ -410,11 +410,13 @@ module {
             resolved_compound_type;
         };
 
-        _build_compound_type(compound_types, start_pos);
+        let result_type = _build_compound_type(compound_types, start_pos);
+        (result_type, recursive_types_map);
     };
 
-    public func build_types(bytes : Blob, state : [var Nat], compound_types : [ShallowCandidTypes], recursive_types_map : Map<Nat, CandidType>) : [CandidType] {
+    public func build_types(bytes : Blob, state : [var Nat], compound_types : [ShallowCandidTypes], recursive_types_map_param : Map<Nat, CandidType>) : ([CandidType], Map<Nat, CandidType>) {
         let total_candid_types = decode_leb128(bytes, state);
+        var recursive_types_map = recursive_types_map_param;
 
         let candid_types = Array.tabulate(
             total_candid_types,
@@ -426,7 +428,8 @@ module {
                     primitive_type;
                 } else {
                     let start_pos = decode_leb128(bytes, state);
-                    let compound_type = build_compound_type(compound_types, start_pos, recursive_types_map);
+                    let (compound_type, updated_map) = build_compound_type(compound_types, start_pos, recursive_types_map);
+                    recursive_types_map := updated_map;
                     compound_type;
                 };
 
@@ -435,7 +438,7 @@ module {
             },
         );
 
-        (candid_types);
+        (candid_types, recursive_types_map);
     };
 
     public func skip_compound_types(bytes : Blob, state : [var Nat], total_compound_types : Nat) {
@@ -515,13 +518,15 @@ module {
             return #err("Invalid Magic Number");
         };
 
-        let recursive_types_map = PureMap.empty<Nat, CandidType>();
+        var recursive_types_map = PureMap.empty<Nat, CandidType>();
 
         if (not is_types_set) {
             // extract types from blob
             let total_compound_types = decode_leb128(bytes, state);
             let compound_types = extract_compound_types(bytes, state, total_compound_types, record_key_map);
-            candid_types := build_types(bytes, state, compound_types, recursive_types_map);
+            let (types, updated_recursive_map) = build_types(bytes, state, compound_types, recursive_types_map);
+            candid_types := types;
+            recursive_types_map := updated_recursive_map;
 
         } else {
             // types are set but 'blob_contains_only_values' is not set,
@@ -915,5 +920,11 @@ module {
             case (null) key;
         };
     };
+
+    // TODO: Performance optimization - Replace Map<Nat, CandidType> with List<(Nat, CandidType)> for recursive_types_map
+    // DeBruijn indices are typically small (0-5 for nesting depth), making linear list scan O(n) much faster
+    // than Map operations O(log n) + immutable map copying overhead. Building new maps is costly, while
+    // cons-ing onto a linked list is O(1). For typical recursive type depths, list lookup will outperform
+    // tree-based map lookup by a significant margin.
 
 };
