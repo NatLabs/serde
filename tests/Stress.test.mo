@@ -4,8 +4,9 @@ import Debug "mo:core/Debug";
 import Prelude "mo:base/Prelude";
 import Text "mo:core/Text";
 import Char "mo:core/Char";
-import Buffer "mo:core/List";
 import Nat64 "mo:core/Nat64";
+
+import Utils "../src/Utils";
 
 import Fuzz "mo:fuzz";
 import Itertools "mo:itertools@0.2.2/Iter";
@@ -176,11 +177,11 @@ func new_item() : StoreItem {
 
 let store_item_keys = ["name", "store", "customer_reviews", "username", "rating", "comment", "available_sizes", "xs", "s", "m", "l", "xl", "color_options", "name", "hex", "price", "in_stock", "address", "contact", "email", "phone"];
 
-let candid_buffer = Buffer.Buffer<[Serde.Candid]>(limit);
-let store_items = Buffer.Buffer<StoreItem>(limit);
+let candid_buffer = Utils.Buffer.Buffer<[Serde.Candid]>(limit);
+let store_items = Utils.Buffer.Buffer<StoreItem>(limit);
 
-let candid_buffer_with_types = Buffer.Buffer<[Serde.Candid]>(limit);
-let store_items_with_types = Buffer.Buffer<StoreItem>(limit);
+let candid_buffer_with_types = Utils.Buffer.Buffer<[Serde.Candid]>(limit);
+let store_items_with_types = Utils.Buffer.Buffer<StoreItem>(limit);
 
 // Roundtrip test function that takes a schema, value generator, and comparison function
 func roundtripTest<T>(
@@ -191,8 +192,8 @@ func roundtripTest<T>(
     keys : [Text],
     iterations : Nat,
 ) : () {
-    let values = Buffer.Buffer<T>(iterations);
-    let candid_values = Buffer.Buffer<[Serde.Candid]>(iterations);
+    let values = Utils.Buffer.Buffer<T>(iterations);
+    let candid_values = Utils.Buffer.Buffer<[Serde.Candid]>(iterations);
 
     // Phase 1: Generate values and decode them to Candid
     for (i in Itertools.range(0, iterations)) {

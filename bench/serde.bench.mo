@@ -2,7 +2,8 @@ import Iter "mo:core/Iter";
 import Debug "mo:core/Debug";
 import Text "mo:core/Text";
 import Char "mo:core/Char";
-import Buffer "mo:core/List";
+
+import Utils "../src/Utils";
 
 import Bench "mo:bench";
 import Fuzz "mo:fuzz";
@@ -154,9 +155,9 @@ module {
             };
         };
 
-        let buffer = Buffer.Buffer<StoreItem>(limit);
-        let candid_blobs = Buffer.Buffer<Blob>(limit);
-        let candid_buffer = Buffer.Buffer<[Serde.Candid]>(limit);
+        let buffer = Utils.Buffer.Buffer<StoreItem>(limit);
+        let candid_blobs = Utils.Buffer.Buffer<Blob>(limit);
+        let candid_buffer = Utils.Buffer.Buffer<[Serde.Candid]>(limit);
 
         for (i in Itertools.range(0, limit)) {
             let item = new_item();

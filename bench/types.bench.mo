@@ -2,8 +2,9 @@ import Iter "mo:core/Iter";
 import Debug "mo:core/Debug";
 import Text "mo:core/Text";
 import Char "mo:core/Char";
-import Buffer "mo:core/List";
 import Array "mo:core/Array";
+
+import Utils "../src/Utils";
 import Blob "mo:core/Blob";
 import Principal "mo:core/Principal";
 import Int "mo:core/Int";
@@ -103,27 +104,27 @@ module {
         let limit = 1000;
 
         // Generate test data for each type
-        let nat_values = Buffer.Buffer<Nat>(limit);
-        let nat8_values = Buffer.Buffer<Nat8>(limit);
-        let nat16_values = Buffer.Buffer<Nat16>(limit);
-        let nat32_values = Buffer.Buffer<Nat32>(limit);
-        let nat64_values = Buffer.Buffer<Nat64>(limit);
-        let int_values = Buffer.Buffer<Int>(limit);
-        let int8_values = Buffer.Buffer<Int8>(limit);
-        let int16_values = Buffer.Buffer<Int16>(limit);
-        let int32_values = Buffer.Buffer<Int32>(limit);
-        let int64_values = Buffer.Buffer<Int64>(limit);
-        let float_values = Buffer.Buffer<Float>(limit);
-        let bool_values = Buffer.Buffer<Bool>(limit);
-        let text_values = Buffer.Buffer<Text>(limit);
-        let principal_values = Buffer.Buffer<Principal>(limit);
-        let blob_values = Buffer.Buffer<Blob>(limit);
+        let nat_values = Utils.Buffer.Buffer<Nat>(limit);
+        let nat8_values = Utils.Buffer.Buffer<Nat8>(limit);
+        let nat16_values = Utils.Buffer.Buffer<Nat16>(limit);
+        let nat32_values = Utils.Buffer.Buffer<Nat32>(limit);
+        let nat64_values = Utils.Buffer.Buffer<Nat64>(limit);
+        let int_values = Utils.Buffer.Buffer<Int>(limit);
+        let int8_values = Utils.Buffer.Buffer<Int8>(limit);
+        let int16_values = Utils.Buffer.Buffer<Int16>(limit);
+        let int32_values = Utils.Buffer.Buffer<Int32>(limit);
+        let int64_values = Utils.Buffer.Buffer<Int64>(limit);
+        let float_values = Utils.Buffer.Buffer<Float>(limit);
+        let bool_values = Utils.Buffer.Buffer<Bool>(limit);
+        let text_values = Utils.Buffer.Buffer<Text>(limit);
+        let principal_values = Utils.Buffer.Buffer<Principal>(limit);
+        let blob_values = Utils.Buffer.Buffer<Blob>(limit);
 
         // Compound type test data
-        let option_nat_values = Buffer.Buffer<?Nat>(limit);
-        let option_text_values = Buffer.Buffer<?Text>(limit);
-        let array_nat8_values = Buffer.Buffer<[Nat8]>(limit);
-        let array_text_values = Buffer.Buffer<[Text]>(limit);
+        let option_nat_values = Utils.Buffer.Buffer<?Nat>(limit);
+        let option_text_values = Utils.Buffer.Buffer<?Text>(limit);
+        let array_nat8_values = Utils.Buffer.Buffer<[Nat8]>(limit);
+        let array_text_values = Utils.Buffer.Buffer<[Text]>(limit);
 
         // Complex structures
         type SimpleRecord = { id : Nat; name : Text; active : Bool };
@@ -140,18 +141,18 @@ module {
             #guest;
         };
 
-        let simple_record_values = Buffer.Buffer<SimpleRecord>(limit);
-        let nested_record_values = Buffer.Buffer<NestedRecord>(limit);
-        let mixed_tuple_values = Buffer.Buffer<MixedTuple>(limit);
-        let simple_variant_values = Buffer.Buffer<SimpleVariant>(limit);
-        let complex_variant_values = Buffer.Buffer<ComplexVariant>(limit);
-        let map_values = Buffer.Buffer<[(Text, Nat)]>(limit);
+        let simple_record_values = Utils.Buffer.Buffer<SimpleRecord>(limit);
+        let nested_record_values = Utils.Buffer.Buffer<NestedRecord>(limit);
+        let mixed_tuple_values = Utils.Buffer.Buffer<MixedTuple>(limit);
+        let simple_variant_values = Utils.Buffer.Buffer<SimpleVariant>(limit);
+        let complex_variant_values = Utils.Buffer.Buffer<ComplexVariant>(limit);
+        let map_values = Utils.Buffer.Buffer<[(Text, Nat)]>(limit);
 
         // Edge case data
-        let large_text_values = Buffer.Buffer<Text>(limit);
-        let large_array_values = Buffer.Buffer<[Nat]>(limit);
-        let deep_nesting_values = Buffer.Buffer<Candid>(limit);
-        let wide_record_values = Buffer.Buffer<Candid>(limit);
+        let large_text_values = Utils.Buffer.Buffer<Text>(limit);
+        let large_array_values = Utils.Buffer.Buffer<[Nat]>(limit);
+        let deep_nesting_values = Utils.Buffer.Buffer<Candid>(limit);
+        let wide_record_values = Utils.Buffer.Buffer<Candid>(limit);
 
         let random_principal = fuzz.principal.randomPrincipal(29);
 
@@ -366,35 +367,35 @@ module {
 
         // Storage for encoded blobs
         let encoded_blobs = {
-            var nat = Buffer.Buffer<Blob>(limit);
-            var nat8 = Buffer.Buffer<Blob>(limit);
-            var nat16 = Buffer.Buffer<Blob>(limit);
-            var nat32 = Buffer.Buffer<Blob>(limit);
-            var nat64 = Buffer.Buffer<Blob>(limit);
-            var int = Buffer.Buffer<Blob>(limit);
-            var int8 = Buffer.Buffer<Blob>(limit);
-            var int16 = Buffer.Buffer<Blob>(limit);
-            var int32 = Buffer.Buffer<Blob>(limit);
-            var int64 = Buffer.Buffer<Blob>(limit);
-            var float = Buffer.Buffer<Blob>(limit);
-            var bool = Buffer.Buffer<Blob>(limit);
-            var text = Buffer.Buffer<Blob>(limit);
-            var principal = Buffer.Buffer<Blob>(limit);
-            var blob = Buffer.Buffer<Blob>(limit);
-            var option_nat = Buffer.Buffer<Blob>(limit);
-            var option_text = Buffer.Buffer<Blob>(limit);
-            var array_nat8 = Buffer.Buffer<Blob>(limit);
-            var array_text = Buffer.Buffer<Blob>(limit);
-            var simple_record = Buffer.Buffer<Blob>(limit);
-            var nested_record = Buffer.Buffer<Blob>(limit);
-            var mixed_tuple = Buffer.Buffer<Blob>(limit);
-            var simple_variant = Buffer.Buffer<Blob>(limit);
-            var complex_variant = Buffer.Buffer<Blob>(limit);
-            var map_values = Buffer.Buffer<Blob>(limit);
-            var large_text = Buffer.Buffer<Blob>(limit);
-            var large_array = Buffer.Buffer<Blob>(limit);
-            var deep_nesting = Buffer.Buffer<Blob>(limit);
-            var wide_record = Buffer.Buffer<Blob>(limit);
+            var nat = Utils.Buffer.Buffer<Blob>(limit);
+            var nat8 = Utils.Buffer.Buffer<Blob>(limit);
+            var nat16 = Utils.Buffer.Buffer<Blob>(limit);
+            var nat32 = Utils.Buffer.Buffer<Blob>(limit);
+            var nat64 = Utils.Buffer.Buffer<Blob>(limit);
+            var int = Utils.Buffer.Buffer<Blob>(limit);
+            var int8 = Utils.Buffer.Buffer<Blob>(limit);
+            var int16 = Utils.Buffer.Buffer<Blob>(limit);
+            var int32 = Utils.Buffer.Buffer<Blob>(limit);
+            var int64 = Utils.Buffer.Buffer<Blob>(limit);
+            var float = Utils.Buffer.Buffer<Blob>(limit);
+            var bool = Utils.Buffer.Buffer<Blob>(limit);
+            var text = Utils.Buffer.Buffer<Blob>(limit);
+            var principal = Utils.Buffer.Buffer<Blob>(limit);
+            var blob = Utils.Buffer.Buffer<Blob>(limit);
+            var option_nat = Utils.Buffer.Buffer<Blob>(limit);
+            var option_text = Utils.Buffer.Buffer<Blob>(limit);
+            var array_nat8 = Utils.Buffer.Buffer<Blob>(limit);
+            var array_text = Utils.Buffer.Buffer<Blob>(limit);
+            var simple_record = Utils.Buffer.Buffer<Blob>(limit);
+            var nested_record = Utils.Buffer.Buffer<Blob>(limit);
+            var mixed_tuple = Utils.Buffer.Buffer<Blob>(limit);
+            var simple_variant = Utils.Buffer.Buffer<Blob>(limit);
+            var complex_variant = Utils.Buffer.Buffer<Blob>(limit);
+            var map_values = Utils.Buffer.Buffer<Blob>(limit);
+            var large_text = Utils.Buffer.Buffer<Blob>(limit);
+            var large_array = Utils.Buffer.Buffer<Blob>(limit);
+            var deep_nesting = Utils.Buffer.Buffer<Blob>(limit);
+            var wide_record = Utils.Buffer.Buffer<Blob>(limit);
         };
 
         bench.runner(
