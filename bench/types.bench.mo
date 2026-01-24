@@ -3,6 +3,7 @@ import Debug "mo:core/Debug";
 import Text "mo:core/Text";
 import Char "mo:core/Char";
 import Array "mo:core/Array";
+import Runtime "mo:core/Runtime";
 
 import Utils "../src/Utils";
 import Blob "mo:core/Blob";
@@ -1469,7 +1470,7 @@ module {
                 };
 
                 case (_, _) {
-                    Debug.trap("Unhandled benchmark case: row = \"" # row # "\", col = \"" # col # "\"");
+                    Runtime.trap("Unhandled benchmark case: row = \"" # row # "\", col = \"" # col # "\"");
                 };
             }
         );

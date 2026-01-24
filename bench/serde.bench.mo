@@ -1,7 +1,7 @@
 import Iter "mo:core/Iter";
-import Debug "mo:core/Debug";
 import Text "mo:core/Text";
 import Char "mo:core/Char";
+import Runtime "mo:core/Runtime";
 
 import Utils "../src/Utils";
 
@@ -251,7 +251,7 @@ module {
                 };
 
                 case (_, _) {
-                    Debug.trap("Should be unreachable:\n row = \"" # debug_show row # "\" and col = \"" # debug_show col # "\"");
+                    Runtime.trap("Should be unreachable:\n row = \"" # debug_show row # "\" and col = \"" # debug_show col # "\"");
                 };
             }
         );
