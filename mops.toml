@@ -9,11 +9,14 @@ license = "MIT"
 [dependencies]
 core = "/Users/ggreif/motoko-core/src"
 "itertools@0.2.2" = "0.2.2"
-"xtended-numbers@2.3.0" = "2.3.0"
+"xtended-numbers" = "2.3.0"
+"xtended-numbers@2.3.0" = "2.3.0" # because for ByteUtils
 "cbor@4.1.0" = "4.1.0"
 "sha2@0.1.6" = "0.1.6"
 "byte-utils@0.1.2" = "https://github.com/ggreif/ByteUtils#fc522a0ba56764b76b866e29d3cbeeb3ea7f0060"
-"base@0.7.3" = "0.7.3"
+buffer = "0.1.0"
+"base@0.14.13" = "0.14.13" # because for ByteUtils
+"base@0.7.3" = "0.14.13" # because for ByteUtils
 
 [dev-dependencies]
 test = "2.1.1"
