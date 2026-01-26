@@ -12,7 +12,7 @@ core = "/Users/ggreif/motoko-core/src"
 "xtended-numbers@2.3.0" = "2.3.0"
 "cbor@4.1.0" = "4.1.0"
 "sha2@0.1.6" = "0.1.6"
-"byte-utils@0.1.2" = "./ByteUtils"
+"byte-utils@0.1.2" = "https://github.com/ggreif/ByteUtils#fc522a0ba56764b76b866e29d3cbeeb3ea7f0060"
 "base@0.7.3" = "0.7.3"
 
 [dev-dependencies]

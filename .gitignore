@@ -13,6 +13,9 @@
 .mops/
 .wasm/
 
+# ByteUtils submodule (now managed via mops)
+ByteUtils/
+
 # frontend code
 node_modules/
 dist/
