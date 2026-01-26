@@ -169,7 +169,7 @@ suite(
                         let blob = to_candid (info);
                         let text = UrlEncoded.toText(blob, ["name", "msg"], null);
                         Debug.print("single record: " #debug_show (text));
-                        assert (text == #ok("msg=Hello World&name=John"));
+                        assert (text == #ok("name=John&msg=Hello World"));
                     },
                 );
                 test(
@@ -193,7 +193,7 @@ suite(
                         Debug.print("record with array: " #debug_show (text));
 
                         assert (
-                            text == #ok("users[0][msg]=Hello World&users[0][name]=John&users[1][msg]=testing&users[1][name]=Jane")
+                            text == #ok("users[1][name]=Jane&users[1][msg]=testing&users[0][name]=John&users[0][msg]=Hello World")
                         );
                     },
                 );
