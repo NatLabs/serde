@@ -7,7 +7,7 @@ keywords = ["json", "candid", "cbor", "urlencoded", "serialization"]
 license = "MIT"
 
 [dependencies]
-core = "/Users/ggreif/motoko-core/src"
+core = "2.0.0"
 "itertools@0.2.2" = "0.2.2"
 "xtended-numbers" = "2.3.0"
 "xtended-numbers@2.3.0" = "2.3.0" # because for ByteUtils
