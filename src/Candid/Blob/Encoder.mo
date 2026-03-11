@@ -1,6 +1,5 @@
 import Array "mo:core/Array";
 import Blob "mo:core/Blob";
-import B "mo:buffer";
 import Debug "mo:core/Debug";
 import Runtime "mo:core/Runtime";
 import Result "mo:core/Result";
