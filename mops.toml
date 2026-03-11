@@ -13,7 +13,7 @@ core = "2.0.0"
 "xtended-numbers@2.3.0" = "2.3.0" # because for ByteUtils
 "cbor@4.1.0" = "4.1.0"
 "sha2@0.1.6" = "0.1.6"
-"byte-utils@0.1.2" = "https://github.com/ggreif/ByteUtils#core"
+"byte-utils@0.1.2" = "https://github.com/NatLabs/ByteUtils#refs/pull/3/head"
 "base@0.7.3" = "0.14.13" # because for submodules/json.mo
 
 [dev-dependencies]
