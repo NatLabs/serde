@@ -17,7 +17,7 @@ import Debug "mo:core/Debug";
 import Runtime "mo:core/Runtime";
 import Itertools "mo:itertools@0.2.2/Iter";
 
-import ByteUtils "mo:byte-utils@0.1.2";
+import ByteUtils "mo:byte-utils";
 
 module {
 

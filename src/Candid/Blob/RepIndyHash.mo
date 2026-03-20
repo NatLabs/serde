@@ -18,7 +18,7 @@ import T "../Types";
 import Utils "../../Utils";
 import Sha256 "mo:sha2@0.1.6/Sha256";
 
-import ByteUtils "mo:byte-utils@0.1.2";
+import ByteUtils "mo:byte-utils";
 
 module {
     type Buffer<A> = Utils.Buffer.Buffer<A>;

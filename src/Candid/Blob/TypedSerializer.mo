@@ -14,7 +14,7 @@ import Debug "mo:core/Debug";
 import PureMap "mo:core/pure/Map";
 import Set "mo:core/pure/Set";
 import Map "mo:core/Map";
-import ByteUtils "mo:byte-utils@0.1.2";
+import ByteUtils "mo:byte-utils";
 
 import T "../Types";
 import CandidUtils "CandidUtils";

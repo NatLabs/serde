@@ -20,7 +20,7 @@ import Option "mo:core/Option";
 
 import PureMap "mo:core/pure/Map";
 import PureSet "mo:core/pure/Set";
-import ByteUtils "mo:byte-utils@0.1.2";
+import ByteUtils "mo:byte-utils";
 
 import T "../Types";
 import Utils "../../Utils";
