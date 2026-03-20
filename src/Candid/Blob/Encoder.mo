@@ -25,7 +25,7 @@ import Itertools "mo:itertools@0.2.2/Iter";
 import PeekableIter "mo:itertools@0.2.2/PeekableIter";
 import PureMap "mo:core/pure/Map";
 import Map "mo:core/Map";
-import ByteUtils "mo:byte-utils";
+import ByteUtils "../../../submodules/byte-utils/src/lib";
 
 import T "../Types";
 import Utils "../../Utils";
