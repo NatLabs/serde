@@ -1,12 +1,12 @@
-import Char "mo:base@0.7.3/Char";
-import Iter "mo:base@0.7.3/Iter";
-import Int "mo:base@0.7.3/Int";
-import Float "mo:base@0.7.3/Float";
-import List "mo:base@0.7.3/List";
-import Nat8 "mo:base@0.7.3/Nat8";
-import Nat32 "mo:base@0.7.3/Nat32";
-import Result "mo:base@0.7.3/Result";
-import Text "mo:base@0.7.3/Text";
+import Char "mo:base/Char";
+import Iter "mo:base/Iter";
+import Int "mo:base/Int";
+import Float "mo:base/Float";
+import List "mo:base/List";
+import Nat8 "mo:base/Nat8";
+import Nat32 "mo:base/Nat32";
+import Result "mo:base/Result";
+import Text "mo:base/Text";
 
 import C "../../parser-combinators.mo/src/Combinators";
 import L "../../parser-combinators.mo/src/List";
