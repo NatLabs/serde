@@ -2,7 +2,7 @@
 name = "serde-core"
 version = "0.0.1"
 description = "A serialisation and deserialisation library for Motoko. Mirrors NatLabs/serde (core branch) + NatLabs/ByteUtils (refs/pull/3/head) inlined."
-
+repository = "https://github.com/ggreif/serde"
 keywords = ["json", "candid", "cbor", "urlencoded", "serialization"]
 license = "MIT"
 files = ["src/**/*.mo", "submodules/**/*.mo"]
