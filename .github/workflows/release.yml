@@ -1,0 +1,29 @@
+name: Release
+
+# Pushing a v*.*.* tag runs tests, publishes the Mops library,
+
+on:
+    push:
+        tags:
+            - "v*.*.*"
+
+jobs:
+    publish-mops:
+        name: Publish to Mops
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+            - uses: dfinity/setup-dfx@main
+            - uses: ZenVoich/setup-mops@v1
+              with:
+                  mops-version: 2.8.1
+                  identity-pem: ${{ secrets.MOPS_IDENTITY_PEM }}
+    
+            - name: Install dependencies
+              run: mops install --lock ignore
+    
+            - name: Set version from tag in mops.toml
+              run: sed -i "s/^version = .*/version = \"${GITHUB_REF_NAME#v}\"/" mops.toml
+    
+            - name: Publish
+              run: mops publish
