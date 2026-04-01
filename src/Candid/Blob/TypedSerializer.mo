@@ -408,10 +408,9 @@ module TypedSerializer {
         };
     };
 
-    /// Encodes values using the precomputed types in this TypedSerializer
-    public func encode(self : TypedSerializer, candid_values : [Candid]) : Result<Blob, Text> {
+    func encode_values(self : TypedSerializer, candid_values : [Candid]) : Result<[Nat8], Text> {
         if (candid_values.size() != self.encoder_candid_types.size()) {
-            return #err("encode: candid_values size does not match encoder_candid_types size");
+            return #err("encode_values: candid_values size does not match encoder_candid_types size");
         };
 
         let value_buffer = Buffer.Buffer<Nat8>(400);
@@ -434,14 +433,33 @@ module TypedSerializer {
             i += 1;
         };
 
-        #ok(
-            Blob.fromArray(
-                Array.append(
-                    self.encoded_type_header,
-                    Buffer.toArray(value_buffer),
-                )
-            )
-        );
+        #ok(Buffer.toArray(value_buffer));
+    };
+
+    /// Encodes values using the precomputed types in this TypedSerializer
+    public func encode(self : TypedSerializer, candid_values : [Candid]) : Result<Blob, Text> {
+        switch(encode_values(self, candid_values)) {
+            case (#ok(encoded_values)) {
+                #ok(
+                    Blob.fromArray(
+                        Array.append(
+                            self.encoded_type_header,
+                            encoded_values,
+                        )
+                    )
+                );
+            };
+            case (#err(err_msg)) #err(err_msg);
+        };
+    };
+
+    public func encodeWithNoTypeHeader(self : TypedSerializer, candid_values : [Candid]) : Result<Blob, Text> {
+        switch(encode_values(self, candid_values)) {
+            case (#ok(encoded_values)) {
+                #ok(Blob.fromArray(encoded_values));
+            };
+            case (#err(err_msg)) #err(err_msg);
+        };
     };
 
     /// Decodes values from a full candid blob using precomputed types
@@ -455,12 +473,24 @@ module TypedSerializer {
             return #err("Invalid Magic Number");
         };
 
-        // Since we have the precomputed encoded_type_header, we can directly jump to the values section
+        // Since we have the precomputed encoded_type_header, we can jump directly to the values section
         // instead of parsing and skipping the type section
         state[C.BYTES_INDEX] := self.encoded_type_header.size();
 
         // Use precomputed types and recursive types map for decoding values
         Decoder.decode_candid_values(bytes, self.decoder_candid_types, state, self.options, self.renaming_map, self.recursive_types_map);
+    };
+
+    /// Decodes values from a candid blob has no type header (only values), using precomputed types
+    public func decodeWithNoTypeHeader(self : TypedSerializer, candid_blob : Blob) : Result<[Candid], Text> {
+        let bytes = candid_blob;
+        let state : [var Nat] = [var 0];
+
+        Decoder.decode_candid_values(bytes, self.decoder_candid_types, state, self.options, self.renaming_map, self.recursive_types_map);
+    };
+
+    public func getTypeHeader(self : TypedSerializer) : [Nat8] {
+        self.encoded_type_header;
     };
 
 };
