@@ -1,14 +1,15 @@
-import Array "mo:base@0.16.0/Array";
-import Nat8 "mo:base@0.16.0/Nat8";
-import Nat16 "mo:base@0.16.0/Nat16";
-import Nat64 "mo:base@0.16.0/Nat64";
-import Nat32 "mo:base@0.16.0/Nat32";
-import Int8 "mo:base@0.16.0/Int8";
-import Int16 "mo:base@0.16.0/Int16";
-import Int64 "mo:base@0.16.0/Int64";
-import Int32 "mo:base@0.16.0/Int32";
-import Debug "mo:base@0.16.0/Debug";
-import Principal "mo:base@0.16.0/Principal";
+import Array "mo:core@2.4/Array";
+import Nat8 "mo:core@2.4/Nat8";
+import Nat16 "mo:core@2.4/Nat16";
+import Nat64 "mo:core@2.4/Nat64";
+import Nat32 "mo:core@2.4/Nat32";
+import Int8 "mo:core@2.4/Int8";
+import Int16 "mo:core@2.4/Int16";
+import Int64 "mo:core@2.4/Int64";
+import Int32 "mo:core@2.4/Int32";
+import Debug "mo:core@2.4/Debug";
+import Runtime "mo:core@2.4/Runtime";
+import Principal "mo:core@2.4/Principal";
 
 import T "Types";
 
@@ -48,10 +49,10 @@ module {
                         },
                     )
                 );
-                case (#Bool(_) or #Option(_) or #Variant(_) or #Tuple(_)) Debug.trap(debug_show candid # " not suppported in ICRC3Value");
-                case (#Empty) Debug.trap("Empty not suppported in ICRC3Value");
-                case (#Float(f)) Debug.trap("Float not suppported in ICRC3Value");
-                case (#Null) Debug.trap("Null not suppported in ICRC3Value");
+                case (#Bool(_) or #Option(_) or #Variant(_) or #Tuple(_)) Runtime.trap(debug_show candid # " not suppported in ICRC3Value");
+                case (#Empty) Runtime.trap("Empty not suppported in ICRC3Value");
+                case (#Float(f)) Runtime.trap("Float not suppported in ICRC3Value");
+                case (#Null) Runtime.trap("Null not suppported in ICRC3Value");
 
             };
 

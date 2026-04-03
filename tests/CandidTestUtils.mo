@@ -1,20 +1,39 @@
 // @testmode wasi
-import Blob "mo:base@0.16.0/Blob";
-import Debug "mo:base@0.16.0/Debug";
-import Iter "mo:base@0.16.0/Iter";
-import Nat "mo:base@0.16.0/Nat";
-import Principal "mo:base@0.16.0/Principal";
-import Result "mo:base@0.16.0/Result";
-import Option "mo:base@0.16.0/Option";
+import Array "mo:core@2.4/Array";
+import Blob "mo:core@2.4/Blob";
+import Debug "mo:core@2.4/Debug";
+import Iter "mo:core@2.4/Iter";
+import Nat "mo:core@2.4/Nat";
+import Principal "mo:core@2.4/Principal";
+import Result "mo:core@2.4/Result";
+import Option "mo:core@2.4/Option";
 
 import { test; suite } "mo:test";
+import Map "mo:map@9.0/Map";
+import Itertools "mo:itertools@0.2.2/Iter";
 
 import Serde "../src";
 import Candid "../src/Candid";
 import Encoder "../src/Candid/Blob/Encoder";
 
+import { toArgs; toArgType; fromArgs; fromArgType } "helpers/motoko_candid_utils";
+import ValidationDecoder "mo:candid/Decoder";
+import ValidationEncoder "mo:candid/Encoder";
+import ValidationType "mo:candid/Type";
+import ValidationArg "mo:candid/Arg";
+import Runtime "mo:core/Runtime";
+
+
+
 module {
     type Candid = Candid.Candid;
+
+    type CandidType = Candid.CandidType;
+
+    let Validator = {
+        Encoder = ValidationEncoder;
+        Decoder = ValidationDecoder;
+    };
 
     public func encode_with_types(types : [Candid.CandidType], vals : [Candid], _options : ?Candid.Options) : Result.Result<Blob, Text> {
         let options = Option.get(_options, Candid.defaultOptions);
@@ -98,5 +117,91 @@ module {
 
         return #ok(decoder_instance_vals);
     };
+
+    func empty_map() : Map.Map<Text, Text> {
+        Map.new<Text, Text>()
+    };
+
+    public func validator_encoding(candid_values : [Candid.Candid]) : Blob {
+        let #ok(args) = toArgs(candid_values, empty_map()) else Runtime.trap("validator_encoding: toArgs failed");
+        Blob.fromArray(Validator.Encoder.toBytes(args));
+    };
+
+    public func validate_encoding(candid_values : [Candid.Candid], encoded: Blob) : Bool {
+        Debug.print("candid_values: " # debug_show candid_values);
+
+        let expected = validator_encoding(candid_values);
+
+        Debug.print("encoded: " # debug_show (encoded));
+        Debug.print("expected: " # debug_show(expected));
+
+        return encoded == expected;
+    };
+
+    public func validate_encoding_with_types(candid_values : [Candid.Candid], types : [CandidType], encoded: Blob) : Bool {
+
+        let #ok(args) = toArgs(candid_values, empty_map());
+        let arg_types = Array.map<CandidType, ValidationType.Type>(types, toArgType);
+
+        let arg_types_iter = arg_types.vals();
+        let augmented_args = Array.map(
+            args,
+            func(arg : ValidationArg.Arg) : ValidationArg.Arg {
+                let ?arg_type = arg_types_iter.next();
+
+                { arg with type_ = arg_type };
+            },
+        );
+
+        let expected = Blob.fromArray(Validator.Encoder.toBytes(augmented_args));
+
+        Debug.print("encoded: " # debug_show (encoded));
+        Debug.print("expected: " # debug_show(expected));
+        
+        return encoded == expected;
+    };
+
+    public func validate_decoding(decoded : [Candid.Candid], encoded: Blob, field_names: [Text]) : Bool {
+
+        let expected_args = switch(Validator.Decoder.fromBytes(encoded.vals())){
+            case (?args) args;
+            case (null) Runtime.trap("validate_decoding: decoding failed");
+        };
+
+        let expected = switch (fromArgs(expected_args, empty_map(), field_names)) {
+            case (#ok(vals)) vals;
+            case (#err(err)) {
+                Debug.print("Decoding failed: " # err);
+                return false;
+            };
+        };
+
+        Debug.print("decoded: " # debug_show decoded);
+        Debug.print("expected: " # debug_show expected);
+
+        return Itertools.all(
+            Itertools.zip(decoded.vals(), expected.vals()),
+            func((a, b): (Candid, Candid)) : Bool {Candid.equal(a, b)},
+        );
+    };
+
+    public func validate_encoding_by_decoding(candid_values: [Candid.Candid], encoded: Blob, field_names: [Text]) : Bool {
+
+        return validate_decoding(candid_values, encoded, field_names);
+    };
+
+    // public func validate_decoding_with_types(encoded: Blob, types : [CandidType], decoded : [Candid.Candid]) : Bool {
+    //     let expected = switch (fromArgs(Validator.Decoder.fromBytes(encoded.vals(), Array.map<CandidType, ValidationType.Type>(types, toArgType)))) {
+    //         case (#ok(vals)) vals;
+    //         case (#err(err)) {
+    //             Debug.print("Decoding failed: " # err);
+    //             return false;
+    //         };
+    //     };
+
+    //     Debug.print("(decoded, expected): " # debug_show (decoded, expected));
+
+    //     return decoded == expected;
+    // };
 
 };

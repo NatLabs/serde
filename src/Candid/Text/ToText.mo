@@ -1,8 +1,7 @@
-import Float "mo:base@0.16.0/Float";
-import Array "mo:base@0.16.0/Array";
-import Text "mo:base@0.16.0/Text";
-import Principal "mo:base@0.16.0/Principal";
-import TrieMap "mo:base@0.16.0/TrieMap";
+import Float "mo:core@2.4/Float";
+import Array "mo:core@2.4/Array";
+import Text "mo:core@2.4/Text";
+import Principal "mo:core@2.4/Principal";
 
 import Itertools "mo:itertools@0.2.2/Iter";
 
@@ -12,7 +11,6 @@ import U "../../Utils";
 
 module {
     type Candid = CandidType.Candid;
-    type TrieMap<K, V> = TrieMap.TrieMap<K, V>;
 
     public func toText(candid_values : [Candid]) : Text {
         var text = "";
@@ -48,7 +46,7 @@ module {
             case (#Int32(n)) addBrackets(U.stripStart(removeUnderscore(debug_show (n)), #char '+') # " : int32");
             case (#Int64(n)) addBrackets(U.stripStart(removeUnderscore(debug_show (n)), #char '+') # " : int64");
 
-            case (#Float(n)) Float.format(#exact, n);
+            case (#Float(n)) Float.format(n, #exact);
 
             case (#Null) "null";
             case (#Empty) "()";

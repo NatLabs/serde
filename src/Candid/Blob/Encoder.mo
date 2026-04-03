@@ -1,40 +1,37 @@
-import Array "mo:base@0.16.0/Array";
-import Blob "mo:base@0.16.0/Blob";
-import Buffer "mo:base@0.16.0/Buffer";
-import B "mo:buffer";
-import Debug "mo:base@0.16.0/Debug";
-import Result "mo:base@0.16.0/Result";
-import Nat64 "mo:base@0.16.0/Nat64";
-import Int8 "mo:base@0.16.0/Int8";
-import Int32 "mo:base@0.16.0/Int32";
-import Nat8 "mo:base@0.16.0/Nat8";
-import Nat32 "mo:base@0.16.0/Nat32";
-import Nat16 "mo:base@0.16.0/Nat16";
-import Int64 "mo:base@0.16.0/Int64";
-import Nat "mo:base@0.16.0/Nat";
-import Int "mo:base@0.16.0/Int";
-import Iter "mo:base@0.16.0/Iter";
-import Prelude "mo:base@0.16.0/Prelude";
-import Principal "mo:base@0.16.0/Principal";
-import Text "mo:base@0.16.0/Text";
-import Order "mo:base@0.16.0/Order";
-import Option "mo:base@0.16.0/Option";
-import Func "mo:base@0.16.0/Func";
-import Char "mo:base@0.16.0/Char";
-import Int16 "mo:base@0.16.0/Int16";
+import Array "mo:core@2.4/Array";
+import Blob "mo:core@2.4/Blob";
+import Buffer "mo:base@0.16/Buffer";
+import Debug "mo:core@2.4/Debug";
+import Runtime "mo:core@2.4/Runtime";
+import Result "mo:core@2.4/Result";
+import Nat64 "mo:core@2.4/Nat64";
+import Int8 "mo:core@2.4/Int8";
+import Int32 "mo:core@2.4/Int32";
+import Nat8 "mo:core@2.4/Nat8";
+import Nat32 "mo:core@2.4/Nat32";
+import Nat16 "mo:core@2.4/Nat16";
+import Int64 "mo:core@2.4/Int64";
+import Nat "mo:core@2.4/Nat";
+import Int "mo:core@2.4/Int";
+import Iter "mo:core@2.4/Iter";
+import Principal "mo:core@2.4/Principal";
+import Text "mo:core@2.4/Text";
+import Order "mo:core@2.4/Order";
+import Option "mo:core@2.4/Option";
+import Func "mo:core@2.4/Func";
+import Char "mo:core@2.4/Char";
+import Int16 "mo:core@2.4/Int16";
 
 import Itertools "mo:itertools@0.2.2/Iter";
 import PeekableIter "mo:itertools@0.2.2/PeekableIter";
-import Map "mo:map@9.0.1/Map";
-import ByteUtils "mo:byte-utils@0.1.2";
+import Map "mo:map@9.0/Map";
+import ByteUtils "mo:byte-utils@0.2";
 
 import T "../Types";
-import TrieMap "mo:base@0.16.0/TrieMap";
 import Utils "../../Utils";
 import CandidUtils "CandidUtils";
 
 module {
-    type TrieMap<K, V> = TrieMap.TrieMap<K, V>;
     type Result<A, B> = Result.Result<A, B>;
     type Buffer<A> = Buffer.Buffer<A>;
     type Iter<A> = Iter.Iter<A>;
@@ -167,10 +164,6 @@ module {
             value_buffer,
         ];
 
-        // Print each buffer in the sequence as a Blob
-        // for (buf in sequence.vals()) {
-        //   Debug.print(debug_show Blob.fromArray(Buffer.toArray(buf)));
-        // };
 
         var i = 0;
         var j = 0;
@@ -291,7 +284,7 @@ module {
         if (candid_is_compound_type) {
             switch (candid_type, candid_value) {
                 case (#Option(opt_type), #Option(opt_value)) {
-                    if (opt_value == #Null and opt_type != #Null) {
+                    if (opt_value == #Null) {
                         value_buffer.add(0); // no value
                     } else {
                         value_buffer.add(1); // has value
@@ -357,7 +350,7 @@ module {
                     if (bytes.size() > 0) {
                         switch (bytes[0]) {
                             case (#Nat8(_)) {};
-                            case (_) return Debug.trap("invalid blob value: expected array of Nat8, got array of " # debug_show bytes[0]);
+                            case (_) return Runtime.trap("invalid blob value: expected array of Nat8, got array of " # debug_show bytes[0]);
                         };
                     };
                     ignore encode_value_only(
@@ -402,7 +395,7 @@ module {
                                 // Field is missing - if the type is optional, use #Null
                                 switch (field_type) {
                                     case (#Option(_)) #Null;
-                                    case (_) Debug.trap("unable to find field key in field types: " # debug_show field_type_key # "in " # debug_show record_entries);
+                                    case (_) Runtime.trap("encode_value_only() error: unable to find field key in field types: " # debug_show field_type_key # "in " # debug_show record_entries);
                                 };
                             };
                         };
@@ -476,13 +469,13 @@ module {
                     let variant_key = get_renamed_key(renaming_map, variant.0);
                     let variant_value = variant.1;
                     let variant_index_res = Array.indexOf<(Text, CandidType)>(
-                        (variant_key, #Empty),
                         variant_types,
                         func((a, _) : (Text, CandidType), (b, _) : (Text, CandidType)) : Bool = a == b,
+                        (variant_key, #Empty),
                     );
                     let variant_index = switch (variant_index_res) {
                         case (?index) index;
-                        case (_) Debug.trap("unable to find variant key in variant types");
+                        case (_) Runtime.trap("unable to find variant key in variant types");
                     };
                     unsigned_leb128(value_buffer, variant_index);
                     ignore encode_value_only(
@@ -496,7 +489,7 @@ module {
                         true,
                     );
                 };
-                case (_) Debug.trap("invalid (type, value) pair for encode_value_only: " # debug_show { candid_type; candid_value });
+                case (_) Runtime.trap("invalid (type, value) pair for encode_value_only: " # debug_show { candid_type; candid_value });
             };
 
         } else {
@@ -559,7 +552,7 @@ module {
                         i += 1;
                     };
                 };
-                case (_) Debug.trap("unknown (type, value) pair for encode_value_only: " # debug_show (candid_type, candid_value));
+                case (_) Runtime.trap("unknown (type, value) pair for encode_value_only: " # debug_show (candid_type, candid_value));
             };
         };
         null;
@@ -604,7 +597,7 @@ module {
             case (#Null) ref_candid_type_buffer.add(T.TypeCode.Null);
             case (#Empty) ref_candid_type_buffer.add(T.TypeCode.Empty);
 
-            case (_) Debug.trap("encode_primitive_type_only(): unknown primitive type " # debug_show candid_type);
+            case (_) Runtime.trap("encode_primitive_type_only(): unknown primitive type " # debug_show candid_type);
         };
     };
 
@@ -644,7 +637,7 @@ module {
                     let opt_type_info = get_type_info(opt_type);
                     let pos = switch (Map.get(unique_compound_type_map, thash, opt_type_info)) {
                         case (?pos) pos;
-                        case (_) Debug.trap("unable to find compound type pos to store in primitive type sequence for " # debug_show (type_info));
+                        case (_) Runtime.trap("unable to find compound type pos to store in primitive type sequence for " # debug_show (type_info));
                     };
                     unsigned_leb128(compound_type_buffer, pos);
                 };
@@ -672,7 +665,7 @@ module {
                     let arr_type_info = get_type_info(arr_type);
                     let pos = switch (Map.get(unique_compound_type_map, thash, arr_type_info)) {
                         case (?pos) pos;
-                        case (_) Debug.trap("unable to find compound type pos to store in primitive type sequence for " # debug_show (type_info));
+                        case (_) Runtime.trap("unable to find compound type pos to store in primitive type sequence for " # debug_show (type_info));
                     };
                     unsigned_leb128(compound_type_buffer, pos);
                 };
@@ -732,7 +725,7 @@ module {
                         let value_type_info = get_type_info(field_type);
                         let pos = switch (Map.get(unique_compound_type_map, thash, value_type_info)) {
                             case (?pos) pos;
-                            case (_) Debug.trap("unable to find compound type pos to store in primitive type sequence for " # debug_show (type_info));
+                            case (_) Runtime.trap("unable to find compound type pos to store in primitive type sequence for " # debug_show (type_info));
                         };
                         unsigned_leb128(compound_type_buffer, pos);
                     } else {
@@ -799,7 +792,7 @@ module {
                         let variant_type_info = get_type_info(variant_type);
                         let pos = switch (Map.get(unique_compound_type_map, thash, variant_type_info)) {
                             case (?pos) pos;
-                            case (_) Debug.trap("unable to find compound type pos to store in primitive type sequence for " # debug_show (type_info));
+                            case (_) Runtime.trap("unable to find compound type pos to store in primitive type sequence for " # debug_show (type_info));
                         };
                         unsigned_leb128(compound_type_buffer, pos);
                     } else {
@@ -815,7 +808,7 @@ module {
                 };
             };
 
-            case (_) Debug.trap("encode_compound_type_only(): unknown compound type " # debug_show candid_type);
+            case (_) Runtime.trap("encode_compound_type_only(): unknown compound type " # debug_show candid_type);
         };
 
         ignore Map.put(unique_compound_type_map, thash, type_info, counter[C.COUNTER.COMPOUND_TYPE]);
@@ -848,7 +841,7 @@ module {
                 let type_info = get_type_info(candid_type);
                 let pos = switch (Map.get(unique_compound_type_map, thash, type_info)) {
                     case (?pos) pos;
-                    case (_) Debug.trap("unable to find compound type pos to store in primitive type sequence for " # debug_show (type_info));
+                    case (_) Runtime.trap("unable to find compound type pos to store in primitive type sequence for " # debug_show (type_info));
                 };
                 unsigned_leb128(candid_type_buffer, pos);
             };
@@ -896,9 +889,7 @@ module {
 
         switch (candid_type, candid_value) {
             case (#Nat, #Nat(n)) {
-                // Debug.print("start encoding Nat: " # debug_show n);
                 ref_candid_type_buffer.add(T.TypeCode.Nat);
-                // Debug.print("encoded type codde");
                 unsigned_leb128(value_buffer, n);
 
             };
@@ -978,7 +969,7 @@ module {
                 };
             };
 
-            case (_) Debug.trap("unknown (type, value) pair: " # debug_show (candid_type, candid_value));
+            case (_) Runtime.trap("unknown (type, value) pair: " # debug_show (candid_type, candid_value));
         };
     };
 
@@ -1020,9 +1011,10 @@ module {
                     compound_type_buffer.add(T.TypeCode.Option);
                 };
 
-                if (opt_value == #Null and opt_type != #Null) {
-                    // a result of being able to set #Null at any point in an #Option type
-                    // for instance, type #Option(#Nat) with value #Null
+                if (opt_value == #Null) {
+                    // #Option(#Null) encodes as absent, regardless of the inner type.
+                    // This handles both explicit #Option(#Null) and inferred types where
+                    // the resolved type may differ (e.g. #Option(#Array(...)) from other elements).
 
                     value_buffer.add(0); // no value
 
@@ -1062,7 +1054,7 @@ module {
                     let opt_type_info = get_type_info(opt_type);
                     let pos = switch (Map.get(unique_compound_type_map, thash, opt_type_info)) {
                         case (?pos) pos;
-                        case (_) Debug.trap("unable to find compound type pos to store in primitive type sequence for " # debug_show (type_info));
+                        case (_) Runtime.trap("unable to find compound type pos to store in primitive type sequence for " # debug_show (type_info));
                     };
                     unsigned_leb128(compound_type_buffer, pos);
                 };
@@ -1096,7 +1088,7 @@ module {
                     let opt_type_info = get_type_info(opt_type);
                     let pos = switch (Map.get(unique_compound_type_map, thash, opt_type_info)) {
                         case (?pos) pos;
-                        case (_) Debug.trap("unable to find compound type pos to store in primitive type sequence for " # debug_show (type_info, opt_type));
+                        case (_) Runtime.trap("unable to find compound type pos to store in primitive type sequence for " # debug_show (type_info, opt_type));
                     };
                     unsigned_leb128(compound_type_buffer, pos);
                 };
@@ -1152,7 +1144,7 @@ module {
                     let arr_type_info = get_type_info(arr_type);
                     let pos = switch (Map.get(unique_compound_type_map, thash, arr_type_info)) {
                         case (?pos) pos;
-                        case (_) Debug.trap("unable to find compound type pos to store in primitive type sequence for " # debug_show (type_info, arr_type));
+                        case (_) Runtime.trap("unable to find compound type pos to store in primitive type sequence for " # debug_show (type_info, arr_type));
                     };
                     unsigned_leb128(compound_type_buffer, pos);
 
@@ -1198,7 +1190,7 @@ module {
                 if (bytes.size() > 0) {
                     switch (bytes[0]) {
                         case (#Nat8(_)) {};
-                        case (_) return Debug.trap("invalid blob value: expected array of Nat8, got array of " # debug_show bytes[0]);
+                        case (_) return Runtime.trap("invalid blob value: expected array of Nat8, got array of " # debug_show bytes[0]);
                     };
                 };
 
@@ -1258,7 +1250,7 @@ module {
                             // Field is missing - if the type is optional, use #Null
                             switch (field_type) {
                                 case (#Option(_)) #Null;
-                                case (_) Debug.trap("unable to find field key in field types: " # debug_show field_type_key # "in " # debug_show record_entries);
+                                case (_) Runtime.trap("encode_compound_type() error: unable to find field key in field types: " # debug_show field_type_key # "in " # debug_show record_entries);
                             };
                         };
                     };
@@ -1305,7 +1297,7 @@ module {
                             let value_type_info = get_type_info(field_type);
                             let pos = switch (Map.get(unique_compound_type_map, thash, value_type_info)) {
                                 case (?pos) pos;
-                                case (_) Debug.trap("unable to find compound type pos to store in primitive type sequence for " # debug_show (type_info, field_type));
+                                case (_) Runtime.trap("unable to find compound type pos to store in primitive type sequence for " # debug_show (type_info, field_type));
                             };
 
                             unsigned_leb128(compound_type_buffer, pos);
@@ -1393,14 +1385,14 @@ module {
                 let variant_value = variant.1;
 
                 let variant_index_res = Array.indexOf<(Text, CandidType)>(
-                    (variant_key, #Empty), // attach #Empty variant type to satisfy the type checker
                     variant_types,
                     func((a, _) : (Text, CandidType), (b, _) : (Text, CandidType)) : Bool = a == b,
+                    (variant_key, #Empty), // attach #Empty variant type to satisfy the type checker
                 );
 
                 let variant_index = switch (variant_index_res) {
                     case (?index) index;
-                    case (_) Debug.trap("unable to find variant key in variant types");
+                    case (_) Runtime.trap("unable to find variant key in variant types");
                 };
 
                 var i = 0;
@@ -1458,7 +1450,7 @@ module {
                             let variant_type_info = get_type_info(variant_type);
                             let pos = switch (Map.get(unique_compound_type_map, thash, variant_type_info)) {
                                 case (?pos) pos;
-                                case (_) Debug.trap("unable to find compound type pos to store in primitive type sequence for " # debug_show (type_info));
+                                case (_) Runtime.trap("unable to find compound type pos to store in primitive type sequence for " # debug_show (type_info));
                             };
                             unsigned_leb128(compound_type_buffer, pos);
                         } else {
@@ -1476,7 +1468,7 @@ module {
 
             };
 
-            case (_) Debug.trap("invalid (type, value) pair: " # debug_show { candid_type; candid_value });
+            case (_) Runtime.trap("invalid (type, value) pair: " # debug_show { candid_type; candid_value });
         };
 
         if (not type_exists) {
@@ -1490,7 +1482,7 @@ module {
         if (not is_nested_child_of_compound_type) {
             let pos = switch (Map.get(unique_compound_type_map, thash, type_info)) {
                 case (?pos) pos;
-                case (_) Debug.trap("unable to find compound type pos to store in primitive type sequence for " # debug_show (type_info));
+                case (_) Runtime.trap("unable to find compound type pos to store in primitive type sequence for " # debug_show (type_info));
             };
             unsigned_leb128(candid_type_buffer, pos);
         };
@@ -1727,7 +1719,7 @@ module {
     };
 
     func to_candid_record_field_type(node : CandidTypeNode) : (Text, CandidType) {
-        let ?key = node.key else return Debug.trap("to_candid_record_field_type: key is null");
+        let ?key = node.key else return Runtime.trap("to_candid_record_field_type: key is null");
         return (key, node.type_);
     };
 
@@ -2116,7 +2108,7 @@ module {
     func order_candid_types_by_height_bfs(rows : Buffer<[InternalCandidTypeNode]>) {
 
         label while_loop while (rows.size() > 0) {
-            let candid_values = Buffer.last(rows) else return Prelude.unreachable();
+            let candid_values = Buffer.last(rows) else return Runtime.unreachable();
             let buffer = Buffer.Buffer<InternalCandidTypeNode>(8);
 
             var has_compound_type = false;

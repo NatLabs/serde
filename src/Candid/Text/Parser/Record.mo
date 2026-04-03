@@ -1,5 +1,5 @@
-import Iter "mo:base@0.16.0/Iter";
-import List "mo:base@0.16.0/List";
+import Iter "mo:core@2.4/Iter";
+import List "mo:base/List";
 
 import C "../../../../submodules/parser-combinators.mo/src/Combinators";
 import P "../../../../submodules/parser-combinators.mo/src/Parser";
@@ -36,7 +36,7 @@ module {
                 ),
             ),
             func(xs : List<(Text, Candid)>) : Candid {
-                let records = Iter.toArray(Iter.fromList(xs));
+                let records = Iter.toArray(List.toIter(xs));
                 #Record(records);
             },
         );

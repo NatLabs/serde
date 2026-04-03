@@ -1,8 +1,8 @@
-import Char "mo:base@0.16.0/Char";
-import Iter "mo:base@0.16.0/Iter";
-import Float "mo:base@0.16.0/Float";
-import List "mo:base@0.16.0/List";
-import Nat32 "mo:base@0.16.0/Nat32";
+import Char "mo:core@2.4/Char";
+import Iter "mo:core@2.4/Iter";
+import Float "mo:core@2.4/Float";
+import List "mo:base/List";
+import Nat32 "mo:core@2.4/Nat32";
 
 import C "../../submodules/parser-combinators.mo/src/Combinators";
 import P "../../submodules/parser-combinators.mo/src/Parser";
@@ -36,7 +36,7 @@ module {
             case (t) t;
         };
 
-        let list = Iter.toList(t.chars());
+        let list =List.fromArray(Iter.toArray(t.chars()));
 
         // todo: parse Principal
         switch (parseCharList(list)) {

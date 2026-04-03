@@ -1,25 +1,26 @@
-import Array "mo:base@0.16.0/Array";
-import Char "mo:base@0.16.0/Char";
-import Order "mo:base@0.16.0/Order";
-import Float "mo:base@0.16.0/Float";
-import Text "mo:base@0.16.0/Text";
-import Iter "mo:base@0.16.0/Iter";
-import Nat64 "mo:base@0.16.0/Nat64";
-import Nat32 "mo:base@0.16.0/Nat32";
-import Nat8 "mo:base@0.16.0/Nat8";
-import Int "mo:base@0.16.0/Int";
-import Buffer "mo:base@0.16.0/Buffer";
-import Result "mo:base@0.16.0/Result";
-import Int64 "mo:base@0.16.0/Int64";
-import Blob "mo:base@0.16.0/Blob";
+import Array "mo:core@2.4/Array";
+import VarArray "mo:core@2.4/VarArray";
+import Char "mo:core@2.4/Char";
+import Order "mo:core@2.4/Order";
+import Float "mo:core@2.4/Float";
+import Text "mo:core@2.4/Text";
+import Iter "mo:core@2.4/Iter";
+import Nat64 "mo:core@2.4/Nat64";
+import Nat32 "mo:core@2.4/Nat32";
+import Nat8 "mo:core@2.4/Nat8";
+import Int "mo:core@2.4/Int";
+import Buffer "mo:base@0.16/Buffer";
+import Result "mo:core@2.4/Result";
+import Int64 "mo:core@2.4/Int64";
+import Blob "mo:core@2.4/Blob";
 
-import Prelude "mo:base@0.16.0/Prelude";
-import Debug "mo:base@0.16.0/Debug";
+import Debug "mo:core@2.4/Debug";
+import Runtime "mo:core@2.4/Runtime";
 import Itertools "mo:itertools@0.2.2/Iter";
-import Map "mo:map@9.0.1/Map";
-import MapConst "mo:map@9.0.1/Map/const";
+import Map "mo:map@9.0/Map";
+import MapConst "mo:map@9.0/Map/const";
 
-import ByteUtils "mo:byte-utils@0.1.2";
+import ByteUtils "mo:byte-utils@0.2";
 
 module {
 
@@ -29,10 +30,10 @@ module {
 
     public func create_map<K, V>(map_size : Nat) : Map.Map<K, V> = [
         var ?(
-            Array.init<?K>(map_size, null),
-            Array.init<?V>(map_size, null),
-            Array.init<Nat>(map_size * 2, MapConst.NULL),
-            Array.init<Nat32>(3, 0),
+            VarArray.repeat(null, map_size),
+            VarArray.repeat(null, map_size),
+            VarArray.repeat(MapConst.NULL, map_size * 2),
+            VarArray.repeat(0 : Nat32, 3),
         )
     ];
 
@@ -93,7 +94,7 @@ module {
             func(i : Nat) {
                 switch (iter.next()) {
                     case (?x) x;
-                    case (_) Prelude.unreachable();
+                    case (_) Runtime.unreachable();
                 };
             },
         );
@@ -101,7 +102,7 @@ module {
 
     public func send_error<OldOk, NewOk, Error>(res : Result<OldOk, Error>) : Result<NewOk, Error> {
         switch (res) {
-            case (#ok(_)) Prelude.unreachable();
+            case (#ok(_)) Runtime.unreachable();
             case (#err(errorMsg)) #err(errorMsg);
         };
     };
@@ -216,14 +217,14 @@ module {
     // };
 
     public class ReusableBuffer<A>(init_capacity : Nat) {
-        var elems : [var ?A] = Array.init(init_capacity, null);
+        var elems : [var ?A] = VarArray.repeat(null, init_capacity);
         var count : Nat = 0;
 
         public func size() : Nat = count;
 
         public func add(elem : A) {
             if (count == elems.size()) {
-                elems := Array.tabulateVar(
+                elems := VarArray.tabulate(
                     elems.size() * 2,
                     func(i : Nat) : ?A {
                         if (i < count) {
@@ -246,12 +247,12 @@ module {
         public func get(i : Nat) : A {
             switch (elems[i]) {
                 case (?elem) elem;
-                case (null) Debug.trap "Index out of bounds";
+                case (null) Runtime.trap "Index out of bounds";
             };
         };
 
         public func put(i : Nat, elem : A) {
-            if (i >= count) Debug.trap "Index out of bounds";
+            if (i >= count) Runtime.trap "Index out of bounds";
             elems[i] := ?elem;
         };
 

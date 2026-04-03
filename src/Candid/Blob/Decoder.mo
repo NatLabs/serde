@@ -1,27 +1,27 @@
-import Array "mo:base@0.16.0/Array";
-import Blob "mo:base@0.16.0/Blob";
-import Buffer "mo:base@0.16.0/Buffer";
-import Debug "mo:base@0.16.0/Debug";
-import Result "mo:base@0.16.0/Result";
-import Nat64 "mo:base@0.16.0/Nat64";
-import Int8 "mo:base@0.16.0/Int8";
-import Int32 "mo:base@0.16.0/Int32";
-import Nat8 "mo:base@0.16.0/Nat8";
-import Nat32 "mo:base@0.16.0/Nat32";
-import Int64 "mo:base@0.16.0/Int64";
-import Nat "mo:base@0.16.0/Nat";
-import Int "mo:base@0.16.0/Int";
-import Iter "mo:base@0.16.0/Iter";
-import Principal "mo:base@0.16.0/Principal";
-import Text "mo:base@0.16.0/Text";
-import Order "mo:base@0.16.0/Order";
-import Int16 "mo:base@0.16.0/Int16";
-import TrieMap "mo:base@0.16.0/TrieMap";
-import Option "mo:base@0.16.0/Option";
+import Array "mo:core@2.4/Array";
+import Blob "mo:core@2.4/Blob";
+import Buffer "mo:base@0.16/Buffer";
+import Debug "mo:core@2.4/Debug";
+import Runtime "mo:core@2.4/Runtime";
+import Result "mo:core@2.4/Result";
+import Nat64 "mo:core@2.4/Nat64";
+import Int8 "mo:core@2.4/Int8";
+import Int32 "mo:core@2.4/Int32";
+import Nat8 "mo:core@2.4/Nat8";
+import Nat32 "mo:core@2.4/Nat32";
+import Int64 "mo:core@2.4/Int64";
+import Nat "mo:core@2.4/Nat";
+import Int "mo:core@2.4/Int";
+import Iter "mo:core@2.4/Iter";
+import Principal "mo:core@2.4/Principal";
+import Text "mo:core@2.4/Text";
+import Order "mo:core@2.4/Order";
+import Int16 "mo:core@2.4/Int16";
+import Option "mo:core@2.4/Option";
 
-import Map "mo:map@9.0.1/Map";
-import Set "mo:map@9.0.1/Set";
-import ByteUtils "mo:byte-utils@0.1.2";
+import Map "mo:map@9.0/Map";
+import Set "mo:map@9.0/Set";
+import ByteUtils "mo:byte-utils@0.2";
 
 import T "../Types";
 import Utils "../../Utils";
@@ -30,8 +30,6 @@ import CandidUtils "CandidUtils";
 module {
     type Iter<A> = Iter.Iter<A>;
     type Result<A, B> = Result.Result<A, B>;
-
-    type TrieMap<K, V> = TrieMap.TrieMap<K, V>;
     type Candid = T.Candid;
     type KeyValuePair = T.KeyValuePair;
 
@@ -195,7 +193,7 @@ module {
     func read_from_iter(iter : Iter.Iter<Nat8>) : Nat8 {
         switch (iter.next()) {
             case (?byte) byte;
-            case (null) Debug.trap("Unexpected end of data stream");
+            case (null) Runtime.trap("Unexpected end of data stream");
         };
     };
 
@@ -278,7 +276,7 @@ module {
         } else if (code == T.TypeCode.Empty) {
             #Empty;
         } else {
-            Debug.trap("code [" # debug_show code # "] does not belong to a primitive type");
+            Runtime.trap("code [" # debug_show code # "] does not belong to a primitive type");
         };
     };
 
@@ -340,7 +338,7 @@ module {
                     #VariantRef(fields);
                 };
             } else {
-                Debug.trap("extract_compound_types(): expected compound type instead found " # debug_show (compound_type_code));
+                Runtime.trap("extract_compound_types(): expected compound type instead found " # debug_show (compound_type_code));
             };
 
             shallow_type;
@@ -482,7 +480,7 @@ module {
                     i += 1;
                 };
             } else {
-                Debug.trap("code [" # debug_show compound_type_code # "] does not belong to a compound type");
+                Runtime.trap("code [" # debug_show compound_type_code # "] does not belong to a compound type");
             };
 
             i += 1;
@@ -509,7 +507,6 @@ module {
 
     public func one_shot_decode(candid_blob : Blob, record_key_map : Map<Nat32, Text>, options : T.Options) : Result<[Candid], Text> {
         let bytes = candid_blob;
-        // let stream = BitBuffer.fromArray(bytes);
 
         let is_types_set = Option.isSome(options.types);
 
@@ -539,6 +536,8 @@ module {
             skip_types(bytes, state);
 
         };
+
+        // Debug.print("candid_types: " # debug_show(candid_types));
 
         let renaming_map = Map.fromIter<Text, Text>(options.renameKeys.vals(), Map.thash);
 
@@ -897,14 +896,16 @@ module {
             case (#Recursive(pos)) {
                 let recursive_type = switch (Map.get(recursive_map, nhash, pos)) {
                     case (?recursive_type) recursive_type;
-                    case (_) Debug.trap("Recursive type not found");
+                    case (_) Runtime.trap("Recursive type not found");
                 };
 
                 return decode_value_from_iter(iter, options, renaming_map, recursive_map, recursive_type);
             };
 
-            case (val) Debug.trap(debug_show (val) # " decoding is not supported");
+            case (val) Runtime.trap(debug_show (val) # " decoding is not supported");
         };
+
+        // Debug.print("value: " # debug_show(value));
 
         #ok(value);
     };

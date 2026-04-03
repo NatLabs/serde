@@ -1,22 +1,20 @@
-import Array "mo:base@0.16.0/Array";
-import Buffer "mo:base@0.16.0/Buffer";
-import Result "mo:base@0.16.0/Result";
-import Nat32 "mo:base@0.16.0/Nat32";
-import Nat "mo:base@0.16.0/Nat";
-import Iter "mo:base@0.16.0/Iter";
-import Text "mo:base@0.16.0/Text";
-import Order "mo:base@0.16.0/Order";
+import Array "mo:core@2.4/Array";
+import Buffer "mo:base@0.16/Buffer";
+import Result "mo:core@2.4/Result";
+import Nat32 "mo:core@2.4/Nat32";
+import Nat "mo:core@2.4/Nat";
+import Iter "mo:core@2.4/Iter";
+import Text "mo:core@2.4/Text";
+import Order "mo:core@2.4/Order";
 
 import Itertools "mo:itertools@0.2.2/Iter";
-import Map "mo:map@9.0.1/Map";
+import Map "mo:map@9.0/Map";
 
 import T "../Types";
-import TrieMap "mo:base@0.16.0/TrieMap";
 import Utils "../../Utils";
 
 module {
 
-    type TrieMap<K, V> = TrieMap.TrieMap<K, V>;
     type Result<A, B> = Result.Result<A, B>;
     type Buffer<A> = Buffer.Buffer<A>;
     type Iter<A> = Iter.Iter<A>;

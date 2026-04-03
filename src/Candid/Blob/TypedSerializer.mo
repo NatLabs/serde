@@ -1,21 +1,20 @@
-import Array "mo:base@0.16.0/Array";
-import Blob "mo:base@0.16.0/Blob";
-import Buffer "mo:base@0.16.0/Buffer";
-import Result "mo:base@0.16.0/Result";
-import Nat64 "mo:base@0.16.0/Nat64";
-import Nat8 "mo:base@0.16.0/Nat8";
-import Nat32 "mo:base@0.16.0/Nat32";
-import Nat "mo:base@0.16.0/Nat";
-import Iter "mo:base@0.16.0/Iter";
-import Text "mo:base@0.16.0/Text";
-import Order "mo:base@0.16.0/Order";
-import TrieMap "mo:base@0.16.0/TrieMap";
-import Option "mo:base@0.16.0/Option";
-import Debug "mo:base@0.16.0/Debug";
+import Array "mo:core@2.4/Array";
+import Blob "mo:core@2.4/Blob";
+import Buffer "mo:base@0.16/Buffer";
+import Result "mo:core@2.4/Result";
+import Nat64 "mo:core@2.4/Nat64";
+import Nat8 "mo:core@2.4/Nat8";
+import Nat32 "mo:core@2.4/Nat32";
+import Nat "mo:core@2.4/Nat";
+import Iter "mo:core@2.4/Iter";
+import Text "mo:core@2.4/Text";
+import Order "mo:core@2.4/Order";
+import Option "mo:core@2.4/Option";
+import Debug "mo:core@2.4/Debug";
 
-import Map "mo:map@9.0.1/Map";
-import Set "mo:map@9.0.1/Set";
-import ByteUtils "mo:byte-utils@0.1.2";
+import Map "mo:map@9.0/Map";
+import Set "mo:map@9.0/Set";
+import ByteUtils "mo:byte-utils@0.2";
 
 import T "../Types";
 import CandidUtils "CandidUtils";
@@ -28,8 +27,6 @@ module TypedSerializer {
 
     type Iter<A> = Iter.Iter<A>;
     type Result<A, B> = Result.Result<A, B>;
-
-    type TrieMap<K, V> = TrieMap.TrieMap<K, V>;
     type Candid = T.Candid;
     type KeyValuePair = T.KeyValuePair;
 
@@ -442,7 +439,7 @@ module TypedSerializer {
             case (#ok(encoded_values)) {
                 #ok(
                     Blob.fromArray(
-                        Array.append(
+                        Array.concat(
                             self.encoded_type_header,
                             encoded_values,
                         )

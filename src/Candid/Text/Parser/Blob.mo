@@ -1,6 +1,6 @@
-import Blob "mo:base@0.16.0/Blob";
-import Iter "mo:base@0.16.0/Iter";
-import List "mo:base@0.16.0/List";
+import Blob "mo:core@2.4/Blob";
+import Iter "mo:core@2.4/Iter";
+import List "mo:base/List";
 
 import C "../../../../submodules/parser-combinators.mo/src/Combinators";
 import P "../../../../submodules/parser-combinators.mo/src/Parser";
@@ -41,7 +41,7 @@ module {
                 ),
             ),
             func(chars : List<Nat8>) : Candid {
-                let blob = Blob.fromArray(Iter.toArray(Iter.fromList(chars)));
+                let blob = Blob.fromArray(Iter.toArray(List.toIter(chars)));
                 #Blob(blob);
             },
         );

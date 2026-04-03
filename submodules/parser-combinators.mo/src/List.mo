@@ -1,5 +1,5 @@
-import Iter "mo:base@0.7.3/Iter";
-import List "mo:base@0.7.3/List";
+import Iter "mo:base@0.16/Iter";
+import List "mo:base@0.16/List";
 
 module {
     private type List<T> = List.List<T>;

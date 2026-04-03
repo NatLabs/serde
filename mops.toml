@@ -3,26 +3,26 @@ name = "serde"
 version = "3.4.0"
 description = "A serialisation and deserialisation library for Motoko."
 repository = "https://github.com/NatLabs/serde"
-keywords = ["json", "candid", "cbor", "urlencoded", "serialization"]
+keywords = [ "json", "candid", "cbor", "urlencoded", "serialization" ]
 license = "MIT"
 
 [dependencies]
-"base@0.16.0" = "0.16.0"
+"base@0.16" = "0.16.0"
 "itertools@0.2.2" = "0.2.2"
-"xtended-numbers@2.0.0" = "2.0.0"
-"cbor@4.0.0" = "4.0.0"
-"map@9.0.1" = "9.0.1"
-"sha2@0.1.6" = "0.1.6"
-"byte-utils@0.1.2" = "0.1.2"
-"base@0.7.3" = "0.7.3"
+"xtended-numbers@2.3" = "2.3.0"
+"cbor@4.1" = "4.1.0"
+"map@9.0" = "9.0.1"
+"sha2@0.1" = "0.1.14"
+"byte-utils@0.2" = "0.2.0"
+"core@2.4" = "2.4.0"
 
 [dev-dependencies]
-test = "2.1.1"
+test = "2.1.2"
 fuzz = "1.0.0"
-rep-indy-hash = "0.1.1"
-candid = "2.0.0"
-bench = "1.0.0"
+rep-indy-hash = "0.2.1"
+candid = "2.4.2"
+bench = "2.0.1"
 
 [toolchain]
-wasmtime = "33.0.1"
-moc = "0.16.2"
+wasmtime = "43.0.0"
+moc = "1.4.1"

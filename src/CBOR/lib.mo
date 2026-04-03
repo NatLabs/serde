@@ -1,19 +1,19 @@
-import Buffer "mo:base@0.16.0/Buffer";
-import Blob "mo:base@0.16.0/Blob";
-import Int8 "mo:base@0.16.0/Int8";
-import Int16 "mo:base@0.16.0/Int16";
-import Int32 "mo:base@0.16.0/Int32";
-import Int64 "mo:base@0.16.0/Int64";
-import Option "mo:base@0.16.0/Option";
-import Nat64 "mo:base@0.16.0/Nat64";
-import Result "mo:base@0.16.0/Result";
-import Principal "mo:base@0.16.0/Principal";
+import Buffer "mo:base@0.16/Buffer";
+import Blob "mo:core@2.4/Blob";
+import Int8 "mo:core@2.4/Int8";
+import Int16 "mo:core@2.4/Int16";
+import Int32 "mo:core@2.4/Int32";
+import Int64 "mo:core@2.4/Int64";
+import Option "mo:core@2.4/Option";
+import Nat64 "mo:core@2.4/Nat64";
+import Result "mo:core@2.4/Result";
+import Principal "mo:core@2.4/Principal";
 
-import CBOR_Types "mo:cbor@4.0.0/Types";
-import CBOR_Encoder "mo:cbor@4.0.0/Encoder";
-import CBOR_Decoder "mo:cbor@4.0.0/Decoder";
-import NatX "mo:xtended-numbers/NatX";
-import FloatX "mo:xtended-numbers/FloatX";
+import CBOR_Types "mo:cbor@4.1/Types";
+import CBOR_Encoder "mo:cbor@4.1/Encoder";
+import CBOR_Decoder "mo:cbor@4.1/Decoder";
+import NatX "mo:xtended-numbers@2.3/NatX";
+import FloatX "mo:xtended-numbers@2.3/FloatX";
 
 import Candid "../Candid";
 import CandidType "../Candid/Types";

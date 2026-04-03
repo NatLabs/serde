@@ -1,9 +1,10 @@
-import Debug "mo:base@0.16.0/Debug";
-import List "mo:base@0.16.0/List";
-import Nat8 "mo:base@0.16.0/Nat8";
-import Nat16 "mo:base@0.16.0/Nat16";
-import Nat32 "mo:base@0.16.0/Nat32";
-import Nat64 "mo:base@0.16.0/Nat64";
+import Debug "mo:core@2.4/Debug";
+import Runtime "mo:core@2.4/Runtime";
+import List "mo:base/List";
+import Nat8 "mo:core@2.4/Nat8";
+import Nat16 "mo:core@2.4/Nat16";
+import Nat32 "mo:core@2.4/Nat32";
+import Nat64 "mo:core@2.4/Nat64";
 
 import C "../../../../submodules/parser-combinators.mo/src/Combinators";
 import P "../../../../submodules/parser-combinators.mo/src/Parser";
@@ -28,7 +29,7 @@ module {
                     case ("nat16") #Nat16(Nat16.fromNat(nat));
                     case ("nat32") #Nat32(Nat32.fromNat(nat));
                     case ("nat64") #Nat64(Nat64.fromNat(nat));
-                    case (_) Debug.trap("Only nat8, nat16, nat32, nat64 nat bit types but got '" # natType # "'");
+                    case (_) Runtime.trap("Only nat8, nat16, nat32, nat64 nat bit types but got '" # natType # "'");
                 };
             },
         );

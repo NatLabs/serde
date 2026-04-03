@@ -1,4 +1,4 @@
-import List "mo:base@0.7.3/List";
+import List "mo:base@0.16/List";
 
 import C "../src/Combinators";
 import L "../src/List";

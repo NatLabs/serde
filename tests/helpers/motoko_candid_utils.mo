@@ -1,26 +1,25 @@
-import Array "mo:base@0.16.0/Array";
-import Blob "mo:base@0.16.0/Blob";
-import Buffer "mo:base@0.16.0/Buffer";
-import Debug "mo:base@0.16.0/Debug";
-import Result "mo:base@0.16.0/Result";
-import Nat64 "mo:base@0.16.0/Nat64";
-import Int8 "mo:base@0.16.0/Int8";
-import Int32 "mo:base@0.16.0/Int32";
-import Nat8 "mo:base@0.16.0/Nat8";
-import Nat32 "mo:base@0.16.0/Nat32";
-import Nat16 "mo:base@0.16.0/Nat16";
-import Int64 "mo:base@0.16.0/Int64";
-import Nat "mo:base@0.16.0/Nat";
-import Int "mo:base@0.16.0/Int";
-import Iter "mo:base@0.16.0/Iter";
-import Prelude "mo:base@0.16.0/Prelude";
-import Principal "mo:base@0.16.0/Principal";
-import Text "mo:base@0.16.0/Text";
-import Order "mo:base@0.16.0/Order";
-import Func "mo:base@0.16.0/Func";
-import Char "mo:base@0.16.0/Char";
-import TrieMap "mo:base@0.16.0/TrieMap";
-import Int16 "mo:base@0.16.0/Int16";
+import Array "mo:core@2.4/Array";
+import Blob "mo:core@2.4/Blob";
+import Buffer "mo:base@0.16/Buffer";
+import Debug "mo:core@2.4/Debug";
+import Runtime "mo:core@2.4/Runtime";
+import Result "mo:core@2.4/Result";
+import Nat64 "mo:core@2.4/Nat64";
+import Int8 "mo:core@2.4/Int8";
+import Int32 "mo:core@2.4/Int32";
+import Nat8 "mo:core@2.4/Nat8";
+import Nat32 "mo:core@2.4/Nat32";
+import Nat16 "mo:core@2.4/Nat16";
+import Int64 "mo:core@2.4/Int64";
+import Nat "mo:core@2.4/Nat";
+import Int "mo:core@2.4/Int";
+import Iter "mo:core@2.4/Iter";
+import Principal "mo:core@2.4/Principal";
+import Text "mo:core@2.4/Text";
+import Order "mo:core@2.4/Order";
+import Func "mo:core@2.4/Func";
+import Char "mo:core@2.4/Char";
+import Int16 "mo:core@2.4/Int16";
 
 import Arg "mo:candid/Arg";
 import Value "mo:candid/Value";
@@ -28,11 +27,11 @@ import Type "mo:candid/Type";
 import Tag "mo:candid/Tag";
 import Itertools "mo:itertools@0.2.2/Iter";
 import PeekableIter "mo:itertools@0.2.2/PeekableIter";
-import Map "mo:map@9.0.1/Map";
-import FloatX "mo:xtended-numbers/FloatX";
+import Map "mo:map@9.0/Map";
+import FloatX "mo:xtended-numbers@2.3/FloatX";
 
-import T "../../Candid/Types";
-import Utils "../../Utils";
+import T "../../src/Candid/Types";
+import Utils "../../src/Utils";
 
 module {
 
@@ -42,7 +41,6 @@ module {
     type Value = Value.Value;
     type RecordFieldType = Type.RecordFieldType;
     type RecordFieldValue = Value.RecordFieldValue;
-    type TrieMap<K, V> = TrieMap.TrieMap<K, V>;
     type Result<A, B> = Result.Result<A, B>;
     type Buffer<A> = Buffer.Buffer<A>;
     type Iter<A> = Iter.Iter<A>;
@@ -103,11 +101,11 @@ module {
                 )
             );
             case (unsupported) {
-                Debug.trap("toArgeType(): Unsupported type " # debug_show unsupported);
+                Runtime.trap("toArgeType(): Unsupported type " # debug_show unsupported);
             };
         };
     };
-    public func toArgs(candid_values : [Candid], renaming_map : TrieMap<Text, Text>) : Result<[Arg], Text> {
+    public func toArgs(candid_values : [Candid], renaming_map : Map<Text, Text>) : Result<[Arg], Text> {
         let buffer = Buffer.Buffer<Arg>(candid_values.size());
 
         for (candid in candid_values.vals()) {
@@ -150,7 +148,7 @@ module {
 
     type InternalType = Type.PrimitiveType or InternalCompoundType;
 
-    func toArgTypeAndValue(candid : Candid, renaming_map : TrieMap<Text, Text>) : (InternalType, Value) {
+    func toArgTypeAndValue(candid : Candid, renaming_map : Map<Text, Text>) : (InternalType, Value) {
         let (arg_type, arg_value) : (InternalType, Value) = switch (candid) {
             case (#Nat(n)) (#nat, #nat(n));
             case (#Nat8(n)) (#nat8, #nat8(n));
@@ -498,7 +496,7 @@ module {
     func order_types_by_height_bfs(rows : Buffer<[InternalTypeNode]>) {
 
         label while_loop while (rows.size() > 0) {
-            let candid_values = Buffer.last(rows) else return Prelude.unreachable();
+            let candid_values = Buffer.last(rows) else return Runtime.unreachable();
             let buffer = Buffer.Buffer<InternalTypeNode>(8);
 
             var has_compound_type = false;
@@ -571,10 +569,164 @@ module {
         };
     };
 
-    func get_renamed_key(renaming_map : TrieMap<Text, Text>, key : Text) : Text {
-        switch (renaming_map.get(key)) {
+    func get_renamed_key(renaming_map : Map<Text, Text>, key : Text) : Text {
+        switch (Map.get(renaming_map, Map.thash, key)) {
             case (?v) v;
             case (_) key;
         };
+    };
+
+    func tag_to_text(tag : Tag) : Text {
+        switch (tag) {
+            case (#name(t)) t;
+            case (#hash(n)) Nat32.toText(n);
+        };
+    };
+
+
+    public func fromArgType(type_ : Type.Type) : CandidType {
+        switch (type_) {
+            case (#nat) #Nat;
+            case (#nat8) #Nat8;
+            case (#nat16) #Nat16;
+            case (#nat32) #Nat32;
+            case (#nat64) #Nat64;
+            case (#int) #Int;
+            case (#int8) #Int8;
+            case (#int16) #Int16;
+            case (#int32) #Int32;
+            case (#int64) #Int64;
+            case (#float64) #Float;
+            case (#bool) #Bool;
+            case (#principal) #Principal;
+            case (#text) #Text;
+            case (#null_) #Null;
+            case (#empty) #Empty;
+            case (#opt(inner)) #Option(fromArgType(inner));
+            case (#vector(inner)) #Array(fromArgType(inner));
+            case (#record(fields)) #Record(
+                Array.map<Type.RecordFieldType, (Text, CandidType)>(
+                    fields,
+                    func({ tag; type_ } : Type.RecordFieldType) : (Text, CandidType) = (
+                        tag_to_text(tag),
+                        fromArgType(type_),
+                    ),
+                )
+            );
+            case (#variant(fields)) #Variant(
+                Array.map<Type.RecordFieldType, (Text, CandidType)>(
+                    fields,
+                    func({ tag; type_ } : Type.RecordFieldType) : (Text, CandidType) = (
+                        tag_to_text(tag),
+                        fromArgType(type_),
+                    ),
+                )
+            );
+            case (unsupported) {
+                Runtime.trap("fromArgType(): Unsupported type " # debug_show unsupported);
+            };
+        };
+    };
+
+    func resolve_tag(tag : Tag, hash_to_name_map : Map<Nat32, Text>) : Text {
+        switch (tag) {
+            case (#name(t)) t;
+            case (#hash(n)) {
+                switch (Map.get(hash_to_name_map, Map.n32hash, n)) {
+                    case (?name) name;
+                    case (_) Nat32.toText(n);
+                };
+            };
+        };
+    };
+
+    func fromArgValue(type_ : Type.Type, value : Value, renaming_map : Map<Text, Text>, hash_to_name_map : Map<Nat32, Text>) : Candid {
+        switch (type_, value) {
+            case (#nat, #nat(n)) #Nat(n);
+            case (#nat8, #nat8(n)) #Nat8(n);
+            case (#nat16, #nat16(n)) #Nat16(n);
+            case (#nat32, #nat32(n)) #Nat32(n);
+            case (#nat64, #nat64(n)) #Nat64(n);
+            case (#int, #int(n)) #Int(n);
+            case (#int8, #int8(n)) #Int8(n);
+            case (#int16, #int16(n)) #Int16(n);
+            case (#int32, #int32(n)) #Int32(n);
+            case (#int64, #int64(n)) #Int64(n);
+            case (#float64, #float64(n)) #Float(n);
+            case (#bool, #bool(b)) #Bool(b);
+            case (#principal, #principal(p)) #Principal(p);
+            case (#text, #text(t)) #Text(t);
+            case (#null_, #null_) #Null;
+            case (#empty, #empty) #Empty;
+            case (#opt(inner_type), #opt(inner_value)) #Option(fromArgValue(inner_type, inner_value, renaming_map, hash_to_name_map));
+            case (#vector(#nat8), #vector(bytes)) {
+                let nat8s = Array.map(
+                    bytes,
+                    func(v : Value) : Nat8 {
+                        let #nat8(n) = v else Runtime.trap("fromArgValue(): expected #nat8 in blob vector");
+                        n;
+                    },
+                );
+                #Blob(Blob.fromArray(nat8s));
+            };
+            case (#vector(inner_type), #vector(items)) #Array(
+                Array.map(items, func(v : Value) : Candid = fromArgValue(inner_type, v, renaming_map, hash_to_name_map))
+            );
+            case (#record(field_types), #record(field_values)) {
+                // Build a lookup from tag hash/name to type for matching
+                let type_map = Map.fromIter<Text, Type.Type>(
+                    Array.map<Type.RecordFieldType, (Text, Type.Type)>(
+                        field_types,
+                        func({ tag; type_ } : Type.RecordFieldType) : (Text, Type.Type) = (resolve_tag(tag, hash_to_name_map), type_),
+                    ).vals(),
+                    Map.thash,
+                );
+
+                #Record(
+                    Array.map<Value.RecordFieldValue, (Text, Candid)>(
+                        field_values,
+                        func({ tag; value } : Value.RecordFieldValue) : (Text, Candid) {
+                            let key = resolve_tag(tag, hash_to_name_map);
+                            let field_type = switch (Map.get(type_map, Map.thash, key)) {
+                                case (?t) t;
+                                case (_) Runtime.trap("fromArgValue(): missing field type for key: " # key);
+                            };
+                            let original_key = get_renamed_key(renaming_map, key);
+                            (original_key, fromArgValue(field_type, value, renaming_map, hash_to_name_map));
+                        },
+                    )
+                );
+            };
+            case (#variant(field_types), #variant({ tag; value })) {
+                let key = resolve_tag(tag, hash_to_name_map);
+                let field_type = switch (
+                    Array.find(field_types, func(f : Type.RecordFieldType) : Bool = resolve_tag(f.tag, hash_to_name_map) == key)
+                ) {
+                    case (?f) f.type_;
+                    case (_) Runtime.trap("fromArgValue(): missing variant type for key: " # key);
+                };
+                let original_key = get_renamed_key(renaming_map, key);
+                #Variant((original_key, fromArgValue(field_type, value, renaming_map, hash_to_name_map)));
+            };
+            case (t, v) {
+                Runtime.trap("fromArgValue(): type/value mismatch: " # debug_show t # " vs " # debug_show v);
+            };
+        };
+    };
+
+    public func fromArgs(args : [Arg], renaming_map : Map<Text, Text>, field_names : [Text]) : Result<[Candid], Text> {
+        // Build hash -> field name map so #hash tags in decoded records resolve to readable names
+        let hash_to_name_map = Map.new<Nat32, Text>();
+        for (name in field_names.vals()) {
+            let hash = Utils.hash_record_key(name);
+            ignore Map.put(hash_to_name_map, Map.n32hash, hash, name);
+        };
+
+        let buffer = Buffer.Buffer<Candid>(args.size());
+        for ({ type_; value } in args.vals()) {
+            buffer.add(fromArgValue(type_, value, renaming_map, hash_to_name_map));
+        };
+
+        #ok(Buffer.toArray(buffer));
     };
 };

@@ -1,24 +1,25 @@
-import Array "mo:base@0.16.0/Array";
-import Blob "mo:base@0.16.0/Blob";
-import Buffer "mo:base@0.16.0/Buffer";
-import Debug "mo:base@0.16.0/Debug";
-import Nat64 "mo:base@0.16.0/Nat64";
-import Int8 "mo:base@0.16.0/Int8";
-import Int32 "mo:base@0.16.0/Int32";
-import Nat8 "mo:base@0.16.0/Nat8";
-import Nat32 "mo:base@0.16.0/Nat32";
-import Nat16 "mo:base@0.16.0/Nat16";
-import Int64 "mo:base@0.16.0/Int64";
-import Nat "mo:base@0.16.0/Nat";
-import Principal "mo:base@0.16.0/Principal";
-import Text "mo:base@0.16.0/Text";
-import Int16 "mo:base@0.16.0/Int16";
+import Array "mo:core@2.4/Array";
+import Blob "mo:core@2.4/Blob";
+import Buffer "mo:base@0.16/Buffer";
+import Debug "mo:core@2.4/Debug";
+import Runtime "mo:core@2.4/Runtime";
+import Nat64 "mo:core@2.4/Nat64";
+import Int8 "mo:core@2.4/Int8";
+import Int32 "mo:core@2.4/Int32";
+import Nat8 "mo:core@2.4/Nat8";
+import Nat32 "mo:core@2.4/Nat32";
+import Nat16 "mo:core@2.4/Nat16";
+import Int64 "mo:core@2.4/Int64";
+import Nat "mo:core@2.4/Nat";
+import Principal "mo:core@2.4/Principal";
+import Text "mo:core@2.4/Text";
+import Int16 "mo:core@2.4/Int16";
 
 import T "../Types";
 import Utils "../../Utils";
-import Sha256 "mo:sha2@0.1.6/Sha256";
+import Sha256 "mo:sha2@0.1/Sha256";
 
-import ByteUtils "mo:byte-utils@0.1.2";
+import ByteUtils "mo:byte-utils@0.2";
 
 module {
     type Buffer<A> = Buffer.Buffer<A>;
@@ -131,7 +132,7 @@ module {
                     let value_hash = candid_hash(buffer, sha256, unwrapped_value);
 
                     let concatenated = Blob.fromArray(
-                        Array.append(
+                        Array.concat(
                             Blob.toArray(key_hash),
                             Blob.toArray(value_hash),
                         )
@@ -150,7 +151,7 @@ module {
                 };
 
             };
-            case (candid) Debug.trap("oops: " # debug_show (candid));
+            case (candid) Runtime.trap("oops: " # debug_show (candid));
         };
 
         sha256.writeIter(buffer.vals());

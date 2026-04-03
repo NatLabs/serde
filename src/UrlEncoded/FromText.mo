@@ -1,14 +1,15 @@
-import Array "mo:base@0.16.0/Array";
-import Blob "mo:base@0.16.0/Blob";
-import Buffer "mo:base@0.16.0/Buffer";
-import Char "mo:base@0.16.0/Char";
-import Debug "mo:base@0.16.0/Debug";
-import Result "mo:base@0.16.0/Result";
-import TrieMap "mo:base@0.16.0/TrieMap";
-import Nat "mo:base@0.16.0/Nat";
-import Text "mo:base@0.16.0/Text";
-import Iter "mo:base@0.16.0/Iter";
-import Option "mo:base@0.16.0/Option";
+import Array "mo:core@2.4/Array";
+import Blob "mo:core@2.4/Blob";
+import Buffer "mo:base@0.16/Buffer";
+import Char "mo:core@2.4/Char";
+import Debug "mo:core@2.4/Debug";
+import Runtime "mo:core@2.4/Runtime";
+import Result "mo:core@2.4/Result";
+import Map "mo:map@9.0/Map";
+import Nat "mo:core@2.4/Nat";
+import Text "mo:core@2.4/Text";
+import Iter "mo:core@2.4/Iter";
+import Option "mo:core@2.4/Option";
 
 import Itertools "mo:itertools@0.2.2/Iter";
 
@@ -25,17 +26,16 @@ module {
 
     type Buffer<A> = Buffer.Buffer<A>;
     type Iter<A> = Iter.Iter<A>;
-    type TrieMap<K, V> = TrieMap.TrieMap<K, V>;
     type Result<A, B> = Result.Result<A, B>;
 
-    type TextOrTrieMap = {
+    type TextOrMap = {
         #text : Text;
-        #triemap : TrieMap<Text, TextOrTrieMap>;
+        #triemap : Map.Map<Text, TextOrMap>;
     };
 
-    type NestedTrieMap = TrieMap<Text, TextOrTrieMap>;
+    type NestedTrieMap = Map.Map<Text, TextOrMap>;
 
-    func newMap() : NestedTrieMap = TrieMap.TrieMap(Text.equal, Text.hash);
+    func newMap() : NestedTrieMap = Map.new();
 
     /// Converts a Url-Encoded Text to a serialized Candid Record
     public func fromText(text : Text, options : ?T.Options) : Result<Blob, Text> {
@@ -182,7 +182,7 @@ module {
     func trieMapToCandid(triemap : NestedTrieMap, options : T.Options) : Result<Candid, Text> {
         var i = 0;
         let isArray = Itertools.all(
-            Iter.sort(triemap.keys(), Text.compare),
+            Iter.sort(Map.keys(triemap), Text.compare),
             func(key : Text) : Bool {
                 let res = key == Nat.toText(i);
                 i += 1;
@@ -191,11 +191,11 @@ module {
         );
 
         if (isArray) {
-            let buffer = Buffer.Buffer<Candid>(triemap.size());
+            let buffer = Buffer.Buffer<Candid>(Map.size(triemap));
 
-            for (i in Itertools.range(0, triemap.size())) {
+            for (i in Nat.range(0, Map.size(triemap))) {
 
-                switch (triemap.get(Nat.toText(i))) {
+                switch (Map.get(triemap, Map.thash, Nat.toText(i))) {
                     case (?(#text(text))) {
                         let candid = parseValue(text);
                         buffer.add(candid);
@@ -206,7 +206,7 @@ module {
                         buffer.add(candid);
                     };
 
-                    case (_) Debug.trap("Array might be improperly formatted");
+                    case (_) Runtime.trap("Array might be improperly formatted");
                 };
             };
 
@@ -216,10 +216,10 @@ module {
         };
 
         // check if single value is a variant
-        if (triemap.size() == 1) {
-            let (variant_key, value) = switch (triemap.entries().next()) {
+        if (Map.size(triemap) == 1) {
+            let (variant_key, value) = switch (Map.entries(triemap).next()) {
                 case (?(k, v)) { (k, v) };
-                case (_) { Debug.trap("Variant might be improperly formatted") };
+                case (_) { Runtime.trap("Variant might be improperly formatted") };
             };
 
             let isVariant = Text.startsWith(variant_key, #text "#");
@@ -238,9 +238,9 @@ module {
             };
         };
 
-        let buffer = Buffer.Buffer<(Text, Candid)>(triemap.size());
+        let buffer = Buffer.Buffer<(Text, Candid)>(Map.size(triemap));
 
-        for ((key, field) in triemap.entries()) {
+        for ((key, field) in Map.entries(triemap)) {
             switch (field) {
                 case (#text(text)) {
                     let candid = parseValue(text);
@@ -265,12 +265,12 @@ module {
         let next_field = switch (fields_iter.next()) {
             case (?_field) _field;
             case (_) {
-                map.put(field, #text(value));
+                Map.set(map, Map.thash, field, #text(value));
                 return #ok();
             };
         };
 
-        let nestedTriemap = switch (map.get(field)) {
+        let nestedTriemap = switch (Map.get(map, Map.thash, field)) {
             case (?val) {
                 switch (val) {
                     case (#text(prevValue)) {
@@ -281,7 +281,7 @@ module {
             };
             case (_) {
                 let nestedTriemap = newMap();
-                map.put(field, #triemap(nestedTriemap));
+                Map.set(map, Map.thash, field, #triemap(nestedTriemap));
                 nestedTriemap;
             };
         };

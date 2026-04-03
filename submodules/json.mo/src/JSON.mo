@@ -1,12 +1,12 @@
-import Char "mo:base@0.7.3/Char";
-import Iter "mo:base@0.7.3/Iter";
-import Int "mo:base@0.7.3/Int";
-import Float "mo:base@0.7.3/Float";
-import List "mo:base@0.7.3/List";
-import Nat8 "mo:base@0.7.3/Nat8";
-import Nat32 "mo:base@0.7.3/Nat32";
-import Result "mo:base@0.7.3/Result";
-import Text "mo:base@0.7.3/Text";
+import Char "mo:base@0.16/Char";
+import Iter "mo:base@0.16/Iter";
+import Int "mo:base@0.16/Int";
+import Float "mo:base@0.16/Float";
+import List "mo:base@0.16/List";
+import Nat8 "mo:base@0.16/Nat8";
+import Nat32 "mo:base@0.16/Nat32";
+import Result "mo:base@0.16/Result";
+import Text "mo:base@0.16/Text";
 
 import C "../../parser-combinators.mo/src/Combinators";
 import L "../../parser-combinators.mo/src/List";
@@ -213,7 +213,7 @@ module JSON {
                 var num = n;
                 var n_of_decimals : Float = 0;
 
-                for (char in Iter.fromList(decimal_list)) {
+                for (char in List.toIter(decimal_list)) {
                     let digit = Nat32.toNat(
                         Char.toNat32(char) - Char.toNat32('0')
                     );

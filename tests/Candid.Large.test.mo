@@ -1,13 +1,12 @@
 // @testmode wasi
-import Iter "mo:base@0.16.0/Iter";
-import Debug "mo:base@0.16.0/Debug";
-import Prelude "mo:base@0.16.0/Prelude";
-import Text "mo:base@0.16.0/Text";
-import Char "mo:base@0.16.0/Char";
-import Buffer "mo:base@0.16.0/Buffer";
+import Iter "mo:core@2.4/Iter";
+import Text "mo:core@2.4/Text";
+import Char "mo:core@2.4/Char";
+import Buffer "mo:base@0.16/Buffer";
 
 import Fuzz "mo:fuzz";
 import Itertools "mo:itertools@0.2.2/Iter";
+import Nat "mo:core@2.4/Nat";
 import { test; suite } "mo:test";
 
 import Serde "../src";
@@ -169,7 +168,7 @@ suite(
         test(
             "decode()",
             func() {
-                for (i in Itertools.range(0, limit)) {
+                for (i in Nat.range(0, limit)) {
                     let item = new_item();
                     store_items.add(item);
                     let candid_blob = candify_store_item.to_blob(item);
@@ -181,7 +180,7 @@ suite(
         test(
             "encode()",
             func() {
-                for (i in Itertools.range(0, limit)) {
+                for (i in Nat.range(0, limit)) {
                     let candid = candid_buffer.get(i);
                     let res = LegacyCandidEncoder.encode(candid, null);
                     let #ok(blob) = res;
@@ -193,7 +192,7 @@ suite(
         test(
             "decode() with types",
             func() {
-                for (i in Itertools.range(0, limit)) {
+                for (i in Nat.range(0, limit)) {
                     let item = new_item();
                     store_items_with_types.add(item);
                     let candid_blob = candify_store_item.to_blob(item);
@@ -206,7 +205,7 @@ suite(
         test(
             "encode() with types",
             func() {
-                for (i in Itertools.range(0, limit)) {
+                for (i in Nat.range(0, limit)) {
                     let candid = candid_buffer_with_types.get(i);
                     let res = LegacyCandidEncoder.encode(candid, ?{ Serde.Candid.defaultOptions with types = ?FormattedStoreItem });
                     let #ok(blob) = res;

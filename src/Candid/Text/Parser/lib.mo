@@ -1,8 +1,8 @@
-import Char "mo:base@0.16.0/Char";
-import Debug "mo:base@0.16.0/Debug";
-import Iter "mo:base@0.16.0/Iter";
-import List "mo:base@0.16.0/List";
-import TrieMap "mo:base@0.16.0/TrieMap";
+import Char "mo:core@2.4/Char";
+import Debug "mo:core@2.4/Debug";
+import Runtime "mo:core@2.4/Runtime";
+import Iter "mo:core@2.4/Iter";
+import List "mo:base/List";
 
 import C "../../../../submodules/parser-combinators.mo/src/Combinators";
 import P "../../../../submodules/parser-combinators.mo/src/Parser";
@@ -28,16 +28,15 @@ import { variantParser } "Variant";
 module CandidParser {
     type Candid = Candid.Candid;
     type List<A> = List.List<A>;
-    type TrieMap<K, V> = TrieMap.TrieMap<K, V>;
 
     type Parser<T, A> = P.Parser<T, A>;
 
     public func parse(text : Text) : [Candid] {
-        let chars = Iter.toList(text.chars());
+        let chars = List.fromArray(Iter.toArray(text.chars()));
 
         switch (parseCandid(chars)) {
             case (?candid) candid;
-            case (null) Debug.trap("Failed to parse Candid text from input: " # debug_show (chars));
+            case (null) Runtime.trap("Failed to parse Candid text from input: " # debug_show (chars));
         };
     };
 

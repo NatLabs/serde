@@ -1,10 +1,9 @@
 // @testmode wasi
-import Array "mo:base@0.16.0/Array";
-import Blob "mo:base@0.16.0/Blob";
-import Debug "mo:base@0.16.0/Debug";
-import Iter "mo:base@0.16.0/Iter";
-import Principal "mo:base@0.16.0/Principal";
-import Text "mo:base@0.16.0/Text";
+import Array "mo:core@2.4/Array";
+import Blob "mo:core@2.4/Blob";
+import Runtime "mo:core@2.4/Runtime";
+import Principal "mo:core@2.4/Principal";
+import Text "mo:core@2.4/Text";
 
 import { test; suite } "mo:test";
 
@@ -96,7 +95,7 @@ suite(
 
                 let self_describe_tag : Blob = "\D9\D9\F7";
 
-                func blob_concat(b1 : Blob, b2 : Blob) : Blob = Blob.fromArray(Array.append(Blob.toArray(b1), Blob.toArray(b2)));
+                func blob_concat(b1 : Blob, b2 : Blob) : Blob = Blob.fromArray(Array.concat(Blob.toArray(b1), Blob.toArray(b2)));
                 func sdt(blob : Blob) : Blob = blob_concat(self_describe_tag, blob);
                 func strip(text : Text, to_strip : Text) : Text = Text.replace(text, #text(to_strip), "");
 
