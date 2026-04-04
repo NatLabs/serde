@@ -1,17 +1,17 @@
 [package]
 name = "serde-core"
-version = "0.0.1"
-description = "A serialisation and deserialisation library for Motoko. Mirrors NatLabs/serde (core branch) + NatLabs/ByteUtils (refs/pull/3/head) inlined."
+version = "0.0.2"
+description = "A serialisation and deserialisation library for Motoko. Mirrors NatLabs/serde (core branch), uses official byte-utils mops package."
 repository = "https://github.com/ggreif/serde"
 keywords = ["json", "candid", "cbor", "urlencoded", "serialization"]
 license = "MIT"
 files = ["src/**/*.mo", "submodules/**/*.mo"]
 
 [dependencies]
-core = "2.0.0"
+core = "2.3.1"
 "itertools@0.2.2" = "0.2.2"
 "xtended-numbers" = "2.3.0"
-"xtended-numbers@2.3.0" = "2.3.0" # because for ByteUtils
+"byte-utils" = "0.2.0"
 "cbor@4.1.0" = "4.1.0"
 "sha2@0.1.6" = "0.1.6"
 base = "0.14.13" # because for submodules/json.mo
@@ -25,4 +25,4 @@ bench = "1.0.0"
 
 [toolchain]
 wasmtime = "33.0.1"
-moc = "1.3.0"
+moc = "1.4.1"
