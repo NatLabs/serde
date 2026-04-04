@@ -8,7 +8,7 @@ All notable changes to `serde-core` will be documented here.
 - Replace inlined `submodules/byte-utils/` with the official `byte-utils@0.2.0` mops package.
   The ByteUtils patch (switching from `mo:base` to `mo:core`) has been upstreamed to NatLabs/ByteUtils.
 - Bump `moc` toolchain requirement to `1.4.1` (required by `byte-utils@0.2.0` via `core@2.4`).
-- Pin `core` dependency to `2.3.1`.
+- Bump `core` dependency to `2.4.0` (aligned with `byte-utils@0.2.0`).
 
 ## [0.0.1] - 2026-03-23
 
