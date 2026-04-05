@@ -24,6 +24,14 @@ jobs:
     
             - name: Set version from tag in mops.toml
               run: sed -i "s/^version = .*/version = \"${GITHUB_REF_NAME#v}\"/" mops.toml
-    
+
+            - name: Commit updated mops.toml
+              run: |
+                git config user.name "github-actions[bot]"
+                git config user.email "github-actions[bot]@users.noreply.github.com"
+                git add mops.toml
+                git commit -m "updated mops version to ${GITHUB_REF_NAME} [skip ci]"
+                git push origin HEAD:main
+
             - name: Publish
               run: mops publish
