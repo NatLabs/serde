@@ -347,8 +347,9 @@ module {
         Array.tabulate(total_compound_types, extract_compound_type);
     };
 
-    func build_compound_type(compound_types : [ShallowCandidTypes], start_pos : Nat, recursive_types_map : Map<Nat, CandidType>) : CandidType {
-        func _build_compound_type(compound_types : [ShallowCandidTypes], start_pos : Nat, visited : Set<Nat>, is_recursive_set : Set<Nat>, recursive_types_map : Map<Nat, CandidType>) : CandidType {
+    func build_compound_type(compound_types : [ShallowCandidTypes], start_pos : Nat, recursive_types_map_param : Map<Nat, CandidType>) : (CandidType, Map<Nat, CandidType>) {
+        var recursive_types_map = recursive_types_map_param;
+        func _build_compound_type(compound_types : [ShallowCandidTypes], start_pos : Nat, visited : Set<Nat>, is_recursive_set : Set<Nat>) : CandidType {
             var pos = start_pos;
 
             func resolve_field_types((field_key, ref_pos) : (Text, Nat)) : ((Text, CandidType)) {
@@ -356,7 +357,7 @@ module {
                 let resolved_type : CandidType = if (is_code_primitive_type(Nat8.fromNat(ref_pos))) {
                     code_to_primitive_type(Nat8.fromNat(ref_pos));
                 } else {
-                    _build_compound_type(compound_types, ref_pos, visited, is_recursive_set, recursive_types_map);
+                    _build_compound_type(compound_types, ref_pos, visited, is_recursive_set);
                 };
 
                 while (Set.size(visited) > visited_size) {
@@ -383,7 +384,7 @@ module {
                     let ref_type = if (is_code_primitive_type(Nat8.fromNat(ref_pos))) {
                         code_to_primitive_type(Nat8.fromNat(ref_pos));
                     } else {
-                        _build_compound_type(compound_types, ref_pos, visited, is_recursive_set, recursive_types_map);
+                        _build_compound_type(compound_types, ref_pos, visited, is_recursive_set);
                     };
 
                     #Option(ref_type);
@@ -392,7 +393,7 @@ module {
                     let ref_type = if (is_code_primitive_type(Nat8.fromNat(ref_pos))) {
                         code_to_primitive_type(Nat8.fromNat(ref_pos));
                     } else {
-                        _build_compound_type(compound_types, ref_pos, visited, is_recursive_set, recursive_types_map);
+                        _build_compound_type(compound_types, ref_pos, visited, is_recursive_set);
                     };
                     #Array(ref_type);
                 };
@@ -416,11 +417,13 @@ module {
         let visited = Set.new<Nat>();
         let is_recursive_set = Set.new<Nat>();
 
-        _build_compound_type(compound_types, start_pos, visited, is_recursive_set, recursive_types_map);
+        let result_type = _build_compound_type(compound_types, start_pos, visited, is_recursive_set);
+        (result_type, recursive_types_map);
     };
 
-    public func build_types(bytes : Blob, state : [var Nat], compound_types : [ShallowCandidTypes], recursive_types_map : Map<Nat, CandidType>) : [CandidType] {
+    public func build_types(bytes : Blob, state : [var Nat], compound_types : [ShallowCandidTypes], recursive_types_map_param : Map<Nat, CandidType>) : ([CandidType], Map<Nat, CandidType>) {
         let total_candid_types = decode_leb128(bytes, state);
+        var recursive_types_map = recursive_types_map_param;
 
         let candid_types = Array.tabulate(
             total_candid_types,
@@ -432,7 +435,8 @@ module {
                     primitive_type;
                 } else {
                     let start_pos = decode_leb128(bytes, state);
-                    let compound_type = build_compound_type(compound_types, start_pos, recursive_types_map);
+                    let (compound_type, updated_map) = build_compound_type(compound_types, start_pos, recursive_types_map);
+                    recursive_types_map := updated_map;
                     compound_type;
                 };
 
@@ -441,7 +445,7 @@ module {
             },
         );
 
-        (candid_types);
+        (candid_types, recursive_types_map);
     };
 
     public func skip_compound_types(bytes : Blob, state : [var Nat], total_compound_types : Nat) {
@@ -520,13 +524,15 @@ module {
             return #err("Invalid Magic Number");
         };
 
-        let recursive_types_map = Map.new<Nat, CandidType>();
+        var recursive_types_map = Map.new<Nat, CandidType>();
 
         if (not is_types_set) {
             // extract types from blob
             let total_compound_types = decode_leb128(bytes, state);
             let compound_types = extract_compound_types(bytes, state, total_compound_types, record_key_map);
-            candid_types := build_types(bytes, state, compound_types, recursive_types_map);
+            let (types, updated_recursive_map) = build_types(bytes, state, compound_types, recursive_types_map);
+            candid_types := types;
+            recursive_types_map := updated_recursive_map;
 
         } else {
             // types are set but 'blob_contains_only_values' is not set,

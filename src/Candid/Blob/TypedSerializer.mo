@@ -383,8 +383,8 @@ module TypedSerializer {
 
         let total_compound_types = decode_leb128(bytes, state);
         let compound_types = Decoder.extract_compound_types(bytes, state, total_compound_types, record_key_map);
-        let recursive_types_map = Map.new<Nat, CandidType>();
-        let extracted_candid_types = Decoder.build_types(bytes, state, compound_types, recursive_types_map);
+        let initial_recursive_types_map = Map.new<Nat, CandidType>();
+        let (extracted_candid_types, recursive_types_map) = Decoder.build_types(bytes, state, compound_types, initial_recursive_types_map);
 
         let type_header_size = state[C.BYTES_INDEX];
         let encoded_type_header = Array.tabulate(type_header_size, func(i : Nat) : Nat8 = blob.get(i));
