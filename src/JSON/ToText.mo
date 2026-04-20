@@ -20,20 +20,29 @@ module {
         let decoded_res = Candid.decode(blob, keys, options);
         let #ok(candid) = decoded_res else return Utils.send_error(decoded_res);
 
-        let json_res = fromCandid(candid[0]);
+        let skip_null_fields = switch (options) {
+            case (?opts) opts.skip_null_fields;
+            case null false;
+        };
+
+        let json_res = fromCandidWith(candid[0], skip_null_fields);
         let #ok(json) = json_res else return Utils.send_error(json_res);
         #ok(json);
     };
 
-    /// Convert a Candid value to JSON text
-    public func fromCandid(candid : Candid) : Result<Text, Text> {
-        let res = candidToJSON(candid);
+    /// Convert a Candid value to JSON text (default: keep null fields).
+    public func fromCandid(candid : Candid) : Result<Text, Text> =
+        fromCandidWith(candid, false);
+
+    /// Convert a Candid value to JSON text with explicit null-skip behaviour.
+    public func fromCandidWith(candid : Candid, skip_null_fields : Bool) : Result<Text, Text> {
+        let res = candidToJSON(candid, skip_null_fields);
         let #ok(json) = res else return Utils.send_error(res);
 
         #ok(JSON.show(json));
     };
 
-    func candidToJSON(candid : Candid) : Result<JSON, Text> {
+    func candidToJSON(candid : Candid, skip_null_fields : Bool) : Result<JSON, Text> {
         let json : JSON = switch (candid) {
             case (#Null) #Null;
             case (#Bool(n)) #Boolean(n);
@@ -56,7 +65,7 @@ module {
             case (#Option(val)) {
                 let res = switch (val) {
                     case (#Null) return #ok(#Null);
-                    case (v) candidToJSON(v);
+                    case (v) candidToJSON(v, skip_null_fields);
                 };
 
                 let #ok(optional_val) = res else return Utils.send_error(res);
@@ -66,7 +75,7 @@ module {
                 let newArr = Buffer.Buffer<JSON>(arr.size());
 
                 for (item in arr.vals()) {
-                    let res = candidToJSON(item);
+                    let res = candidToJSON(item, skip_null_fields);
                     let #ok(json) = res else return Utils.send_error(res);
                     newArr.add(json);
                 };
@@ -78,9 +87,15 @@ module {
                 let newRecords = Buffer.Buffer<(Text, JSON)>(records.size());
 
                 for ((key, val) in records.vals()) {
-                    let res = candidToJSON(val);
+                    let res = candidToJSON(val, skip_null_fields);
                     let #ok(json) = res else return Utils.send_error(res);
-                    newRecords.add((key, json));
+                    // With `skip_null_fields`, entries whose value serialised
+                    // to JSON `null` are treated as "field absent" — matches
+                    // how external HTTP APIs read optional fields.
+                    switch (skip_null_fields, json) {
+                        case (true, #Null) ();
+                        case _ newRecords.add((key, json));
+                    };
                 };
 
                 #Object(Buffer.toArray(newRecords));
@@ -88,7 +103,7 @@ module {
 
             case (#Variant(variant)) {
                 let (key, val) = variant;
-                let res = candidToJSON(val);
+                let res = candidToJSON(val, skip_null_fields);
                 let #ok(json_val) = res else return Utils.send_error(res);
 
                 #Object([("#" # key, json_val)]);
