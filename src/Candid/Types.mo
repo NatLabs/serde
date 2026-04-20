@@ -123,6 +123,14 @@ module {
         /// Must call `Candid.formatCandidTypes` before passing in the types
         types : ?[CandidType];
 
+        /// When encoding records/maps to JSON, omit entries whose value
+        /// resolves to `null` (typically from `?T = null` option fields).
+        /// Many external APIs reject `"field": null` payloads where the
+        /// field is optional and the caller didn't provide a value; this
+        /// flag produces a "field absent" shape instead.
+        /// Default: `false` (preserves previous behaviour).
+        skip_null_fields : Bool;
+
     };
 
     public type ICRC3Value = {
@@ -140,6 +148,8 @@ module {
         use_icrc_3_value_type = false;
 
         types = null;
+
+        skip_null_fields = false;
 
     };
 
