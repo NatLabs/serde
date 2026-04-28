@@ -36,7 +36,7 @@ module {
     public let repIndyHash = RepIndyHash.hash;
 
     /// Converts a [Candid](#Candid) value to a motoko value
-    public let { decode } = CandidDecoder;
+    public let { decode; decodeOne } = CandidDecoder;
 
     public let Encoder = CandidEncoder;
     public let Decoder = CandidDecoder;
