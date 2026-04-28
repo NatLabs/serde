@@ -6,6 +6,8 @@ import Runtime "mo:core/Runtime";
 import { test; suite } "mo:test";
 
 import UrlEncoded "../src/UrlEncoded";
+import Candid "../src/Candid";
+import Text "mo:core@2.4/Text";
 
 type User = {
     name : Text;
@@ -197,6 +199,43 @@ suite(
                         );
                     },
                 );
+            },
+        );
+    },
+);
+
+suite(
+    "UrlEncoded skip_null_fields",
+    func() {
+        test(
+            "omits null-valued optional fields",
+            func() {
+                type Post = { text : Text; for_super_followers_only : ?Bool; poll : ?Text };
+
+                let keys = ["text", "for_super_followers_only", "poll"];
+                let post : Post = { text = "hello"; for_super_followers_only = null; poll = null };
+                let blob = to_candid (post);
+
+                // default: emits key=null
+                let defaultText = UrlEncoded.toText(blob, keys, null);
+                Debug.print("default: " # debug_show defaultText);
+                let #ok(defaultStr) = defaultText else Runtime.trap("toText failed");
+                assert Iter.size(Text.split(defaultStr, #char '&')) == 3;
+
+                // skip_null_fields: omits those pairs
+                let options = { Candid.defaultOptions with skip_null_fields = true };
+                let skipped = UrlEncoded.toText(blob, keys, ?options);
+                Debug.print("skipped: " # debug_show skipped);
+                assert skipped == #ok("text=hello");
+
+                // non-null optionals survive
+                let post2 : Post = { text = "hi"; for_super_followers_only = ?false; poll = null };
+                let blob2 = to_candid (post2);
+                let result = UrlEncoded.toText(blob2, keys, ?options);
+                let #ok(resultStr) = result else Runtime.trap("toText failed");
+                assert Text.contains(resultStr, #text "text=hi");
+                assert Text.contains(resultStr, #text "for_super_followers_only=false");
+                assert not Text.contains(resultStr, #text "poll");
             },
         );
     },

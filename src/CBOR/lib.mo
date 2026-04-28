@@ -93,7 +93,14 @@ module {
                 for ((key, val) in records.vals()) {
                     let res = transpile_candid_to_cbor(val, options);
                     let #ok(cbor_val) = res else return Utils.send_error(res);
-                    newRecords.add((#majorType3(key), cbor_val));
+                    // With `skip_null_fields`, entries whose value encodes to
+                    // CBOR null are treated as "field absent" — same rationale
+                    // as the JSON encoder: many external APIs reject explicit
+                    // null-valued optional fields.
+                    switch (options.skip_null_fields, cbor_val) {
+                        case (true, #majorType7(#_null)) ();
+                        case _ newRecords.add((#majorType3(key), cbor_val));
+                    };
                 };
 
                 #majorType5(Buffer.toArray(newRecords));

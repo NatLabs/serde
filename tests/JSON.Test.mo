@@ -3,6 +3,8 @@ import Blob "mo:core@2.4/Blob";
 import Debug "mo:core@2.4/Debug";
 import Iter "mo:core@2.4/Iter";
 import Nat "mo:core@2.4/Nat";
+import Runtime "mo:core@2.4/Runtime";
+import Text "mo:core@2.4/Text";
 
 import { test; suite } "mo:test";
 
@@ -298,6 +300,55 @@ suite(
                 let jsonText = JSON.toText(blob, UserDataKeys, ?options);
 
                 assert jsonText == #ok("{\"query\": \"?user_id=12&address=2014%20Forest%20Hill%20Drive\", \"label\": 123}");
+            },
+        );
+        test(
+            "skip_null_fields omits null optional fields",
+            func() {
+                // Record with a mix of set and null optional fields — the
+                // shape OpenAPI-generated clients produce for bodies with
+                // partially-filled optionals.
+                type Post = {
+                    text : Text;
+                    for_super_followers_only : ?Bool;
+                    poll : ?Text;
+                    reply_settings : ?Text;
+                };
+
+                let keys = ["text", "for_super_followers_only", "poll", "reply_settings"];
+                let post : Post = {
+                    text = "hello";
+                    for_super_followers_only = null;
+                    poll = null;
+                    reply_settings = null;
+                };
+                let blob = to_candid (post);
+
+                // Default behaviour: nulls are emitted.
+                let #ok(withNulls) = JSON.toText(blob, keys, null) else Runtime.trap("toText failed");
+                assert Text.contains(withNulls, #text "\"for_super_followers_only\": null");
+                assert Text.contains(withNulls, #text "\"poll\": null");
+                assert Text.contains(withNulls, #text "\"reply_settings\": null");
+                assert Text.contains(withNulls, #text "\"text\": \"hello\"");
+
+                // With skip_null_fields: null-valued entries are omitted.
+                let options = { Candid.defaultOptions with skip_null_fields = true };
+                let #ok(withoutNulls) = JSON.toText(blob, keys, ?options) else Runtime.trap("toText failed");
+                assert withoutNulls == "{\"text\": \"hello\"}";
+
+                // Non-null optionals still survive.
+                let post2 : Post = {
+                    text = "hi";
+                    for_super_followers_only = ?false;
+                    poll = null;
+                    reply_settings = ?"everyone";
+                };
+                let blob2 = to_candid (post2);
+                let #ok(result) = JSON.toText(blob2, keys, ?options) else Runtime.trap("toText failed");
+                assert Text.contains(result, #text "\"text\": \"hi\"");
+                assert Text.contains(result, #text "\"for_super_followers_only\": false");
+                assert Text.contains(result, #text "\"reply_settings\": \"everyone\"");
+                assert not Text.contains(result, #text "null");
             },
         );
     },

@@ -24,11 +24,20 @@ module {
     public func toText(blob : Blob, keys : [Text], options : ?CandidType.Options) : Result<Text, Text> {
         let res = Candid.decode(blob, keys, options);
         let #ok(candid) = res else return Utils.send_error(res);
-        fromCandid(candid[0]);
+
+        let skip_null_fields = switch (options) {
+            case (?opts) opts.skip_null_fields;
+            case null false;
+        };
+        fromCandidWith(candid[0], skip_null_fields);
     };
 
-    /// Convert a Candid Record to a URL-Encoded string.
-    public func fromCandid(candid : Candid) : Result<Text, Text> {
+    /// Convert a Candid Record to a URL-Encoded string (default: keep null fields as `key=null`).
+    public func fromCandid(candid : Candid) : Result<Text, Text> =
+        fromCandidWith(candid, false);
+
+    /// Same as [fromCandid] but with explicit null-skip behaviour.
+    public func fromCandidWith(candid : Candid, skip_null_fields : Bool) : Result<Text, Text> {
 
         let records = switch (candid) {
             case (#Record(records) or #Map(records)) records;
@@ -39,7 +48,7 @@ module {
         let pairsOrder = Buffer.Buffer<Text>(16);
 
         for ((key, value) in records.vals()) {
-            toKeyValuePairs(pairsMap, pairsOrder, key, value);
+            toKeyValuePairs(pairsMap, pairsOrder, key, value, skip_null_fields);
         };
 
         var url_encoding = "";
@@ -65,6 +74,7 @@ module {
         pairsOrder : Buffer.Buffer<Text>,
         storedKey : Text,
         candid : Candid,
+        skip_null_fields : Bool,
     ) {
         func set(key : Text, value : Text) {
             if (Map.get(pairsMap, Map.thash, key) == null) {
@@ -76,26 +86,26 @@ module {
             case (#Array(arr)) {
                 for ((i, value) in itertools.enumerate(arr.vals())) {
                     let array_key = storedKey # "[" # Nat.toText(i) # "]";
-                    toKeyValuePairs(pairsMap, pairsOrder, array_key, value);
+                    toKeyValuePairs(pairsMap, pairsOrder, array_key, value, skip_null_fields);
                 };
             };
 
             case (#Record(records) or #Map(records)) {
                 for ((key, value) in records.vals()) {
                     let record_key = storedKey # "[" # key # "]";
-                    toKeyValuePairs(pairsMap, pairsOrder, record_key, value);
+                    toKeyValuePairs(pairsMap, pairsOrder, record_key, value, skip_null_fields);
                 };
             };
 
             case (#Variant(key, val)) {
                 let variant_key = storedKey # "#" # key;
-                toKeyValuePairs(pairsMap, pairsOrder, variant_key, val);
+                toKeyValuePairs(pairsMap, pairsOrder, variant_key, val, skip_null_fields);
             };
 
             // TODO: convert blob to hex
             // case (#Blob(blob)) set(storedKey, "todo: Blob.toText(blob)");
 
-            case (#Option(p)) toKeyValuePairs(pairsMap, pairsOrder, storedKey, p);
+            case (#Option(p)) toKeyValuePairs(pairsMap, pairsOrder, storedKey, p, skip_null_fields);
             case (#Text(t)) set(storedKey, t);
             case (#Principal(p)) set(storedKey, Principal.toText(p));
 
@@ -112,7 +122,9 @@ module {
             case (#Int64(n)) set(storedKey, U.stripStart(debug_show (n), #char '+'));
 
             case (#Float(n)) set(storedKey, Float.toText(n));
-            case (#Null) set(storedKey, "null");
+            // With `skip_null_fields`, omit the pair entirely rather than
+            // emitting `key=null` — matches the JSON/CBOR encoders.
+            case (#Null) if (not skip_null_fields) set(storedKey, "null");
             case (#Empty) set(storedKey, "");
 
             case (#Bool(b)) set(storedKey, debug_show (b));

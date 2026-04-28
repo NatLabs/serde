@@ -371,7 +371,11 @@ module {
                 case (null) {};
             };
 
-            if (Set.has(visited, nhash, pos) and not Set.has(is_recursive_set, nhash, pos)) {
+            if (Set.has(is_recursive_set, nhash, pos)) {
+                return #Recursive(pos);
+            };
+
+            if (Set.has(visited, nhash, pos)) {
                 ignore Set.put(is_recursive_set, nhash, pos);
                 return #Recursive(pos);
             };
