@@ -50,6 +50,26 @@ module JSON {
         case (#Null) { "null" };
     };
 
+    // Parse exactly four hex digits and combine into a Nat32 (one BMP codepoint
+    // or one half of a UTF-16 surrogate pair).
+    private func fourHexAsNat32() : P.Parser<Char, Nat32> = C.map(
+        C.count<Char, Char>(C.Character.hex(), 4),
+        func(digits : List.List<Char>) : Nat32 {
+            var n : Nat32 = 0;
+            for (d in L.toIter(digits)) {
+                let v : Nat32 = if (d >= '0' and d <= '9') {
+                    Char.toNat32(d) - Char.toNat32('0');
+                } else if (d >= 'a' and d <= 'f') {
+                    Char.toNat32(d) - Char.toNat32('a') + 10;
+                } else {
+                    Char.toNat32(d) - Char.toNat32('A') + 10;
+                };
+                n := n * 16 + v;
+            };
+            n;
+        },
+    );
+
     private func character() : P.Parser<Char, Char> = C.oneOf([
         C.sat<Char>(
             func(c : Char) : Bool {
@@ -58,29 +78,60 @@ module JSON {
         ),
         C.right(
             C.Character.char('\\'),
-            C.map(
-                C.Character.oneOf([
-                    Char.fromNat32(0x22),
-                    '\\',
-                    '/',
-                    'b',
-                    'f',
-                    'n',
-                    'r',
-                    't',
-                    // TODO: u hex{4}
-                ]),
-                func(c : Char) : Char {
-                    switch (c) {
-                        case ('b') { Char.fromNat32(0x08) };
-                        case ('f') { Char.fromNat32(0x0C) };
-                        case ('n') { Char.fromNat32(0x0A) };
-                        case ('r') { Char.fromNat32(0x0D) };
-                        case ('t') { Char.fromNat32(0x09) };
-                        case (_) { c };
-                    };
-                },
-            ),
+            C.oneOf([
+                // \u XXXX  (with surrogate-pair handling for codepoints above BMP).
+                // RFC 8259 §7: characters above U+FFFF are encoded as a UTF-16 surrogate pair
+                // — high D800..DBFF then low DC00..DFFF, e.g. `🎓` for U+1F393 🎓.
+                C.right(
+                    C.Character.char('u'),
+                    C.bind<Char, Nat32, Char>(
+                        fourHexAsNat32(),
+                        func(n : Nat32) : P.Parser<Char, Char> {
+                            if (n >= 0xD800 and n <= 0xDBFF) {
+                                // high surrogate — expect `\u` followed by low surrogate
+                                C.bind<Char, Nat32, Char>(
+                                    C.right(
+                                        C.Character.char('\\'),
+                                        C.right(
+                                            C.Character.char('u'),
+                                            fourHexAsNat32(),
+                                        ),
+                                    ),
+                                    func(low : Nat32) : P.Parser<Char, Char> {
+                                        let codepoint : Nat32 = 0x10000 + ((n - 0xD800) * 0x400) + (low - 0xDC00);
+                                        P.result<Char, Char>(Char.fromNat32(codepoint));
+                                    },
+                                );
+                            } else {
+                                P.result<Char, Char>(Char.fromNat32(n));
+                            };
+                        },
+                    ),
+                ),
+                // single-char escape (\", \\, \/, \b, \f, \n, \r, \t)
+                C.map(
+                    C.Character.oneOf([
+                        Char.fromNat32(0x22),
+                        '\\',
+                        '/',
+                        'b',
+                        'f',
+                        'n',
+                        'r',
+                        't',
+                    ]),
+                    func(c : Char) : Char {
+                        switch (c) {
+                            case ('b') { Char.fromNat32(0x08) };
+                            case ('f') { Char.fromNat32(0x0C) };
+                            case ('n') { Char.fromNat32(0x0A) };
+                            case ('r') { Char.fromNat32(0x0D) };
+                            case ('t') { Char.fromNat32(0x09) };
+                            case (_) { c };
+                        };
+                    },
+                ),
+            ]),
         ),
     ]);
 

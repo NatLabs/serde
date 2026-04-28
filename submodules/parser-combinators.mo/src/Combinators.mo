@@ -244,7 +244,7 @@ module {
         public func hex() : CharParser {
             sat(
                 func(x : Char) : Bool {
-                    '0' <= x and x <= '9' or 'a' <= x and x <= 'f' or 'A' <= x and x <= 'A';
+                    '0' <= x and x <= '9' or 'a' <= x and x <= 'f' or 'A' <= x and x <= 'F';
                 }
             );
         };
